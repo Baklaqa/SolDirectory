@@ -13,6 +13,7 @@ import { slugify } from '../../lib/slugify';
 import { api } from '../../api/client';
 import { applySeoTags } from '../../lib/seo';
 import RegisterCard from './register/RegisterCard';
+import DirectoryExtras from '../../components/directory/DirectoryExtras';
 import { formatCount } from './register/RegisterParts';
 import './Home.css';
 import './Directory.css';
@@ -569,6 +570,14 @@ export default function Directory() {
             Browse the full <Link to="/ndis-providers">NDIS provider register</Link> or <Link to="/aged-care-providers">My Aged Care register</Link> by state and suburb.
           </p>
         </div>
+
+        <DirectoryExtras
+          onChooseService={(name) => {
+            setService(name);
+            setServiceText(name);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
 
         <div className="dir-help">
           <p>

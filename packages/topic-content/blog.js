@@ -1,4 +1,7 @@
-export const EDITORIAL_BLOG_POSTS = [
+import { GUIDE_POSTS } from './blogGuides.js';
+
+/** Time-sensitive explainers written from specific official announcements. Evergreen guides live in blogGuides.js. */
+const NEWS_POSTS = [
   {
     slug: 'ndis-budget-changes-october-2026-what-to-check',
     title: 'NDIS budget changes from October 2026: what to check first',
@@ -130,3 +133,5 @@ export const EDITORIAL_BLOG_POSTS = [
     ],
   },
 ];
+
+export const EDITORIAL_BLOG_POSTS = [...NEWS_POSTS, ...GUIDE_POSTS];

@@ -92,6 +92,30 @@ const RELATED_BY_CATEGORY: Record<string, { label: string; to: string }[]> = {
     { label: 'List your business on SolDirectory', to: '/providers' },
     { label: 'Plan management basics', to: '/guides/plan-management-basics' },
   ],
+  'Choosing providers': [
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'Find an NDIS provider', to: '/find-a-provider' },
+    { label: 'Independent support workers', to: '/independent-workers' },
+    { label: 'Browse providers by location', to: '/locations' },
+  ],
+  'Plans and funding': [
+    { label: 'NDIS plan management basics', to: '/guides/plan-management-basics' },
+    { label: 'Understanding the NDIS price guide', to: '/guides/ndis-price-guide' },
+    { label: 'NDIS funding explained', to: '/funding' },
+    { label: 'Find a support coordinator', to: '/find-a-provider?service=Support%20coordination' },
+  ],
+  'Housing and living': [
+    { label: 'Housing, SDA and SIL providers', to: '/find-a-provider?service=Housing%20(SDA%20%26%20SIL)' },
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'NDIS funding explained', to: '/funding' },
+    { label: 'Browse providers by location', to: '/locations' },
+  ],
+  'Everyday supports': [
+    { label: 'NDIS funding explained', to: '/funding' },
+    { label: 'Find an NDIS provider', to: '/find-a-provider' },
+    { label: 'Practical guides', to: '/guides' },
+    { label: 'Browse providers by location', to: '/locations' },
+  ],
   'Service notices': [
     { label: 'All practical guides', to: '/guides' },
     { label: 'NDIS funding explained', to: '/funding' },
