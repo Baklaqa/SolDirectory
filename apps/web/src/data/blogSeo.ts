@@ -116,6 +116,12 @@ const RELATED_BY_CATEGORY: Record<string, { label: string; to: string }[]> = {
     { label: 'Practical guides', to: '/guides' },
     { label: 'Browse providers by location', to: '/locations' },
   ],
+  'Local supports': [
+    { label: 'Browse providers by location', to: '/locations' },
+    { label: 'Find an NDIS provider', to: '/find-a-provider' },
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'NDIS funding explained', to: '/funding' },
+  ],
   'Service notices': [
     { label: 'All practical guides', to: '/guides' },
     { label: 'NDIS funding explained', to: '/funding' },

@@ -543,4 +543,99 @@ export const GUIDE_POSTS = [
       },
     ],
   },
+  {
+    slug: 'finding-ndis-supports-in-regional-and-remote-areas',
+    title: 'Finding NDIS supports in regional and remote areas',
+    summary: 'Fewer providers and longer distances change how you search. Here is a practical approach to widening the search, asking about travel and building a back-up.',
+    category: 'Local supports',
+    publishedAt: '2026-10-12T12:00:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/transport-2.jpg',
+    coverAlt: 'A campervan parked outside a house on a quiet street',
+    source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS provider finder', url: ndis('/participants/working-providers/finding-providers/provider-finder') },
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'Widen the search before you narrow it',
+        paragraphs: [
+          'In smaller towns the right provider may be based in the nearest regional centre rather than in your own suburb or town. Search your town, then the closest larger centre, then the surrounding region. Providers often list the areas they travel to, so read the service area, not just the address.',
+          'Search by the support you need as well as by place. A provider that does not appear under your town name may still visit it on set days, and a different type of provider may be able to deliver part of the support you are after.',
+        ],
+      },
+      {
+        heading: 'Ask how the service actually reaches you',
+        paragraphs: [
+          'Ask how often workers visit, which days, and how long a visit lasts. Ask what happens if a worker is unwell, if roads are closed or if weather stops a trip, and who will let you know. A provider that visits fortnightly is a very different service from one that visits weekly.',
+          'Ask whether travel is charged and how, and have the answer written into your service agreement. Pricing rules allow travel to be charged in some situations, so the arrangement should be clear before the first visit rather than appearing on an invoice later.',
+        ],
+      },
+      {
+        heading: 'Consider supports delivered remotely',
+        paragraphs: [
+          'Some supports, such as certain therapy sessions, coordination and planning conversations, may be delivered by phone or video. These can widen your choice a great deal, but they do not suit everyone or every support. Ask whether it is appropriate for your needs and whether a mix of remote and in-person visits would work.',
+        ],
+      },
+      {
+        heading: 'Build a back-up and keep records',
+        paragraphs: [
+          'With few providers, losing one can leave a gap. Where you can, keep the details of a second provider or a local community organisation, and ask your current provider how they handle absences. Keep a note of the providers you contacted and what they said.',
+          'If you cannot find the support your plan includes, tell your support coordinator or the NDIA, and keep your notes. That evidence can matter at your next plan review. This is general information, not advice about your plan.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'moving-to-a-new-town-or-state-with-the-ndis',
+    title: 'Moving to a new town or state with the NDIS: a practical checklist',
+    summary: 'Your plan travels with you, but your providers may not. Here is what to sort out before, during and after a move.',
+    category: 'Local supports',
+    publishedAt: '2026-10-12T11:50:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/housing.jpg',
+    coverAlt: 'A young man in a wheelchair at home in a kitchen',
+    source: { label: 'NDIS: Changing your plan', url: ndis('/participants/changing-your-plan'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Life transitions', url: ndis('/participants/life-transitions') },
+      { label: 'NDIS: Home and living', url: ndis('/participants/home-and-living') },
+    ],
+    sections: [
+      {
+        heading: 'Tell the right people, early',
+        paragraphs: [
+          'A move is a change in your circumstances, and it affects which providers can support you. Let the NDIA know your new address and plans as soon as you can, and tell your plan manager and support coordinator so invoices and contact details stay correct.',
+          'Ask whether the move changes anything about how your plan should work. Moving can affect travel, the availability of particular supports and, sometimes, what you need. If you think your plan will no longer fit, ask about a change before the move rather than after it.',
+        ],
+      },
+      {
+        heading: 'Find supports at the other end before you go',
+        paragraphs: [
+          'Start looking for providers in the new area early, because some have waiting lists. Search the new suburb and the nearest larger centre, and contact a few. Ask whether they have capacity from your move date and what they need from you to begin.',
+          'If you rely on a particular support worker or therapist, ask your current provider whether they can help with a handover, and whether a short overlap is possible so you are not left without support in the first weeks.',
+        ],
+      },
+      {
+        heading: 'Ending services you are leaving',
+        paragraphs: [
+          'Check the notice period in each service agreement and give notice in writing. Ask for any records you may need, such as reports or progress notes, and confirm the final invoice goes to the right place so it is paid from the correct budget.',
+        ],
+      },
+      {
+        heading: 'Housing, transport and equipment',
+        paragraphs: [
+          'If your move involves different housing, check whether the new home needs modifications or equipment, and whether those need assessments and approvals that take time. Think about how you will travel to appointments and activities from the new address.',
+          'Moving can be unsettling, so build in extra support for the first weeks if you can. This is general information, not advice about your plan. Check the linked official pages and speak to the NDIA about your own circumstances.',
+        ],
+      },
+      {
+        heading: 'Questions to ask a new provider about the move',
+        paragraphs: [
+          'Ask when they could start, whether you would be placed on a waiting list, and who you would deal with first. Ask whether they already work with your plan manager, and whether they can provide a written service agreement before you arrive so there are no surprises on the first day.',
+          'If you are moving because of a change in your needs or housing, say so. It helps a provider understand what you are likely to need over the first few months and whether they are the right fit.',
+        ],
+      },
+    ],
+  },
 ];

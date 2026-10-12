@@ -9,6 +9,7 @@ import { KIND_BY_TYPE, STATES, registerPath, stateByCode } from '../../lib/regis
 import { listPublicAreas, type CountRow } from '../../api/profilesApi';
 import { getRegisterHub, getServiceSuburbs, type RegisterHub } from '../../api/registerApi';
 import Counter from '../../components/Counter';
+import LocationsExtras from '../../components/locations/LocationsExtras';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { providerCountLabel } from '../../lib/statsCounts';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
@@ -272,6 +273,8 @@ export default function Locations() {
             <li><span>06</span><h3>Written terms</h3><p>Get price, hours, cancellation and travel terms in a service agreement before support starts, and keep a copy.</p></li>
           </ol>
         </section>
+
+        <LocationsExtras ndis={ndis} aged={aged} />
 
         {/* FAQ */}
         <section aria-labelledby="loc-faq-heading">
