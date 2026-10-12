@@ -210,7 +210,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
             />
           </>
         )}
-        <RelatedArticles themes={['choosing', 'registration', 'local']} heading="Reading before you choose a provider" />
+        <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'choosing', 'registration'] : ['choosing', 'registration', 'local']} heading="Reading before you choose a provider" />
       </main>
 
       <PublicFooter />

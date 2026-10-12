@@ -11,8 +11,8 @@ import { EDITORIAL_BLOG_POSTS } from './blog.js';
  * Themes: choosing, registration, agreement, workers, funding, plan, housing, assistive, local, regional, moving, news.
  */
 const META = {
-  'how-to-choose-an-ndis-provider-questions-to-ask': { themes: ['choosing', 'agreement'] },
-  'registered-or-unregistered-ndis-provider-what-it-means': { themes: ['choosing', 'registration'] },
+  'how-to-choose-an-ndis-provider-questions-to-ask': { themes: ['choosing', 'agreement'], boost: 2 },
+  'registered-or-unregistered-ndis-provider-what-it-means': { themes: ['choosing', 'registration'], boost: 1 },
   'ndis-service-agreement-what-to-check-before-you-sign': { themes: ['choosing', 'agreement'] },
   'questions-to-ask-an-independent-ndis-support-worker': {
     services: ['Personal care', 'Domestic assistance', 'Transport'],
@@ -27,21 +27,30 @@ const META = {
   'assistive-technology-and-the-ndis-where-to-start': { services: ['Therapy services'], themes: ['assistive'] },
   'finding-ndis-supports-in-regional-and-remote-areas': { themes: ['local', 'regional'] },
   'moving-to-a-new-town-or-state-with-the-ndis': { themes: ['local', 'moving', 'housing'] },
-  'personal-care-and-daily-living-supports-what-to-ask': { services: ['Personal care', 'Domestic assistance'], themes: ['workers'] },
-  'transport-and-the-ndis-getting-to-appointments-and-activities': { services: ['Transport'], themes: ['local'] },
-  'choosing-a-therapist-occupational-therapy-physiotherapy-speech-pathology': { services: ['Therapy services'], themes: ['assistive'] },
-  'nursing-and-health-supports-at-home-what-the-ndis-covers': { services: ['Nursing'], themes: ['plan'] },
+  'personal-care-and-daily-living-supports-what-to-ask': { services: ['Personal care', 'Domestic assistance'], themes: ['workers', 'choosing'] },
+  'transport-and-the-ndis-getting-to-appointments-and-activities': { services: ['Transport'], themes: ['choosing'] },
+  'choosing-a-therapist-occupational-therapy-physiotherapy-speech-pathology': { services: ['Therapy services'], themes: ['assistive', 'choosing'] },
+  'nursing-and-health-supports-at-home-what-the-ndis-covers': { services: ['Nursing'], themes: ['plan', 'choosing'] },
   'how-to-change-ndis-provider-without-losing-support': { themes: ['choosing', 'agreement', 'rights'] },
   'making-a-complaint-about-an-ndis-provider-or-worker': { themes: ['rights', 'registration', 'choosing'] },
   'your-rights-as-an-ndis-participant-choice-control-and-safety': { themes: ['rights', 'choosing'] },
   'ndis-jargon-explained-terms-you-will-hear': { themes: ['funding', 'plan', 'choosing'] },
   'keeping-records-of-your-ndis-supports-a-simple-system': { themes: ['plan', 'funding', 'rights'] },
   'nominees-and-supporters-helping-someone-with-their-ndis-plan': { themes: ['rights', 'plan'] },
-  'a-back-up-plan-for-your-ndis-supports-emergencies-and-disruptions': { themes: ['local', 'regional', 'choosing'] },
+  'a-back-up-plan-for-your-ndis-supports-emergencies-and-disruptions': { themes: ['regional', 'choosing'] },
   'your-first-month-with-a-new-ndis-plan': { themes: ['plan', 'funding'] },
-  'community-participation-and-social-supports-how-to-choose': { services: ['Personal care', 'Transport'], themes: ['local', 'choosing'] },
+  'community-participation-and-social-supports-how-to-choose': { themes: ['choosing'] },
   'starting-as-an-independent-support-worker-what-to-set-up-first': { themes: ['workers'] },
-  'ndis-or-my-aged-care-which-system-supports-you': { themes: ['funding', 'plan', 'choosing'] },
+  'ndis-or-my-aged-care-which-system-supports-you': { themes: ['funding', 'plan', 'choosing', 'aged-care'], both: true },
+  'support-at-home-explained-how-in-home-aged-care-works': { services: ['Personal care', 'Domestic assistance', 'Nursing', 'Transport'], themes: ['aged-care', 'funding', 'choosing'] },
+  'getting-an-aged-care-assessment-what-to-expect': { themes: ['aged-care', 'plan'] },
+  'aged-care-costs-what-you-may-be-asked-to-contribute': { themes: ['aged-care', 'funding'] },
+  'choosing-an-aged-care-provider-or-home-what-to-compare': { themes: ['aged-care', 'choosing', 'registration'] },
+  'aged-care-rights-and-making-a-complaint': { themes: ['aged-care', 'rights'] },
+  'respite-care-a-break-for-you-and-your-carer': { themes: ['aged-care', 'local'] },
+  'registered-supporters-in-aged-care-helping-someone-decide': { themes: ['aged-care', 'rights'] },
+  'when-your-aged-care-needs-change-reviews-and-changing-providers': { themes: ['aged-care', 'plan', 'choosing'] },
+  'moving-into-an-aged-care-home-what-to-expect': { themes: ['aged-care', 'housing', 'choosing'] },
   'ndis-budget-changes-october-2026-what-to-check': { themes: ['funding', 'plan', 'news'] },
   'ndis-claims-after-90-days-from-15-october-2026': { services: ['Plan management'], themes: ['funding', 'news'] },
   'ndis-portal-maintenance-10-11-october-2026': { themes: ['news'] },
@@ -58,8 +67,13 @@ export function relatedArticles({ service, themes = [], exclude = [], limit = 3,
     .map((p) => {
       const meta = META[p.slug] ?? {};
       let score = 0;
+      // Aged-care-only guides are kept for aged care pages; the ones marked `both` suit either.
+      if (meta.themes?.includes('aged-care') && !meta.both && !themes.includes('aged-care')) return { p, score: -1 };
       if (service && meta.services?.includes(service)) score += 10;
-      for (const t of themes) if (meta.themes?.includes(t)) score += 3;
+      // The first theme a page asks for is its main one and counts for more.
+      themes.forEach((t, i) => { if (meta.themes?.includes(t)) score += i === 0 ? 5 : 3; });
+      // The two core "how to choose" guides edge ahead of other equally relevant articles.
+      if (score > 0) score += meta.boost ?? 0;
       return { p, score };
     })
     .sort((a, b) => b.score - a.score || time(b.p.publishedAt) - time(a.p.publishedAt));

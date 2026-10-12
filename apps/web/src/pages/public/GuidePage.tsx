@@ -77,7 +77,7 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
           </p>
         </section>
 
-        <RelatedArticles themes={['choosing', 'funding']} heading="More to read" />
+        <RelatedArticles themes={doc.slug === 'aged-care-support' ? ['aged-care', 'funding', 'choosing'] : ['choosing', 'funding']} heading="More to read" />
         <nav className="legal-other" aria-label="Other guides">
           {Object.values(GUIDE_DOCS).filter((d) => d.slug !== doc.slug).map((d) => (
             <Link key={d.slug} to={`/guides/${d.slug}`}>{d.title}</Link>

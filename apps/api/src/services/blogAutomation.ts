@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import SourceUpdate, { type SourceUpdateDoc } from '../models/SourceUpdate.js';
-import { classify } from './officialSources.js';
+import { classify, sourceInfo } from './officialSources.js';
 
 /**
  * Blog automation around WordPress. The pipeline is:
@@ -10,8 +10,6 @@ import { classify } from './officialSources.js';
  * are replaced, and the readiness check refuses thin, uncited or unfinished posts.
  */
 
-const CATEGORY_NAME = 'NDIS updates';
-const CATEGORY_SLUG = 'ndis-updates';
 const MIN_WORDS = Math.max(120, Number(process.env.BLOG_MIN_WORDS) || 300);
 export const PUBLISH_HOUR = Math.min(22, Math.max(5, Number(process.env.BLOG_PUBLISH_HOUR) || 9));
 export const MAX_PER_DAY = Math.max(1, Number(process.env.BLOG_MAX_PER_DAY) || 1);
@@ -73,7 +71,7 @@ const formatDate = (d?: Date) => (d ? d.toLocaleDateString('en-AU', { day: 'nume
 // ---------- the brief -------------------------------------------------------------------------------------------------
 
 export function buildBriefHtml(update: SourceUpdateDoc): string {
-  const cls = classify({ title: update.title, categories: update.categories, headings: update.headings, kind: update.source === 'ndis-news' ? 'news' : 'page', publishedAt: update.publishedAt });
+  const cls = classify({ title: update.title, categories: update.categories, headings: update.headings, kind: update.source === 'ndis-recent' ? 'page' : 'news', publishedAt: update.publishedAt });
   const origin = siteOrigin();
   const related = cls.related.length ? cls.related : [{ label: 'Find a provider', path: '/find-a-provider' }];
   const sections = update.headings.length
@@ -85,24 +83,24 @@ export function buildBriefHtml(update: SourceUpdateDoc): string {
     `<li>Official source: <a href="${escapeHtml(update.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(update.title)}</a> (${escapeHtml(formatDate(update.publishedAt))}).</li>`,
     update.topics.length ? `<li>Topics: ${escapeHtml(update.topics.join(', '))}. Suggested priority ${update.priority}/100.</li>` : '',
     sections,
-    `<li>Write it in your own words. Do not copy sentences, images or logos from the source: the NDIA licenses its website content CC BY-NC and asks that it is not used for commercial purposes. Facts, dates and amounts may be stated, with the official page cited.</li>`,
-    `<li>Never describe any provider or service as &ldquo;NDIS approved&rdquo; or imply the NDIA endorses it.</li>`,
+    `<li>Write it in your own words. Do not copy sentences, images or logos from the source: ${escapeHtml(sourceInfo(update.source).licence)}. Facts, dates and amounts may be stated, with the official page cited.</li>`,
+    `<li>Never describe any provider or service as &ldquo;NDIS approved&rdquo; or imply that the government endorses it.</li>`,
     `<li>Add an excerpt (50 to 300 characters) in the post settings, check the title and slug, and read the official page again on the day you publish.</li>`,
     `</ul></div>`,
     `<h2>What has changed</h2><p>[[EDITOR: say what changed and the date it applies from, in your own words.]]</p>`,
     `<h2>Who this affects</h2><p>[[EDITOR: participants, families, providers or workers, and any exceptions.]]</p>`,
     `<h2>What to do next</h2><p>[[EDITOR: practical steps a reader could take, and who to ask.]]</p>`,
-    `<h2>Where to read the official information</h2><p>Official source: <a href="${escapeHtml(update.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(update.title)}</a>, National Disability Insurance Agency. Information checked on [[EDITOR: date checked]].</p>`,
+    `<h2>Where to read the official information</h2><p>Official source: <a href="${escapeHtml(update.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(update.title)}</a>, ${escapeHtml(sourceInfo(update.source).org)}. Information checked on [[EDITOR: date checked]].</p>`,
     `<h2>Related pages on SolDirectory</h2><ul>${related.map((r) => `<li><a href="${origin}${escapeHtml(r.path)}">${escapeHtml(r.label)}</a></li>`).join('')}</ul>`,
     `<p><em>This article is general information, not advice. Check your own plan and the official source for your situation.</em></p>`,
   ].filter(Boolean).join('');
 }
 
-async function ensureCategory(): Promise<number | null> {
+async function ensureCategory(category: { name: string; slug: string }): Promise<number | null> {
   try {
-    const found = await wp<{ id: number }[]>(`/categories?slug=${CATEGORY_SLUG}&_fields=id`);
+    const found = await wp<{ id: number }[]>(`/categories?slug=${category.slug}&_fields=id`);
     if (found[0]) return found[0].id;
-    const created = await wp<{ id: number }>('/categories', { method: 'POST', body: JSON.stringify({ name: CATEGORY_NAME, slug: CATEGORY_SLUG }) });
+    const created = await wp<{ id: number }>('/categories', { method: 'POST', body: JSON.stringify({ name: category.name, slug: category.slug }) });
     return created.id;
   } catch {
     return null; // a missing category must never stop a brief being created
@@ -124,7 +122,7 @@ export async function createBrief(update: SourceUpdateDoc): Promise<BriefOutcome
       return { postId: existing[0].id, created: false, adopted: true };
     }
   }
-  const category = await ensureCategory();
+  const category = await ensureCategory(sourceInfo(update.source).category);
   const post = await wp<{ id: number; link: string }>('/posts', {
     method: 'POST',
     body: JSON.stringify({
@@ -173,7 +171,10 @@ export function checkReadiness(post: PostSnapshot, update: Pick<SourceUpdateDoc,
   if (/^\s*\[brief\]/i.test(post.titleRaw)) issues.push('The title still starts with [Brief]. Give it a real title.');
   const words = plain ? plain.split(' ').length : 0;
   if (words < MIN_WORDS) issues.push(`The post is ${words} words; at least ${MIN_WORDS} are needed to be useful and not thin content.`);
-  if (!/<a\s[^>]*href="https?:\/\/(?:www\.)?ndis\.gov\.au/i.test(post.contentRaw)) issues.push('Cite the official NDIS page with a link to it.');
+  let host = 'ndis.gov.au';
+  try { host = new URL(update.url).hostname.replace(/^www\./, ''); } catch { /* keep the default */ }
+  const citesSource = new RegExp(`<a\\s[^>]*href="https?://(?:www\\.)?${host.replace(/\./g, '\\.')}`, 'i').test(post.contentRaw);
+  if (!citesSource) issues.push(`Cite the official page with a link to it (${host}).`);
   const excerpt = textOf(post.excerptRaw);
   if (excerpt.length < 50) issues.push('Add an excerpt of at least 50 characters in the post settings (it is used on the blog list and in search results).');
   if (excerpt.length > 300) issues.push('The excerpt is over 300 characters; shorten it.');

@@ -9,6 +9,8 @@
 const CHECKED = '2026-10-12T09:00:00+11:00';
 const NDIS = 'https://www.ndis.gov.au';
 const ndis = (path) => `${NDIS}${path}`;
+const MAC = 'https://www.myagedcare.gov.au';
+const mac = (path) => `${MAC}${path}`;
 
 export const GUIDE_POSTS = [
   {
@@ -1385,6 +1387,442 @@ export const GUIDE_POSTS = [
         paragraphs: [
           'Ask each system what supports you could receive, how they are arranged, who the providers are, what it might cost you and how long the process takes. Ask what would happen to your current supports if you moved from one to the other.',
           'Take notes, ask for answers in writing where you can, and consider having an advocate or a family member with you. The decision is a big one, and you are entitled to take your time.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'support-at-home-explained-how-in-home-aged-care-works',
+    title: 'Support at Home explained: how in-home aged care works',
+    summary: 'Support at Home is the program that helps older people stay in their own homes. Here is how it works, from approval to choosing a provider.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T14:00:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/personal-care.jpg',
+    coverAlt: 'A care worker talking with older people in a shared room',
+    source: { label: 'My Aged Care: Support at Home program', url: mac('/support-at-home'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Support at Home funding changes from 1 October 2026', url: mac('/news-and-updates/support-home-funding-changes-1-october-2026') },
+      { label: 'My Aged Care: Support at Home costs and contributions', url: mac('/support-at-home-costs-and-contributions') },
+    ],
+    sections: [
+      {
+        heading: 'What it is',
+        paragraphs: [
+          'Support at Home is the Australian Government program that helps older people keep living at home with services and equipment. It began in November 2025 and replaced the Home Care Packages Program and the Short-term Restorative Care Programme. It is aimed at people who need a coordinated mix of help, for example because they need support with many everyday tasks or their needs are more complex.',
+        ],
+      },
+      {
+        heading: 'What it can include',
+        paragraphs: [
+          'Services fall into three broad groups: clinical supports such as nursing care, occupational therapy, podiatry and help with showering or dressing; supports for independence such as transport, respite and help to attend appointments and social events; and everyday living help such as cleaning, gardening, shopping and meals. It also covers services that support culturally safe care.',
+          'Alongside ongoing care there are short-term pathways: a Restorative Care Pathway to help regain function, funding for assistive technology and home modifications, and an End-of-Life Pathway to help someone stay at home in the last months of life.',
+        ],
+      },
+      {
+        heading: 'How it works for you',
+        paragraphs: [
+          'You first have an aged care assessment. If you are approved, you receive a letter that explains the services and funding you are approved for. When funding is available you choose a provider, agree a service agreement and decide with them the mix of services that fits your needs and budget. You can ask to change that mix at any time, and you can ask for a reassessment if your needs change.',
+          'Funding is allocated for each approved service separately, so you may be able to start one service while you wait for another.',
+        ],
+      },
+      {
+        heading: 'Costs, and a recent change',
+        paragraphs: [
+          'You usually contribute towards the cost of services, based on the type of service and your income and assets, and you do not contribute to clinical supports. From 1 October 2026, personal care services that are approved in your support plan, and funded within your budget, no longer need a contribution. Other services such as domestic help and gardening may still involve one.',
+          'This is general information, not advice. Check the linked official pages and speak to your provider about your own situation.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'getting-an-aged-care-assessment-what-to-expect',
+    title: 'Getting an aged care assessment: what to expect',
+    summary: 'The assessment is the first step to government-funded aged care. Here is how to apply, what the assessor does and what to do while you wait.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:50:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/mental-health-3.jpg',
+    coverAlt: 'Two people talking on a sofa with a notebook on the table',
+    source: { label: 'My Aged Care: How to get assessed', url: mac('/how-get-assessed'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Preparing for your assessment', url: mac('/preparing-your-assessment') },
+      { label: 'My Aged Care: Receiving your assessment outcome', url: mac('/receiving-your-assessment-outcome') },
+      { label: 'My Aged Care: What to do while you wait', url: mac('/what-do-while-you-wait-your-assessment-outcome') },
+    ],
+    sections: [
+      {
+        heading: 'Why you need one',
+        paragraphs: [
+          'An assessment looks at your situation and works out which aged care services you are eligible for and how quickly. It is the gateway to most government-funded aged care, so it is worth doing even if you are not sure you need help yet. Some veterans and war widows may be eligible for some support without an assessment, so ask the Department of Veterans’ Affairs.',
+        ],
+      },
+      {
+        heading: 'How to apply',
+        paragraphs: [
+          'You can apply online, by phone or in person with help from Services Australia. A family member, friend or community representative can apply with you or for you, and be with you at the assessment. If you are isolated or vulnerable, an advocate or a care finder service may be able to help.',
+          'When you apply there is a short screening. Your answers decide which assessment organisation contacts you and what referral priority you are given, which affects how quickly the assessment is arranged.',
+        ],
+      },
+      {
+        heading: 'What the assessment is like',
+        paragraphs: [
+          'An assessment organisation contacts you to arrange a time. Most assessments happen in your home with a trained assessor, though they can also be done elsewhere, by telehealth or by phone. The assessor asks about your health, daily life, what you find hard and what support you already have, and recommends services that might suit you.',
+          'It helps to have your key information ready and to write down questions beforehand. Say what matters most to you, including what you want to keep doing.',
+        ],
+      },
+      {
+        heading: 'After the assessment',
+        paragraphs: [
+          'You will be told the outcome, including the services you are approved for. Funding for some services can take time to become available, depending on the service and your priority. While you wait, the official pages explain what support may be available. If you disagree with the outcome, there is a way to ask for it to be looked at again.',
+          'This is general information, not advice about your situation.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'aged-care-costs-what-you-may-be-asked-to-contribute',
+    title: 'Aged care costs: what you may be asked to contribute',
+    summary: 'What you pay depends on the type of care, the provider, your finances and the services you receive. Here is how to make sense of it and what to ask.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:40:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/plan-management-3.jpg',
+    coverAlt: 'Papers, a calculator and a laptop on a desk',
+    source: { label: 'My Aged Care: How do aged care costs work?', url: mac('/how-do-aged-care-costs-work'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Support at Home costs and contributions', url: mac('/support-at-home-costs-and-contributions') },
+      { label: 'My Aged Care: Financial hardship assistance', url: mac('/financial-hardship-assistance') },
+      { label: 'My Aged Care: Financial support and advice', url: mac('/financial-support-and-advice') },
+    ],
+    sections: [
+      {
+        heading: 'Four things that decide the cost',
+        paragraphs: [
+          'What you pay for aged care depends on the type of help you need, the provider you choose, your financial situation and the services you actually receive. The government pays part or all of the cost for providers listed on the official Find a provider tool, which makes care more affordable, but different providers set different prices.',
+        ],
+      },
+      {
+        heading: 'It differs by program',
+        paragraphs: [
+          'For the Commonwealth Home Support Program you agree fees with your provider before services start, and you do not need an income and assets assessment. For Support at Home, what you contribute depends on the provider’s prices, the services you receive and an assessment of your income and assets; the government pays the rest, and there is no contribution for clinical supports.',
+          'Aged care homes have their own types of fees, which depend on factors including your finances and the services you choose. Short-term care does not need a means assessment, although a daily fee may apply.',
+        ],
+      },
+      {
+        heading: 'Questions to ask a provider',
+        paragraphs: [
+          'Ask for a written list of every charge, what each covers and how often prices can change. Ask how you will be told about a price change and whether you can say no. Ask what you would pay for the specific mix of services you expect to use, rather than a general figure. Compare more than one provider using the same list.',
+          'Recent official guidance says that if a provider proposes a price increase for nursing services, it must discuss it with you, explain why and get your agreement first.',
+        ],
+      },
+      {
+        heading: 'If you are worried about affording care',
+        paragraphs: [
+          'You can ask to be considered for financial hardship assistance, and the government may then pay some or all of your costs. Independent financial advice is recommended before deciding how to pay for care, and Services Australia offers free information and education about aged care finances.',
+          'This is general information, not financial advice. Costs and rules change, so check the linked official pages.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'choosing-an-aged-care-provider-or-home-what-to-compare',
+    title: 'Choosing an aged care provider or home: what to compare',
+    summary: 'Star ratings are a good start, not the whole picture. Here is how to compare providers on quality, cost and fit.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:30:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/six-checks-on-every-provider.jpg',
+    coverAlt: 'A support worker talking with an older person in a care setting',
+    source: { label: 'My Aged Care: Checking quality of care', url: mac('/checking-quality-care'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: How are Star Ratings calculated?', url: mac('/how-are-star-ratings-calculated') },
+      { label: 'My Aged Care: Find a provider', url: mac('/find-a-provider') },
+      { label: 'My Aged Care: What aged care homes provide', url: mac('/types-care/what-aged-care-homes-provide') },
+    ],
+    sections: [
+      {
+        heading: 'Start with the official tool',
+        paragraphs: [
+          'My Aged Care has a Find a provider tool that lists providers of government-funded aged care by place and type of care. For aged care homes it also shows Star Ratings and information about prices. It is a sensible starting point for building a shortlist, alongside the public register listings on this site.',
+        ],
+      },
+      {
+        heading: 'What the star ratings show',
+        paragraphs: [
+          'Star Ratings give each aged care home between one and five stars, built from four areas: residents’ experience, compliance with the standards, staffing, and quality measures. A low compliance rating limits the overall rating. They are a useful way to compare homes quickly, but they are a summary, so look at each of the four areas as well as the overall number.',
+          'Ratings are updated over time, so check that you are looking at the current ones.',
+        ],
+      },
+      {
+        heading: 'Go and see for yourself',
+        paragraphs: [
+          'If you can, visit more than once and at different times of day. Notice how staff speak to residents, whether people look occupied and comfortable, whether the place feels clean and calm, and whether the food looks appealing. Ask residents and families how they find it. Ask for the resident agreement and fees in writing before you decide.',
+        ],
+      },
+      {
+        heading: 'Questions to ask',
+        paragraphs: [
+          'Ask how staffing works including overnight, how care plans are made and reviewed, how family can be involved, how complaints are handled and what happens if your needs change. For in-home services, ask who will visit, how regular workers are arranged and how prices are set.',
+          'Ask what is included in the price and what is extra. This is general information, not advice about a particular provider.',
+        ],
+      },
+      {
+        heading: 'Fit matters as much as the rating',
+        paragraphs: [
+          'A high rating does not guarantee a place suits you. Think about where it is and how easily family can visit, whether staff speak your language or understand your culture and faith, what the food is like, whether pets or hobbies are welcome and how much privacy you will have. Write down what would make it feel like home.',
+          'Before you sign anything, take the agreement home, read it with someone you trust and ask for anything unclear to be explained in plain words.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'aged-care-rights-and-making-a-complaint',
+    title: 'Aged care rights and how to make a complaint',
+    summary: 'Under the new Aged Care Act, older people have a Statement of Rights. Here is what it means and what to do if something is not right.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:20:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/mental-health.jpg',
+    coverAlt: 'A man and a woman talking on a sofa with papers on the table',
+    source: { label: 'My Aged Care: Know your rights', url: mac('/know-your-rights'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Making a complaint', url: mac('/making-a-complaint') },
+      { label: 'My Aged Care: Understanding your rights and how to raise concerns', url: mac('/understanding-your-rights-and-how-raise-concerns') },
+      { label: 'My Aged Care: Seeking support from an advocate', url: mac('/seeking-support-from-advocate') },
+    ],
+    sections: [
+      {
+        heading: 'A rights-based system',
+        paragraphs: [
+          'Australia’s new Aged Care Act began on 1 November 2025. It takes a rights-based approach and includes a Statement of Rights, which replaced the Charter of Aged Care Rights. The aim is that older people and their wishes stay at the centre of the system.',
+        ],
+      },
+      {
+        heading: 'What your rights include',
+        paragraphs: [
+          'In summary, you have the right to make your own decisions and to be supported to make and communicate them, to have your decisions respected, to receive the information you need, to feel safe and respected, to have your culture and identity respected, and to stay connected with your community.',
+          'Your provider should explain these rights to you, and they should be reflected in your service agreement for in-home services or your resident agreement in an aged care home.',
+        ],
+      },
+      {
+        heading: 'If something is wrong',
+        paragraphs: [
+          'Raise it early with your provider where you feel able to. There are separate routes for concerns about a provider, an assessment or its outcome, the calculation of costs, Support at Home prices, a My Aged Care service, an appointed decision-maker and elder abuse. If you are not satisfied with how a complaint was handled there are further options.',
+          'In urgent or unsafe situations, contact emergency services first.',
+        ],
+      },
+      {
+        heading: 'You do not have to do it alone',
+        paragraphs: [
+          'Independent aged care advocates can help you understand your rights, raise concerns and make complaints. The service is free, independent and confidential, and it also helps people experiencing elder abuse. Family, friends and registered supporters can help too. This is general information, not legal advice.',
+        ],
+      },
+      {
+        heading: 'What providers are expected to do',
+        paragraphs: [
+          'Registered providers must give you a copy of the Statement of Rights, help you understand it and keep a record of that shared understanding. They are expected to deliver services in a way that treats you as an individual and respects your rights.',
+          'A good response to a concern acknowledges it, explains what will happen and by when, and follows up. If you do not get that, say so in writing and use the other routes described on the official pages.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'respite-care-a-break-for-you-and-your-carer',
+    title: 'Respite care: a break for you and the person who cares for you',
+    summary: 'Respite can mean a few hours, a weekend or a few weeks. Here are the main kinds, how to find them and how to plan.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:10:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/community.jpg',
+    coverAlt: 'Four friends walking together in a park',
+    source: { label: 'My Aged Care: Respite care', url: mac('/types-care/respite-care'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Commonwealth Home Support Program', url: mac('/aged-care-programs/commonwealth-home-support-program') },
+      { label: 'My Aged Care: Support at Home program', url: mac('/support-at-home') },
+    ],
+    sections: [
+      {
+        heading: 'What respite is for',
+        paragraphs: [
+          'Respite gives the person receiving care, and the person caring for them, a break for a short time. It can also be a chance to meet new people. It might be a few hours, a few days or a few weeks, and it can be at home, in the community or in an aged care home. It is often planned in advance, for example around a trip or an appointment, but it can also be arranged in an emergency.',
+        ],
+      },
+      {
+        heading: 'The main kinds',
+        paragraphs: [
+          'Respite at home, sometimes called flexible respite, usually means a paid carer comes to the home so the usual carer can have a break. Community or centre-based respite takes place during the day at a day centre, club or community space. Cottage respite is available overnight or over a weekend in a centre or community location. Residential respite takes place in an aged care home and suits people who need support with most tasks.',
+          'What is available depends on eligibility, needs and services in the area, and the program involved.',
+        ],
+      },
+      {
+        heading: 'Emergencies',
+        paragraphs: [
+          'If a carer is suddenly unable to care, for example through illness or a death, emergency respite may be available through the Carer Gateway. Residential respite normally needs an assessment, but in an emergency an urgent assessment can often be arranged through the provider.',
+        ],
+      },
+      {
+        heading: 'Planning, cost and fit',
+        paragraphs: [
+          'Plan ahead where you can. Ask providers what a typical day or stay looks like, what is included, how it is charged and whether it can be arranged on regular dates. Visit first if you can and tell the staff about routines, medication and preferences. A trial stay or session can make the first time easier.',
+          'Costs depend on the type of respite and the program. This is general information, not advice about your eligibility.',
+        ],
+      },
+      {
+        heading: 'Making respite work for both people',
+        paragraphs: [
+          'Respite works best when the person receiving care feels settled. Share routines, medication, likes and dislikes with whoever will be providing it, and consider starting with a short session before a longer stay. Familiar items and a clear explanation of what to expect help.',
+          'Carers are entitled to support too. The Carer Gateway offers information and services for carers, so it is worth contacting it even if you are not in a crisis.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'registered-supporters-in-aged-care-helping-someone-decide',
+    title: 'Registered supporters in aged care: helping someone make their own decisions',
+    summary: 'Under the new Aged Care Act you can choose who supports you. Here is what a registered supporter is, what they can do and how to set it up.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:05:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/older-people-2.jpg',
+    coverAlt: 'A carer in a face mask with an older woman, both smiling',
+    source: { label: 'My Aged Care: Registering a supporter', url: mac('/registering-supporter'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: Appointed decision-makers', url: mac('/registering-supporter/appointed-decision-makers') },
+      { label: 'My Aged Care: Know your rights', url: mac('/know-your-rights') },
+    ],
+    sections: [
+      {
+        heading: 'Choosing who supports you',
+        paragraphs: [
+          'Many older people want someone alongside them when dealing with aged care: a partner, a child, a friend or a neighbour. Under the new Aged Care Act you can choose who supports you, and that person can be formally registered as your supporter if you want or need that.',
+        ],
+      },
+      {
+        heading: 'What a registered supporter can do',
+        paragraphs: [
+          'A registered supporter can help you communicate your wishes to My Aged Care, assessors, providers and other organisations. They can support you to make decisions about assessments, referrals and everyday aged care choices, and they can ask for, see and receive information about you, including helping keep your details up to date.',
+          'The role is about helping you make and communicate your own decisions, not about making them for you.',
+        ],
+      },
+      {
+        heading: 'How it is set up',
+        paragraphs: [
+          'There are several ways to register a supporter, including through the My Aged Care contact centre, an online form, your online account, a printed form, at an assessment, with a specialist officer at Services Australia or while applying for an assessment. Both people will need to provide some information. Declaring a conflict of interest does not by itself stop an application.',
+          'You can see your supporters in your online account and ask to change or remove them.',
+        ],
+      },
+      {
+        heading: 'Different from a legal decision-maker',
+        paragraphs: [
+          'A registered supporter is different from a person who has been formally appointed as a decision-maker under a legal arrangement. If you are unsure which applies to you, ask My Aged Care or an advocate before relying on either. This is general information, not legal advice.',
+        ],
+      },
+      {
+        heading: 'Keeping the person in charge',
+        paragraphs: [
+          'If you are a supporter, start with what the person wants. Explain choices in plain language, give them time and check that what is decided is what they actually want, not what is easiest for others. If you have a personal interest in a decision, say so openly.',
+          'Keep notes of what was discussed and decided, and make sure the person knows what you have access to. Review the arrangement from time to time and update it if their wishes or circumstances change.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'when-your-aged-care-needs-change-reviews-and-changing-providers',
+    title: 'When your aged care needs change: reviews and changing provider',
+    summary: 'Needs change, and aged care can change with them. Here is how to ask for a review or reassessment and how to change provider.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:02:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/community-2.jpg',
+    coverAlt: 'Four friends smiling together outdoors',
+    source: { label: 'My Aged Care: What to do when your needs change', url: mac('/what-to-do-when-your-needs-change'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: How to change your provider', url: mac('/what-do-when-your-needs-change/how-change-providers') },
+      { label: 'My Aged Care: When to get a support plan review or reassessment', url: mac('/when-get-support-plan-review-or-reassessment') },
+      { label: 'My Aged Care: How to change your current services', url: mac('/how-change-your-current-services') },
+    ],
+    sections: [
+      {
+        heading: 'Needs change, and so can the arrangement',
+        paragraphs: [
+          'Health, mobility, family circumstances and where you live all change over time. When they do, you may want to change when services happen, the services themselves or the provider. The official guidance is clear that you have the right to make changes at any time to suit your needs and preferences.',
+        ],
+      },
+      {
+        heading: 'Start by telling your provider',
+        paragraphs: [
+          'The first step is to tell your provider what has changed. They can work with you to see whether they can meet your new needs within what you are approved for, or whether you need a support plan review or a reassessment to be approved for different or additional services.',
+          'For in-home services, you can ask to change the mix of services you receive. Keep a note of what you asked for and what was agreed.',
+        ],
+      },
+      {
+        heading: 'Reviews and reassessments',
+        paragraphs: [
+          'A review looks again at your support plan, and a reassessment is a fuller look at your needs. Which is appropriate depends on how much has changed. The official page explains when each may apply and how to ask.',
+        ],
+      },
+      {
+        heading: 'Changing provider',
+        paragraphs: [
+          'You can change provider if you are moving, if your current provider does not offer what you now need or if you are simply not happy. Line up the new provider first, check any notice terms in your agreement and give notice in writing. Ask for a smooth handover so routines and preferences are not lost.',
+          'You can update your own details and your registered supporters through your My Aged Care online account. This is general information, not advice about your own services.',
+        ],
+      },
+      {
+        heading: 'Keeping your information up to date',
+        paragraphs: [
+          'Your My Aged Care online account shows your approved services, referrals, waiting times and service charges, and lets you update personal details and supporters. Check it from time to time so that what the system holds matches what is actually happening.',
+          'If you cannot or prefer not to use it online, you can contact My Aged Care by phone or ask a supporter to help. Keep your own notes of calls and decisions with dates and names.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'moving-into-an-aged-care-home-what-to-expect',
+    title: 'Moving into an aged care home: what to expect and what to ask',
+    summary: 'A move into an aged care home is a big step. Here is how to prepare, what stays the same and what to ask before and after you move.',
+    category: 'Aged care',
+    publishedAt: '2026-10-12T13:01:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/housing-2.jpg',
+    coverAlt: 'A support worker and a woman at home, with a wheelchair in the background',
+    source: { label: 'My Aged Care: What to expect when moving into an aged care home', url: mac('/what-expect-when-moving-aged-care-home'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'My Aged Care: What aged care homes provide', url: mac('/types-care/what-aged-care-homes-provide') },
+      { label: 'My Aged Care: Know your rights', url: mac('/know-your-rights') },
+    ],
+    sections: [
+      {
+        heading: 'What does not change',
+        paragraphs: [
+          'Moving into an aged care home means new people, routines and surroundings, but some things stay the same. You still decide what to do each day, and you keep control over your personal matters, your finances and your privacy.',
+        ],
+      },
+      {
+        heading: 'Preparing to move',
+        paragraphs: [
+          'Think about who needs to be told, what you want to bring, and who can help you on the day and in the first weeks. Sort out your documents and agreements, and make sure you understand the resident agreement before signing. It can help to bring familiar things such as photographs, a favourite chair and bedding.',
+          'Ask for a care plan to be developed with you so that your preferences, routines and health needs are written down and shared with staff.',
+        ],
+      },
+      {
+        heading: 'Looking after your health and money',
+        paragraphs: [
+          'You will still see your own doctor, dentist and other health professionals, and the home has a responsibility to help you manage your general health needs. Ask how appointments are booked and how you get to them. Understand how fees are charged and what you can expect to pay for, and speak to an independent adviser if you are unsure.',
+        ],
+      },
+      {
+        heading: 'Staying connected',
+        paragraphs: [
+          'Ask about activities, outings, visiting arrangements and how family and friends can stay involved in your care. Staying independent and social matters. If something is not working in the first weeks, say so early. The home should listen, and there are processes if it does not. This is general information, not advice about a particular home.',
+        ],
+      },
+      {
+        heading: 'Questions for the first few weeks',
+        paragraphs: [
+          'Ask who your main contact is, when your care plan will be reviewed with you and how your preferences about meals, routines and visitors are recorded. Ask how to raise a concern and who will follow it up.',
+          'Give yourself time to settle. If something is not right, say so early, and ask family, a friend or an independent advocate to help if you want support.',
         ],
       },
     ],

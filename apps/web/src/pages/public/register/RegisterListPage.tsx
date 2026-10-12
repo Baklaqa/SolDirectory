@@ -311,7 +311,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
           title={`Looking for support in ${areaName}?`}
           body="We match you with providers who have recently confirmed they can take on new people. It’s free and there’s no obligation."
         />
-        <RelatedArticles themes={['local', 'choosing', 'registration']} heading={`Reading before you choose in ${areaName}`} />
+        <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'local', 'choosing'] : ['local', 'choosing', 'registration']} heading={`Reading before you choose in ${areaName}`} />
       </main>
 
       <PublicFooter />

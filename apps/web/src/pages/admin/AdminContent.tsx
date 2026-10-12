@@ -21,7 +21,7 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
 
 const TOPIC_LABEL: Record<string, string> = {
   pricing: 'Pricing', plans: 'Plans and budgets', providers: 'Providers', legislation: 'Laws and rules', housing: 'Housing',
-  'support-coordination': 'Support coordination', workers: 'Support workers', enforcement: 'Fraud and enforcement', 'system-notices': 'System notices',
+  'support-coordination': 'Support coordination', workers: 'Support workers', 'aged-care': 'Aged care', enforcement: 'Fraud and enforcement', 'system-notices': 'System notices',
 };
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' }) : '');
@@ -58,7 +58,7 @@ function Item({ item, wordpress, onChanged }: { item: ContentUpdate; wordpress: 
         <span className="ac-main">
           <strong>{item.title}</strong>
           <small>
-            {item.source === 'ndis-news' ? 'NDIS news' : 'NDIS page update'} · {day(item.publishedAt)}
+            {item.source === 'myagedcare-news' ? 'My Aged Care news' : item.source === 'ndis-news' ? 'NDIS news' : 'NDIS page update'} · {day(item.publishedAt)}
             {item.categories.length > 0 && ` · ${item.categories.join(', ')}`}
           </small>
         </span>

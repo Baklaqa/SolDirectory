@@ -295,7 +295,9 @@ function relatedShellHtml(originalUrl: string): string {
     service = REAL_SERVICES.find((name) => slugifyService(name) === parts[1]);
     themes = parts.length === 4 ? ['local', 'choosing'] : ['choosing'];
   } else if (top in KINDS) {
-    themes = parts.length === 1 ? ['choosing', 'registration', 'local'] : ['local', 'choosing', 'registration'];
+    themes = top === 'aged-care-providers'
+      ? ['aged-care', 'choosing', parts.length === 1 ? 'registration' : 'local']
+      : parts.length === 1 ? ['choosing', 'registration', 'local'] : ['local', 'choosing', 'registration'];
   } else if (top === 'directory') {
     themes = parts[1] === 'in' ? ['local', 'choosing'] : ['choosing', 'agreement', 'registration'];
   } else if (top === 'condition') {
@@ -310,7 +312,7 @@ function relatedShellHtml(originalUrl: string): string {
     service = 'Support coordination';
     themes = ['funding', 'plan'];
   } else if (top === 'guides') {
-    themes = ['choosing', 'funding'];
+    themes = parts[1] === 'aged-care-support' ? ['aged-care', 'funding', 'choosing'] : ['choosing', 'funding'];
   } else if (['locations', 'find-a-provider', 'services'].includes(top)) {
     themes = ['local', 'choosing'];
   }

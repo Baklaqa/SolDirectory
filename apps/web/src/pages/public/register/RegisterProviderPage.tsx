@@ -193,7 +193,7 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
         )}
 
         {listing.claimStatus !== 'claimed' && <ClaimBox kind={kind} listing={listing} />}
-        <RelatedArticles themes={['choosing', 'registration', 'agreement']} heading="Before you contact a provider" />
+        <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'choosing', 'rights'] : ['choosing', 'registration', 'agreement']} heading="Before you contact a provider" />
       </main>
       <PublicFooter />
     </>

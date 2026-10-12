@@ -37,6 +37,17 @@ briefs, and schedules posts once a person has written them and they pass the che
 - contains the official summary sentence word for word;
 - sits on an official page that has changed since it was briefed.
 
+## Sources
+
+| Source | List page read | Terms |
+| --- | --- | --- |
+| NDIS news and media releases | `ndis.gov.au/news/latest` | NDIA licenses its content CC BY-NC |
+| NDIS pages recently updated | `ndis.gov.au/recent-content` | same |
+| My Aged Care news and updates | `myagedcare.gov.au/news-and-updates` | reproduction only unaltered, for personal or internal use, never commercial |
+
+Aged care items get their own WordPress category ("Aged care updates"). The same rules apply to both: facts only, original
+writing, cite the page, never auto-publish.
+
 ## Why it is built this way
 
 The NDIA's copyright page licenses its website content CC BY-NC 3.0, asks that it is not used for commercial
@@ -87,6 +98,5 @@ OFFICIAL_SOURCES_DETAIL_BACKOFF_MINUTES=360
 
 ## Adding another official source
 
-Add an entry to `SOURCES` in `officialSources.ts` with its list URL and a `parse` function returning
-`{ url, title, categories, publishedAt }`. Check its robots.txt and licence first. The NDIS Commission and aged care
-sites were not reachable from the development machine when this was built, so they are not included yet.
+Add an entry to `SOURCES` in `officialSources.ts` (and to `SOURCE_INFO`, which tells editors who publishes it and what its terms allow) with its list URL and a `parse` function returning
+`{ url, title, categories, publishedAt }`. Check its robots.txt and licence first. The NDIS Commission site was not reachable from the development machine when this was built, so it is not included yet.

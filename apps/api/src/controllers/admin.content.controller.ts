@@ -77,7 +77,7 @@ export async function listUpdates(req: AuthedRequest, res: Response) {
   res.json({
     items: items.map((d) => ({
       ...view(d),
-      related: classify({ title: d.title, categories: d.categories, headings: d.headings, kind: d.source === 'ndis-news' ? 'news' : 'page', publishedAt: d.publishedAt }).related,
+      related: classify({ title: d.title, categories: d.categories, headings: d.headings, kind: d.source === 'ndis-recent' ? 'page' : 'news', publishedAt: d.publishedAt }).related,
     })),
     page,
     total,

@@ -134,6 +134,12 @@ const RELATED_BY_CATEGORY: Record<string, { label: string; to: string }[]> = {
     { label: 'Practical guides', to: '/guides' },
     { label: 'Browse providers by location', to: '/locations' },
   ],
+  'Aged care': [
+    { label: 'Aged care support guide', to: '/guides/aged-care-support' },
+    { label: 'Find aged care providers', to: '/aged-care-providers' },
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'Browse providers by location', to: '/locations' },
+  ],
   'Service notices': [
     { label: 'All practical guides', to: '/guides' },
     { label: 'NDIS funding explained', to: '/funding' },

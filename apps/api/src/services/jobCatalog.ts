@@ -56,7 +56,7 @@ export const JOB_CATALOG: JobDefinition[] = [
   {
     name: 'ndis-news-monitor',
     label: 'Official source monitor',
-    description: 'Reads official NDIS news and recently updated pages (within robots.txt), records new and changed items, and prepares private editorial briefs. It never publishes.',
+    description: 'Reads official NDIS and My Aged Care news and recently updated pages (within robots.txt), records new and changed items, and prepares private editorial briefs. It never publishes.',
     schedule: 'Every 6 hours',
     cron: '0 */6 * * *',
     command: 'npm run job:ndis-news-monitor -w apps/api',

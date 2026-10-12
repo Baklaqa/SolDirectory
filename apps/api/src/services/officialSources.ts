@@ -14,6 +14,7 @@ import CrawlState from '../models/CrawlState.js';
 
 const USER_AGENT = 'SolDirectoryBot/1.0 (+https://directory.solbusinessconsultant.com.au; official-source monitor)';
 const NDIS_ORIGIN = 'https://www.ndis.gov.au';
+const MAC_ORIGIN = 'https://www.myagedcare.gov.au';
 const REQUEST_GAP_MS = Math.max(500, Number(process.env.OFFICIAL_SOURCES_GAP_MS) || 1500);
 const MAX_DETAIL_FETCHES = Math.max(1, Number(process.env.OFFICIAL_SOURCES_MAX_DETAILS) || 15);
 const RECHECK_PER_RUN = 3;
@@ -142,6 +143,32 @@ export interface Discovered {
   kind: 'news' | 'page';
 }
 
+/** Who publishes each source and what its terms allow, so every brief tells the editor the real rule. */
+export const SOURCE_INFO: Record<string, { org: string; short: string; licence: string; category: { name: string; slug: string } }> = {
+  'ndis-news': {
+    org: 'National Disability Insurance Agency',
+    short: 'NDIS',
+    licence: 'the NDIA licenses its website content CC BY-NC and asks that it is not used for commercial purposes',
+    category: { name: 'NDIS updates', slug: 'ndis-updates' },
+  },
+  'ndis-recent': {
+    org: 'National Disability Insurance Agency',
+    short: 'NDIS',
+    licence: 'the NDIA licenses its website content CC BY-NC and asks that it is not used for commercial purposes',
+    category: { name: 'NDIS updates', slug: 'ndis-updates' },
+  },
+  'myagedcare-news': {
+    org: 'Australian Government Department of Health, Disability and Ageing (My Aged Care)',
+    short: 'My Aged Care',
+    licence: 'the My Aged Care terms of use allow reproduction only in unaltered form for personal or internal use and never for a commercial purpose',
+    category: { name: 'Aged care updates', slug: 'aged-care-updates' },
+  },
+};
+
+export function sourceInfo(source: string) {
+  return SOURCE_INFO[source] ?? SOURCE_INFO['ndis-news'];
+}
+
 export interface SourceDefinition {
   id: string;
   label: string;
@@ -150,7 +177,18 @@ export interface SourceDefinition {
 }
 
 const clean = (s: string) => s.replace(/\s+/g, ' ').trim();
-const asDate = (s?: string) => { if (!s) return undefined; const d = new Date(s); return Number.isNaN(d.getTime()) ? undefined : d; };
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+/** "15 September 2026" means that calendar day in Australia, whatever timezone this runs in (02:00 UTC is midday in Sydney). */
+const asDate = (s?: string) => {
+  if (!s) return undefined;
+  const plain = /^(\d{1,2}) ([A-Za-z]+) (\d{4})$/.exec(s.trim());
+  if (plain) {
+    const month = MONTHS.indexOf(plain[2].toLowerCase());
+    if (month >= 0) return new Date(Date.UTC(Number(plain[3]), month, Number(plain[1]), 2));
+  }
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+};
 
 /** Pages worth tracking on the "recently updated" list: news, legislation, policy, pricing and published guidance. */
 const TRACKED_PATH = /^\/(?:news\/\d+-|changes-ndis(?:\/|$)|ndis-laws(?:\/|$)|understanding-ndis\/about-ndis\/our-guidelines(?:\/|$)|publications\/|policies-rules-and-legal\/|strategies\/|providers\/|participants\/|working-provider\/)/i;
@@ -204,6 +242,38 @@ export const SOURCES: SourceDefinition[] = [
   },
 ];
 
+const DATE_AT_END = /(\d{1,2} [A-Z][a-z]+ 20\d\d)(?!.*\d{1,2} [A-Z][a-z]+ 20\d\d)/;
+
+SOURCES.push({
+  id: 'myagedcare-news',
+  label: 'My Aged Care news and updates',
+  listUrl: `${MAC_ORIGIN}/news-and-updates`,
+  parse: ($) => {
+    const out: Discovered[] = [];
+    const seen = new Set<string>();
+    $('a[href^="/news-and-updates/"]').each((_, el) => {
+      const href = ($(el).attr('href') ?? '').split('#')[0].split('?')[0];
+      if (!/^\/news-and-updates\/[a-z0-9-]+$/i.test(href) || seen.has(href)) return;
+      const heading = clean($(el).find('h2, h3, h4').first().text());
+      const text = clean($(el).text());
+      const title = heading || clean($(el).attr('title') ?? '') || text.replace(DATE_AT_END, '').trim();
+      if (!title) return;
+      seen.add(href);
+      const dateText = DATE_AT_END.exec(text)?.[1];
+      out.push({
+        source: 'myagedcare-news',
+        url: `${MAC_ORIGIN}${href}`,
+        title,
+        categories: ['Aged care news'],
+        teaser: clean($(el).find('p').first().text()).slice(0, 300) || undefined,
+        publishedAt: asDate(dateText),
+        kind: 'news',
+      });
+    });
+    return out;
+  },
+});
+
 export async function discover(): Promise<{ items: Discovered[]; problems: string[] }> {
   const byUrl = new Map<string, Discovered>();
   const problems: string[] = [];
@@ -242,7 +312,7 @@ export async function readPage(url: string): Promise<PageFacts> {
   const NOISE = /^(resources?|related (?:links|content|information)|more information|share|on this page|contact us|useful links)$/i;
   const headings = root.find('h2, h3').map((_, h) => clean($(h).text())).get().filter((h) => h && h.length < 140 && !NOISE.test(h)).slice(0, 12);
   return {
-    title: clean($('h1').first().text()) || clean($('title').text().replace(/\s*\|\s*NDIS\s*$/i, '')),
+    title: clean($('h1').first().text()) || clean($('title').text().replace(/\s*\|\s*(NDIS|My Aged Care)\s*$/i, '')),
     publishedAt: asDate($('time[datetime]').first().attr('datetime')),
     headings,
     wordCount: text ? text.split(' ').length : 0,
@@ -277,6 +347,8 @@ export const TOPIC_RULES: TopicRule[] = [
     related: [{ label: 'Support coordination providers', path: '/find-a-provider?service=Support%20coordination' }] },
   { topic: 'workers', label: 'Support workers', test: /\b(support workers?|workers?|employ\w+|careers?)\b/i, weight: 6,
     related: [{ label: 'Independent workers', path: '/independent-workers' }] },
+  { topic: 'aged-care', label: 'Aged care', test: /\b(aged care|support at home|home care|chsp|commonwealth home support|residential|star ratings?|respite|aged care home|older people|seniors?)\b/i, weight: 16,
+    related: [{ label: 'Aged care support guide', path: '/guides/aged-care-support' }, { label: 'Find aged care providers', path: '/aged-care-providers' }, { label: 'Aged care costs explained', path: '/blog/aged-care-costs-what-you-may-be-asked-to-contribute' }] },
   { topic: 'enforcement', label: 'Fraud and enforcement', test: /\b(fraud|charged|scam|alleged|arrest\w*|court|sentenced|taskforce)\b/i, weight: -22,
     related: [{ label: 'Choosing a provider', path: '/guides/choosing-a-provider' }] },
   { topic: 'system-notices', label: 'System notices', test: /\b(system updates?|planned (?:system )?(?:updates?|outage|maintenance)|portal|outage|maintenance)\b/i, weight: -32, related: [] },
