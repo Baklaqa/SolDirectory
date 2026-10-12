@@ -7,8 +7,9 @@
     "dev": "vite",
     "images:optimize": "node scripts/optimizeImages.mjs",
     "images:fetch-banners": "node scripts/fetchBannerImages.mjs",
-    "build":"tsc -b && vite build && node scripts/prerender.mjs",
-    "preview": "vite preview"
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "images:blog-covers": "node scripts/generate-blog-covers.mjs"
   },
   "dependencies": {
     "@soldirectory/design-tokens": "*",

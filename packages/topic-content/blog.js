@@ -1,4 +1,5 @@
 import { GUIDE_POSTS } from './blogGuides.js';
+import { BLOG_COVERS } from './blogCovers.js';
 
 /** Time-sensitive explainers written from specific official announcements. Evergreen guides live in blogGuides.js. */
 const NEWS_POSTS = [
@@ -134,4 +135,13 @@ const NEWS_POSTS = [
   },
 ];
 
-export const EDITORIAL_BLOG_POSTS = [...NEWS_POSTS, ...GUIDE_POSTS];
+/**
+ * Every article has its own drawn cover (apps/web/scripts/generate-blog-covers.mjs), so no photograph repeats from one
+ * article to the next. An article without an entry in blogCovers.js keeps the photo written in its own record.
+ */
+const withCover = (post) => {
+  const cover = BLOG_COVERS[post.slug];
+  return cover ? { ...post, coverImage: `/images/blog/${post.slug}.jpg`, coverAlt: cover.alt } : post;
+};
+
+export const EDITORIAL_BLOG_POSTS = [...NEWS_POSTS, ...GUIDE_POSTS].map(withCover);

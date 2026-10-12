@@ -334,7 +334,7 @@ export default function BlogPage() {
           <main className="blog-article-page"><div className="blog-wrap"><section className="blog-not-found"><span className="blog-kicker">SolDirectory journal</span><h1>Article not found</h1><p>This article may have been unpublished or moved.</p><Link className="blog-primary-link" to="/blog">Browse latest updates</Link></section></div></main>
         ) : (
           <>
-            <header className="blog-hero-art" style={{ backgroundImage: `url(${postImage(article)})` }}>
+            <header className="blog-hero-art" style={{ backgroundImage: `url(${postImage(article)})`, ...(postImage(article).startsWith('/images/blog/') ? { backgroundPosition: '76% 50%' } : {}) }}>
               <div className="blog-hero-art-shade">
                 <div className="blog-wrap">
                   <nav className="blog-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/blog">Updates & insights</Link><span>/</span><span>{article.categories[0]?.name || 'Article'}</span></nav>
