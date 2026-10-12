@@ -10,6 +10,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const faqs = [
   { question: 'Does SolDirectory recommend or rank providers?', answer: 'No. Search results and directory listings are not recommendations. Coordinators should confirm suitability, registration, screening, insurance, availability, pricing and service terms directly.' },
@@ -62,6 +63,6 @@ export default function SupportCoordinators() {
       <section className="wp-cpt-section"><h2>Frequently asked questions</h2><div className="wp-cpt-faq-list">{faqs.map((faq) => <details className="wp-cpt-faq-item" key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
       <section className="wp-cpt-section"><h2>Official checks and guidance</h2><ul className="wp-cpt-plain-list"><li><a href="https://www.ndiscommission.gov.au/providers/provider-registers" target="_blank" rel="noopener noreferrer">NDIS Commission provider registers</a></li><li><a href="https://www.ndiscommission.gov.au/workers/worker-screening" target="_blank" rel="noopener noreferrer">NDIS worker screening</a></li><li><a href="https://www.ndis.gov.au/participants/working-providers" target="_blank" rel="noopener noreferrer">NDIS guidance on working with providers</a></li><li><a href="https://www.myagedcare.gov.au/find-a-provider" target="_blank" rel="noopener noreferrer">My Aged Care provider search</a></li></ul></section>
       <section id="contact" className="wp-cpt-cta"><h2>Contact SolDirectory</h2><p>Ask about using the directory or submit a provider enquiry. Do not send emergency requests through email or the directory.</p><div className="dir-empty-actions">{siteConfig.contactEmail && <a className="btn-secondary" href={`mailto:${siteConfig.contactEmail}`}>Email SolDirectory</a>}<button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry</button></div></section>
-    </main><PublicFooter />
+    <RelatedArticles service="Support coordination" themes={['funding', 'plan']} heading="Reading about support coordination" /></main><PublicFooter />
   </>;
 }

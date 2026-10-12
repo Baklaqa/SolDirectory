@@ -4,6 +4,7 @@ import { EDITORIAL_BLOG_POSTS } from '@soldirectory/topic-content';
 import { STATES } from '../../lib/registerMeta';
 import { setJsonLd } from '../../lib/seo';
 import './DirectoryExtras.css';
+import { blogThumb, fullImageFallback } from '../blog/blogThumb';
 
 /**
  * The reading part of /find-a-provider, below the results: shortcuts by support, how to choose, what the two kinds of
@@ -159,7 +160,7 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
             {guides.map((g) => (
               <li key={g.slug}>
                 <Link to={`/blog/${g.slug}`} className="dx-guide">
-                  <span className="dx-guide-photo"><img src={g.coverImage} alt="" loading="lazy" decoding="async" /></span>
+                  <span className="dx-guide-photo"><img src={blogThumb(g.coverImage)} onError={fullImageFallback(g.coverImage)} alt="" width={800} height={450} loading="lazy" decoding="async" /></span>
                   <span className="dx-guide-body">
                     <span className="dx-guide-cat">{g.category}</span>
                     <strong>{g.title}</strong>

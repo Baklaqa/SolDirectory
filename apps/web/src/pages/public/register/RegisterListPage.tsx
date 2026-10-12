@@ -13,6 +13,7 @@ import { Breadcrumbs, GetMatchedCta, VerifyNote, formatCount, titleCase, trimTo 
 import '../Home.css';
 import '../Directory.css';
 import './register.css';
+import RelatedArticles from '../../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 const NEARBY_SUBURBS = 18;
@@ -310,6 +311,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
           title={`Looking for support in ${areaName}?`}
           body="We match you with providers who have recently confirmed they can take on new people. It’s free and there’s no obligation."
         />
+        <RelatedArticles themes={['local', 'choosing', 'registration']} heading={`Reading before you choose in ${areaName}`} />
       </main>
 
       <PublicFooter />

@@ -16,6 +16,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 /** Mirrors MIN_INDEXABLE_PROVIDERS in the API's providersPublic.controller.ts. */
@@ -236,6 +237,8 @@ export default function ProviderListingPage({ mode }: { mode: Mode }) {
 
   return (
     <TopicLayout
+      relatedThemes={mode === 'area' ? ['local', 'choosing'] : ['assistive', 'choosing', 'funding']}
+      relatedHeading={mode === 'area' ? 'Reading before you choose a local provider' : 'Reading about supports and choosing a provider'}
       crumbs={[
         { label: 'Home', to: '/' },
         mode === 'area' ? { label: 'Provider directory', to: '/find-a-provider' } : { label: 'Condition', to: '/condition' },
@@ -509,6 +512,7 @@ export function ConditionsHubPage() {
           <div><span className="directory-section-label">Need support tailored to one person?</span><h2>Describe the person’s needs and preferences</h2><p>Send a free enquiry so relevant providers can review the support, location, funding and preferred timeframe.</p></div>
           <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry</button>
         </section>
+        <RelatedArticles themes={['assistive', 'choosing', 'funding']} heading="Reading about supports and choosing a provider" />
       </main>
       <PublicFooter />
     </>

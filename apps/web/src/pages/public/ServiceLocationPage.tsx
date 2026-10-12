@@ -25,6 +25,7 @@ import RegisterNearby from './register/RegisterNearby';
 import LocationWorkers from './register/LocationWorkers';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import './ServiceLocationPage.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 // REAL DATA, TWO SOURCES, PER THE ARCHITECTURE DECIDED WITH THE USER:
 //
@@ -98,6 +99,8 @@ export default function ServiceLocationPage() {
   const serviceLower = serviceName.toLowerCase();
   const serviceEditorial = serviceEditorialFor(serviceName);
   const suburbName = unslugify(suburbSlug);
+  // The catalogue name for this service, so its articles can be found ('personal-care' -> 'Personal care').
+  const catalogueService = SERVICES.find((s) => s !== 'All services' && slugify(s) === serviceSlug);
   // The real, register-backed route carries its own :state segment
   // (disambiguates same-named suburbs across states, same as
   // /ndis-providers/:state/:suburb) — the older two-segment illustrative
@@ -827,6 +830,8 @@ export default function ServiceLocationPage() {
           </div>
         </div>
       </section>
+
+      <RelatedArticles standalone service={catalogueService} themes={['local', 'choosing']} heading={`Reading about ${catalogueService ?? serviceName} in ${suburbName}`} />
 
       <PublicFooter />
     </>

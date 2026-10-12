@@ -68,3 +68,14 @@ export interface EditorialBlogPost {
 }
 
 export const EDITORIAL_BLOG_POSTS: readonly EditorialBlogPost[];
+
+export interface RelatedArticlesQuery {
+  /** A service name from the catalogue, e.g. "Personal care". */
+  service?: string;
+  /** Themes: choosing, registration, agreement, workers, funding, plan, housing, assistive, local, regional, moving, news. */
+  themes?: string[];
+  exclude?: string[];
+  limit?: number;
+  now?: number;
+}
+export function relatedArticles(query?: RelatedArticlesQuery): EditorialBlogPost[];

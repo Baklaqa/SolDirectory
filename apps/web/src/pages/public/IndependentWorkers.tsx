@@ -6,6 +6,7 @@ import { applySeoTags } from '../../lib/seo';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import './Home.css';
 import './IndependentWorkers.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const PROFILE_DETAILS = [
   ['Services and experience', 'The supports you deliver, relevant experience and the participant groups you work with.'],
@@ -169,6 +170,7 @@ export default function IndependentWorkers() {
             <button className="btn-gradient btn-lg" onClick={() => navigate('/signup?type=worker')}>Register as an Independent Worker</button>
           </section>
         </div>
+        <RelatedArticles standalone themes={['workers', 'choosing']} heading="Working with an independent worker" />
       </main>
       <PublicFooter />
     </>

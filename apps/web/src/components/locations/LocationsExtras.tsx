@@ -4,6 +4,7 @@ import { STATE_INFO } from '../../data/locationInfo';
 import { stateByCode } from '../../lib/registerMeta';
 import type { RegisterHub } from '../../api/registerApi';
 import './LocationsExtras.css';
+import { blogThumb, fullImageFallback } from '../blog/blogThumb';
 
 /**
  * Extra reading on /locations: how the public register is spread across the states (real counts from the register
@@ -111,7 +112,7 @@ export default function LocationsExtras({ ndis, aged }: { ndis: RegisterHub | nu
             {guides.map((g) => (
               <li key={g.slug}>
                 <Link className="lx-guide" to={`/blog/${g.slug}`}>
-                  <span className="lx-guide-photo"><img src={g.coverImage} alt="" loading="lazy" decoding="async" /></span>
+                  <span className="lx-guide-photo"><img src={blogThumb(g.coverImage)} onError={fullImageFallback(g.coverImage)} alt="" width={800} height={450} loading="lazy" decoding="async" /></span>
                   <span className="lx-guide-body">
                     <span className="lx-guide-cat">{g.category}</span>
                     <strong>{g.title}</strong>

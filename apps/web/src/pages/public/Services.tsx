@@ -8,6 +8,7 @@ import { applySeoTags } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import './Directory.css';
 import './Home.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 // `name` must match the service names providers register under (the
 // directory's ?service= filter and the live provider counts key off it).
@@ -126,6 +127,7 @@ export default function Services() {
           <div><span className="directory-section-label">Not sure where to begin?</span><h2>Describe the support once</h2><p>Send a free request with the support, location, timeframe and funding details. Relevant providers can review it and respond.</p></div>
           <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Get matched, free</button>
         </section>
+        <RelatedArticles themes={['choosing', 'funding']} heading="Reading to help you choose a support" />
       </main>
 
       <PublicFooter />

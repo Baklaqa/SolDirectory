@@ -13,6 +13,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 const fmt = (n: number) => n.toLocaleString('en-AU');
@@ -246,6 +247,7 @@ export default function WorkerFinder() {
           </div>
         </section>
       </section>
+      <RelatedArticles standalone themes={['workers', 'choosing']} heading="Working with an independent worker" />
       <PublicFooter />
     </>
   );

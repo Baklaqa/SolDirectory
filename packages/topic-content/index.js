@@ -269,3 +269,4 @@ export function languageShellEditorial(topic) {
     ],
   };
 }
+export { relatedArticles } from './blogRelated.js';

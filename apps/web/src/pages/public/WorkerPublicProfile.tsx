@@ -11,6 +11,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const chips = (items: string[], plain = true) => (
   <ul className="pp-chips">{items.map((i) => <li key={i} className={`pp-chip${plain ? ' pp-chip-plain' : ''}`}>{i}</li>)}</ul>
@@ -133,6 +134,7 @@ export default function WorkerPublicProfile() {
             <Link className="pp-aside-alt" to="/independent-workers/find">← Back to all workers</Link>
           </aside>
         </div>
+        <RelatedArticles themes={['workers', 'choosing']} heading="Working with an independent worker" />
       </main>
       <PublicFooter />
     </>

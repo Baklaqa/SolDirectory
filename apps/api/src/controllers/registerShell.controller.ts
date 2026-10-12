@@ -14,6 +14,7 @@ import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, pub
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
   CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  relatedArticles,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -279,6 +280,47 @@ function providerTitle(name: string, label: string, where: string): string {
 // Pages with no photo of their own still get a share card, from an image the site already uses.
 const DEFAULT_SHARE_IMAGE = '/images/providers.jpg';
 
+/**
+ * "Helpful reading" for crawlers: the same blog articles the website shows under each kind of page (see
+ * relatedArticles in @soldirectory/topic-content), chosen from the page's address.
+ */
+function relatedShellHtml(originalUrl: string): string {
+  const pathname = new URL(originalUrl, 'http://x').pathname;
+  const parts = pathname.replace(/^\/seo-shell/, '').split('/').filter(Boolean).map((p) => p.toLowerCase());
+  const top = parts[0];
+  if (!top || top === 'blog') return '';
+  let service: string | undefined;
+  let themes: string[] | null = null;
+  if (top === 'services' && (parts.length === 2 || parts.length === 4)) {
+    service = REAL_SERVICES.find((name) => slugifyService(name) === parts[1]);
+    themes = parts.length === 4 ? ['local', 'choosing'] : ['choosing'];
+  } else if (top in KINDS) {
+    themes = parts.length === 1 ? ['choosing', 'registration', 'local'] : ['local', 'choosing', 'registration'];
+  } else if (top === 'directory') {
+    themes = parts[1] === 'in' ? ['local', 'choosing'] : ['choosing', 'agreement', 'registration'];
+  } else if (top === 'condition') {
+    themes = ['assistive', 'choosing', 'funding'];
+  } else if (top === 'funding') {
+    themes = ['funding', 'plan', 'choosing'];
+  } else if (top === 'language') {
+    themes = ['choosing', 'registration'];
+  } else if (top === 'independent-workers') {
+    themes = ['workers', 'choosing'];
+  } else if (top === 'support-coordinators') {
+    service = 'Support coordination';
+    themes = ['funding', 'plan'];
+  } else if (top === 'guides') {
+    themes = ['choosing', 'funding'];
+  } else if (['locations', 'find-a-provider', 'services'].includes(top)) {
+    themes = ['local', 'choosing'];
+  }
+  if (!themes) return '';
+  const articles = relatedArticles({ service, themes, limit: 3 });
+  if (!articles.length) return '';
+  const heading = service ? `Reading about ${service}` : 'Helpful reading';
+  return `<section><h2>${esc(heading)}</h2><ul>${articles.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul><p><a href="/blog">All SolDirectory articles</a></p></section>`;
+}
+
 function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
   const head = [
@@ -304,7 +346,8 @@ function render(html: string, req: Request, page: Page, site: string): string {
   if (page.noindex) out = out.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, follow" />');
   out = out.replace('</head>', () => `    ${head}\n  </head>`);
   const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}</style>';
-  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${page.body}</main></div>`);
+  const related = page.canonical && !page.noindex ? relatedShellHtml(req.originalUrl) : '';
+  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${page.body}${related}</main></div>`);
 }
 
 // ---------------------------------------------------------------

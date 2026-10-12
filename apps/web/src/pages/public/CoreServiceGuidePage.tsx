@@ -8,6 +8,7 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import PageHero from '../../components/topic/PageHero';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import './LegalPage.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 export default function CoreServiceGuidePage({ slug }: { slug: string }) {
   const name = SERVICES.find((service) => service !== 'All services' && slugify(service) === slug);
@@ -49,6 +50,7 @@ export default function CoreServiceGuidePage({ slug }: { slug: string }) {
       <section className="legal-section"><h2>Funding considerations</h2>{editorial.funding.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section>
       <section className="legal-section"><h2>Safeguards and records</h2><ul className="guide-list">{editorial.safeguards.map((item) => <li key={item}>{item}</li>)}</ul></section>
       <section className="legal-section"><h2>Official information</h2><ul className="guide-list">{editorial.sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></section>
+      <RelatedArticles service={name} themes={['choosing']} />
       <nav className="legal-other" aria-label="Continue your search">
         <Link to={`/find-a-provider?service=${encodeURIComponent(name)}`}>Find {name.toLowerCase()} providers</Link>
         <Link to="/services">Browse all service guides</Link>

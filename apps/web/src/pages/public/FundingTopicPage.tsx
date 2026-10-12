@@ -18,6 +18,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 const fmt = (n: number) => n.toLocaleString('en-AU');
@@ -139,6 +140,8 @@ export default function FundingTopicPage() {
 
   return (
     <TopicLayout
+      relatedThemes={['funding', 'plan', 'choosing']}
+      relatedHeading="Reading about funding and plans"
       crumbs={[{ label: 'Home', to: '/' }, { label: 'Funding', to: '/funding' }, { label: meta.name }]}
       eyebrow={meta.categoryGroup}
       title={meta.name}
@@ -333,6 +336,7 @@ export function FundingHubPage() {
           <div><span className="directory-section-label">Ready to discuss support?</span><h2>Include the funding details in one request</h2><p>Tell providers how the support is funded, where it is needed and when you would like it to begin.</p></div>
           <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Get matched, free</button>
         </section>
+        <RelatedArticles themes={['funding', 'plan', 'choosing']} heading="Reading about funding and plans" />
       </main>
       <PublicFooter />
     </>

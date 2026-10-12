@@ -1,0 +1,26 @@
+/* Related blog articles under any page. Type follows the home page scale. */
+.ra { margin: clamp(48px, 6vw, 80px) 0 0; }
+.ra-standalone { max-width: var(--layout-content-max-width, 1440px); margin: clamp(48px, 6vw, 80px) auto 0; padding: 0 clamp(20px, 5vw, 56px) clamp(32px, 4vw, 56px); }
+.ra-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 28px; }
+.ra-eyebrow { display: block; margin-bottom: 10px; color: #0F4FA8; font-size: 13.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.ra-head h2 { margin: 0; color: #0B2343; font-size: clamp(28px, 3vw, 38px); font-weight: 700; line-height: 1.15; letter-spacing: 0; max-width: 28ch; }
+.ra-head p { margin: 12px 0 0; max-width: 62ch; color: #40546D; font-size: 17px; line-height: 1.7; }
+.ra-all { color: #0F4FA8; font-size: 16.5px; font-weight: 700; }
+.ra-list { list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 22px; }
+.ra-card { display: flex; flex-direction: column; height: 100%; overflow: hidden; border: 1px solid #DFE7F0; border-radius: 16px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 4px 14px rgba(11, 45, 92, 0.05); transition: translate 260ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 260ms ease; }
+.ra-card:hover { translate: 0 -4px; box-shadow: 0 22px 40px -20px rgba(11, 45, 92, 0.3); }
+.ra-card:focus-visible { outline: 3px solid #8CB8FF; outline-offset: 2px; }
+.ra-photo { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: #DCE8FA; }
+.ra-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.ra-card:hover .ra-photo img { transform: scale(1.06); }
+.ra-body { display: flex; flex-direction: column; gap: 8px; padding: 22px 22px 24px; flex: 1; }
+.ra-cat { color: #0F4FA8; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+.ra-body strong { color: #0B2343; font-size: 20px; line-height: 1.3; }
+.ra-body > span:not(.ra-cat):not(.ra-read) { color: #40546D; font-size: 16px; line-height: 1.65; }
+.ra-read { margin-top: auto; padding-top: 6px; color: #0F4FA8; font-size: 16px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) {
+  .ra-card, .ra-photo img { transition: none; }
+  .ra-card:hover { translate: none; }
+  .ra-card:hover .ra-photo img { transform: none; }
+}
+@media print { .ra { display: none; } }

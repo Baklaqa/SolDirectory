@@ -3,6 +3,7 @@ import { PublicHeader, PublicFooter } from '../../pages/public/PublicLayout';
 import { useMatchModal } from '../../context/MatchModalContext';
 import PageHero, { DEFAULT_PANEL_CHECKS, type HeroCrumb } from './PageHero';
 import '../../pages/wordpress/WordPressCPTPage.css';
+import RelatedArticles from '../blog/RelatedArticles';
 
 export type TopicCrumb = HeroCrumb;
 export interface TopicTocItem { id: string; label: string }
@@ -17,6 +18,10 @@ interface Props {
   /** Heading of the white call-to-action card in the banner. */
   panelTitle?: string;
   toc: TopicTocItem[];
+  /** What the "helpful reading" under the page should be about (see relatedArticles). */
+  relatedService?: string;
+  relatedThemes?: string[];
+  relatedHeading?: string;
   children: ReactNode;
 }
 
@@ -26,7 +31,7 @@ interface Props {
  * top, then the "On this page" sidebar and content column beneath it — the same
  * structure as a service page (WordPressCPTPage) and a service-in-suburb page.
  */
-export default function TopicLayout({ crumbs, eyebrow, title, description, image = '/images/providers.jpg', panelTitle = 'Find the right support', toc, children }: Props) {
+export default function TopicLayout({ crumbs, eyebrow, title, description, image = '/images/providers.jpg', panelTitle = 'Find the right support', toc, relatedService, relatedThemes, relatedHeading, children }: Props) {
   const { openMatchModal } = useMatchModal();
 
   return (
@@ -54,7 +59,10 @@ export default function TopicLayout({ crumbs, eyebrow, title, description, image
           </div>
         </aside>
 
-        <main className="svc-main wp-cpt-main">{children}</main>
+        <main className="svc-main wp-cpt-main">
+          {children}
+          <RelatedArticles service={relatedService} themes={relatedThemes ?? ['choosing']} heading={relatedHeading} />
+        </main>
       </div>
       <PublicFooter />
     </>

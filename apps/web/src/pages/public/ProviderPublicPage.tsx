@@ -12,6 +12,7 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const STATUS: Record<string, { label: string; tone: 'ok' | 'limited' | 'wait' | 'closed' }> = {
   'Open to referrals': { label: 'Accepting referrals', tone: 'ok' },
@@ -172,6 +173,7 @@ export default function ProviderPublicPage() {
             <Link className="pp-aside-alt" to="/find-a-provider">← Back to all providers</Link>
           </aside>
         </div>
+        <RelatedArticles themes={['choosing', 'agreement', 'registration']} heading="Before you contact a provider" />
       </main>
       <PublicFooter />
     </>

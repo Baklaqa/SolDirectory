@@ -10,6 +10,7 @@ import { Breadcrumbs, GetMatchedCta, ListBusinessCta, VerifyNote, formatCount, t
 import '../Home.css';
 import '../Directory.css';
 import './register.css';
+import RelatedArticles from '../../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 const TOP_SUBURBS = 24;
@@ -209,6 +210,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
             />
           </>
         )}
+        <RelatedArticles themes={['choosing', 'registration', 'local']} heading="Reading before you choose a provider" />
       </main>
 
       <PublicFooter />

@@ -18,6 +18,8 @@ import { runAction } from '../../lib/runAction';
 import { decodeHtmlEntities } from '../../lib/decodeHtmlEntities';
 import CoreServiceGuidePage from '../public/CoreServiceGuidePage';
 import './WordPressCPTPage.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
+import { SERVICES } from '../../data/providers';
 
 interface FAQItem { question: string; answer: string }
 interface HeroStat { label: string; value: string; description?: string }
@@ -495,6 +497,11 @@ export default function WordPressCPTPage({ config }: { config: CPTRouteConfig })
                 <p className="wp-cpt-table-note">General information only, not advice. Confirm details with the NDIS, your planner or the provider.</p>
               </section>
             )}
+
+            <RelatedArticles
+              service={SERVICES.find((name) => name !== 'All services' && (content?.title ?? '').toLowerCase().includes(name.toLowerCase()))}
+              themes={config.pathPrefix === 'locations' ? ['local', 'choosing'] : ['choosing']}
+            />
 
             <section id="wp-cpt-cta" className="wp-cpt-cta">
               <h2>{ctaHeading || 'Ready to find the right support?'}</h2>

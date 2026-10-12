@@ -13,6 +13,7 @@ import { useMatchModal } from '../../../context/MatchModalContext';
 import '../Home.css';
 import '../Directory.css';
 import './register.css';
+import RelatedArticles from '../../../components/blog/RelatedArticles';
 
 /** /ndis-providers/{slug} — one listing, written from its real register data only. */
 export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKind; slug: string }) {
@@ -192,6 +193,7 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
         )}
 
         {listing.claimStatus !== 'claimed' && <ClaimBox kind={kind} listing={listing} />}
+        <RelatedArticles themes={['choosing', 'registration', 'agreement']} heading="Before you contact a provider" />
       </main>
       <PublicFooter />
     </>

@@ -638,4 +638,199 @@ export const GUIDE_POSTS = [
       },
     ],
   },
+  {
+    slug: 'personal-care-and-daily-living-supports-what-to-ask',
+    title: 'Personal care and daily living supports: what to ask a provider',
+    summary: 'Help with showering, dressing, meals and the household is personal. These are the questions that help you set routines, protect your dignity and keep control.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T11:40:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/personal-care-2.jpg',
+    coverAlt: 'Two older women holding hands with a younger woman',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers') },
+    ],
+    sections: [
+      {
+        heading: 'What daily living supports are for',
+        paragraphs: [
+          'Personal care and daily living supports help with everyday tasks such as showering, dressing, preparing meals, taking medication as prescribed and looking after the home. The aim is for you to live as independently as you can, in the way you choose, rather than to do things for you that you can do yourself.',
+          'What your plan includes is decided individually. Check how much support is funded and for which tasks before you ask a provider to quote.',
+        ],
+      },
+      {
+        heading: 'Describe the routine you want',
+        paragraphs: [
+          'Before the first visit, write down what happens on a good day: times, steps, products, preferences and anything that matters to you, such as privacy, the order of tasks or who is in the room. A provider can only respect a routine it has been told about.',
+          'You can ask for a worker of a particular gender, for a small team of regular workers, or for someone who speaks your language. A good provider will say what it can and cannot do, rather than promising everything.',
+        ],
+      },
+      {
+        heading: 'Questions about the workers',
+        paragraphs: [
+          'Ask who will come, how workers are trained for this kind of support, and how they are supervised. Ask what happens if your regular worker is away and how you will be told who is covering.',
+          'Ask how a worker will know your routine, whether notes are kept, and how you can see or correct them. Continuity matters most for personal care because you should not have to explain yourself to a stranger each time.',
+        ],
+      },
+      {
+        heading: 'Dignity, consent and feedback',
+        paragraphs: [
+          'You are entitled to be treated with respect, to say no to something, and to ask for a task to be done differently. Ask how the provider handles a request to change the routine and how you can raise a concern, including with someone other than the worker concerned.',
+          'Review how things are going after the first few weeks, and again when your needs change. Keep notes of what is working and what is not so you can use them at your next plan review. This is general information, not advice about your plan.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'transport-and-the-ndis-getting-to-appointments-and-activities',
+    title: 'Transport and the NDIS: getting to appointments and activities',
+    summary: 'Transport funding is set apart from other supports and works differently. Here is how to think about using it and what to ask a provider who drives.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T11:30:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/transport.jpg',
+    coverAlt: 'A man in a wheelchair beside a car, smiling',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'Transport is usually its own budget',
+        paragraphs: [
+          'Where transport is included in a plan, it is generally funded separately from your other supports and is set according to your circumstances. It is not simply a share of your support budget, so check your plan to see whether you have it and how it is meant to be used.',
+          'The amount and the rules differ from person to person. If you are unsure whether a particular journey is covered, ask your plan manager, support coordinator or the NDIA before you rely on it.',
+        ],
+      },
+      {
+        heading: 'What transport funding is for',
+        paragraphs: [
+          'Transport funding is intended to help you travel to activities connected to your goals and plan, such as community participation, work or study. It is generally not a general allowance for all travel. Everyday medical trips, for example, are often treated differently.',
+          'Keep a simple record of journeys, purposes and costs so you can show how funding was used if asked.',
+        ],
+      },
+      {
+        heading: 'Options to think about',
+        paragraphs: [
+          'You might use public transport, taxis or ride-share, community transport, a support worker who drives, or your own or a family member’s vehicle. Each has different costs and suits different needs. If you use a wheelchair or need assistance getting in and out of a vehicle, check accessibility before you book.',
+          'A support worker travelling with you may be charged for their time as well as the trip, so ask how the costs are split and how the journey is recorded.',
+        ],
+      },
+      {
+        heading: 'Questions to ask a provider who drives',
+        paragraphs: [
+          'Ask whose vehicle is used, how it is insured and whether it suits your equipment. Ask how time and distance are charged, whether there are minimum charges, and what happens if a trip is cancelled or delayed.',
+          'Put the answers in your service agreement so the costs on your invoice match what you expected. This is general information, not advice about your plan.',
+        ],
+      },
+      {
+        heading: 'Plan ahead and have a back-up',
+        paragraphs: [
+          'Accessible vehicles and regular drivers can be booked out, so arrange regular trips as standing bookings where you can. Have a second option for when the first falls through, such as a different taxi service or a person who can step in, and ask what happens if weather or a vehicle breakdown affects a planned trip.',
+          'Keep receipts and notes so that you can show what transport was used for, and review at the end of each period whether the budget is lasting the way you expected.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'choosing-a-therapist-occupational-therapy-physiotherapy-speech-pathology',
+    title: 'Choosing a therapist: occupational therapy, physiotherapy and speech pathology',
+    summary: 'Three common therapies with different focuses. Here is how to work out where to start and what to ask before booking.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T11:20:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/therapy-2.jpg',
+    coverAlt: 'A physiotherapist treating a woman on a treatment table',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Assistive technology', url: ndis('/participants/assistive-technology') },
+    ],
+    sections: [
+      {
+        heading: 'Three therapies, three focuses',
+        paragraphs: [
+          'Occupational therapy generally focuses on doing everyday activities: daily routines, the home, equipment and how tasks are set up. Physiotherapy generally focuses on movement, strength, balance, mobility and pain. Speech pathology generally focuses on communication and, for some people, eating and swallowing.',
+          'Many people benefit from more than one, and the lines overlap. A therapist should be able to tell you honestly when another discipline would be better placed to help.',
+        ],
+      },
+      {
+        heading: 'Start from the goal',
+        paragraphs: [
+          'Choose by what you want to be able to do, not by the name of the therapy. “Make it safer to shower”, “walk to the shops”, or “be understood by my family” each point to a different starting place. Write the goal down and take it to the first appointment.',
+        ],
+      },
+      {
+        heading: 'Questions to ask a therapist',
+        paragraphs: [
+          'Ask how much experience they have with your condition and your age group, how an assessment works, how many sessions to expect and how you will know whether it is working. Ask whether they work in your home or community or only in a clinic, and whether some sessions can be done by phone or video.',
+          'Ask who else they will involve, such as family, support workers or school staff, and how they teach others to carry on the work between sessions. Ask what reports you will receive and when.',
+        ],
+      },
+      {
+        heading: 'Costs, reports and plan reviews',
+        paragraphs: [
+          'Ask about the charge for the session itself and for travel, report writing and preparation, and check how these will appear on invoices. Therapies usually sit in a particular part of your budget, so check which one and how much is left.',
+          'Reports from therapists are among the most useful evidence at a plan review, so ask for one that links the recommendations to your goals. This is general information, not advice about your plan.',
+        ],
+      },
+      {
+        heading: 'Make the sessions count between appointments',
+        paragraphs: [
+          'Therapy usually works best when what is practised in the session carries on at home and in the community. Ask for a short written or visual plan that you and the people around you can follow, and agree who will do what.',
+          'Tell the therapist plainly if something is not working, is too hard or does not fit your routine. A good therapist will adjust the plan rather than expect you to cope with one that does not suit you.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'nursing-and-health-supports-at-home-what-the-ndis-covers',
+    title: 'Nursing and health supports at home: where the NDIS fits',
+    summary: 'The NDIS funds supports related to disability, while the health system covers other care. Here is how to make sense of the boundary and what to ask a nurse or provider.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T11:10:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/older-people-2.jpg',
+    coverAlt: 'A carer in a face mask with an older woman, both smiling',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'Two systems, one person',
+        paragraphs: [
+          'The NDIS funds supports that are related to a person’s disability. Health care, such as treatment of illness and injury, is generally the responsibility of the health system, including GPs, hospitals and public health services. Some needs sit between the two, and the boundary is not always obvious.',
+          'If a service is declined as a health responsibility, ask which system is expected to provide it and who you should speak to. A support coordinator can often help work out the answer.',
+        ],
+      },
+      {
+        heading: 'Where nursing may come in',
+        paragraphs: [
+          'Some plans include nursing support for needs that arise from a disability, for example help with continence, wound care, or other ongoing health tasks that cannot safely be done without clinical skills. Whether yours does depends on your needs and what the NDIA has decided is reasonable and necessary.',
+        ],
+      },
+      {
+        heading: 'Who should deliver it',
+        paragraphs: [
+          'Clinical tasks should be done by someone with the right qualifications. Ask whether the nurse is registered with the national regulator, what experience they have with your needs and what training other workers have for any tasks delegated to them.',
+          'Ask how medication, health information and changes in condition are recorded and shared with your GP or specialists, so care is consistent across everyone involved.',
+        ],
+      },
+      {
+        heading: 'Questions to ask before you start',
+        paragraphs: [
+          'Ask how often the nurse will visit, what happens if there is an emergency and who you should call out of hours. Ask how the service will be charged, whether travel or after-hours rates apply and how those will appear on invoices.',
+          'Keep your GP informed about the supports you use. This is general information, not medical or plan advice; speak to your health professionals and your plan manager or support coordinator about your own situation.',
+        ],
+      },
+      {
+        heading: 'When your needs change',
+        paragraphs: [
+          'Health needs can change after an illness, injury or hospital stay, and that can affect the supports you need. Keep letters or reports from your doctors and nurses that describe the change, and share them with your support coordinator or the NDIA when you ask about a change to your plan.',
+          'If a hospital stay is planned, ask the hospital and your support coordinator early about arrangements for coming home, so supports are in place before discharge rather than arranged in a rush.',
+        ],
+      },
+    ],
+  },
 ];

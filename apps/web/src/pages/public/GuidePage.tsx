@@ -5,6 +5,7 @@ import { GUIDE_DOCS } from '@soldirectory/topic-content';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import './LegalPage.css';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 
 /** One template for all four guide pages — pass the doc's slug. */
 export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | string }) {
@@ -76,6 +77,7 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
           </p>
         </section>
 
+        <RelatedArticles themes={['choosing', 'funding']} heading="More to read" />
         <nav className="legal-other" aria-label="Other guides">
           {Object.values(GUIDE_DOCS).filter((d) => d.slug !== doc.slug).map((d) => (
             <Link key={d.slug} to={`/guides/${d.slug}`}>{d.title}</Link>
