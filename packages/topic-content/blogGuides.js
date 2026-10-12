@@ -116,6 +116,8 @@ export const GUIDE_POSTS = [
     coverAlt: 'Printed forms, a calculator and a phone on a table',
     source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities') },
+
       { label: 'NDIS pricing arrangements', url: ndis('/providers/pricing-and-payments/pricing/pricing-arrangements') },
     ],
     sections: [
@@ -160,6 +162,8 @@ export const GUIDE_POSTS = [
     coverAlt: 'Two older women sitting together on a sofa',
     source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Support workers and recovery coaches', url: ndis('/participants/working-providers/support-workers-and-recovery-coaches') },
+
       { label: 'NDIS Quality and Safeguards Commission', url: 'https://www.ndiscommission.gov.au/' },
     ],
     sections: [
@@ -211,6 +215,9 @@ export const GUIDE_POSTS = [
     coverAlt: 'A laptop, phone and notebook on a white desk',
     source: { label: 'NDIS: How to self-manage your funding', url: ndis('/participants/using-your-funding/self-managed-funding/how-self-manage-your-funding'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Plan-managed funding', url: ndis('/participants/using-your-funding/plan-managed-funding') },
+      { label: 'NDIS: NDIA-managed funding', url: ndis('/participants/using-your-funding/ndia-managed') },
+
       { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
     ],
     sections: [
@@ -259,6 +266,8 @@ export const GUIDE_POSTS = [
     coverAlt: 'A laptop showing a spreadsheet beside a calculator and notebooks',
     source: { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Support coordinators and plan managers', url: ndis('/participants/working-providers/support-coordinators-and-plan-managers') },
+
       { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports') },
     ],
     sections: [
@@ -308,6 +317,8 @@ export const GUIDE_POSTS = [
     coverAlt: 'A woman reading a letter at a kitchen table while another person looks on',
     source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Support coordinators and plan managers', url: ndis('/participants/working-providers/support-coordinators-and-plan-managers') },
+
       { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
     ],
     sections: [
@@ -358,6 +369,8 @@ export const GUIDE_POSTS = [
     coverAlt: 'Papers, a calculator and a cup of coffee on a desk',
     source: { label: 'NDIS: Changing your plan', url: ndis('/participants/changing-your-plan'), date: 'Current guidance page' },
     additionalSources: [
+      { label: 'NDIS: Preparing for your plan meeting', url: ndis('/participants/creating-plan/preparing-your-plan-meeting') },
+
       { label: 'NDIS: Creating your plan', url: ndis('/participants/creating-plan') },
     ],
     sections: [
@@ -829,6 +842,549 @@ export const GUIDE_POSTS = [
         paragraphs: [
           'Health needs can change after an illness, injury or hospital stay, and that can affect the supports you need. Keep letters or reports from your doctors and nurses that describe the change, and share them with your support coordinator or the NDIA when you ask about a change to your plan.',
           'If a hospital stay is planned, ask the hospital and your support coordinator early about arrangements for coming home, so supports are in place before discharge rather than arranged in a rush.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'how-to-change-ndis-provider-without-losing-support',
+    title: 'How to change NDIS provider without losing support',
+    summary: 'You are allowed to change providers. A little planning means the new service is ready before the old one ends, and nothing falls through the gap.',
+    category: 'Choosing providers',
+    publishedAt: '2026-10-12T13:00:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/general-2.jpg',
+    coverAlt: 'Two men talking at a table in a bright room',
+    source: { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers') },
+    ],
+    sections: [
+      {
+        heading: 'You are allowed to change',
+        paragraphs: [
+          'Choice and control are central to the NDIS, which means you can choose your providers and change them. You do not usually need the current provider’s agreement to move on, although you do need to follow the notice terms in any service agreement you signed.',
+          'Wanting to change does not mean something has gone badly wrong. Needs shift, workers leave and people simply find a better fit. What matters is doing it in a way that keeps you supported.',
+        ],
+      },
+      {
+        heading: 'Line up the new service before ending the old one',
+        paragraphs: [
+          'Contact the new provider first and ask when they could start, who would support you and what they need from you. Ask for their service agreement to read before you commit. Only end the existing service once you know when the new one begins, so there is no gap.',
+          'If you rely on regular routines, medication prompts or personal care, plan a handover period of a few days or weeks where possible, so the new workers learn how you like things done.',
+        ],
+      },
+      {
+        heading: 'Check notice, charges and your budget',
+        paragraphs: [
+          'Read the notice period and any cancellation terms in your current agreement and give notice in writing, keeping a copy. Ask for a final invoice so it can be paid from the correct part of your plan, and ask your plan manager to confirm there are no outstanding claims.',
+          'Tell your plan manager and support coordinator about the change so invoices go to the right place and your budget statements stay accurate.',
+        ],
+      },
+      {
+        heading: 'Sharing information and keeping records',
+        paragraphs: [
+          'With your consent, ask the current provider to pass on useful information such as routines, preferences, risks and recent reports. You decide what is shared. Take your own copies of anything you are given, and keep the emails and notes about the change.',
+          'If you are changing because of a concern about safety or conduct, see our guide to making a complaint. This article is general information, not advice about your own agreement or plan.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'making-a-complaint-about-an-ndis-provider-or-worker',
+    title: 'Making a complaint about an NDIS provider or worker: where to start',
+    summary: 'Raising a concern can feel daunting. Here is a clear order of steps, who deals with what, and how to keep a record as you go.',
+    category: 'Your rights',
+    publishedAt: '2026-10-12T12:50:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/mental-health-2.jpg',
+    coverAlt: 'Two women talking on a sofa',
+    source: { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Feedback and complaints about the NDIA', url: ndis('/contact/feedback-and-enquiries') },
+      { label: 'NDIS Quality and Safeguards Commission', url: 'https://www.ndiscommission.gov.au/' },
+    ],
+    sections: [
+      {
+        heading: 'If someone is in danger',
+        paragraphs: [
+          'If a person is in immediate danger or needs urgent medical help, contact emergency services first. A complaint can wait; safety cannot.',
+        ],
+      },
+      {
+        heading: 'Start with the provider, if it is safe to',
+        paragraphs: [
+          'Most providers have a complaints process, and many problems are resolved by raising them there. Ask for the process in writing, say clearly what happened, when and what you would like to change, and ask when you can expect a response.',
+          'If it is not safe or comfortable to raise it with the provider, or the concern is about something serious, you do not have to go through them first. You can go straight to the body that oversees providers.',
+        ],
+      },
+      {
+        heading: 'When to go to the NDIS Commission',
+        paragraphs: [
+          'The NDIS Quality and Safeguards Commission oversees the quality and safety of NDIS supports. It handles complaints about registered providers and also about workers and providers who are not registered. It can also take serious matters further. Contact the Commission if the provider does not respond, you are not satisfied with its response, or the concern is serious.',
+          'Complaints about a decision or the service of the NDIA itself are handled differently, through the NDIA’s own feedback and complaints process.',
+        ],
+      },
+      {
+        heading: 'Keep a record, and get support',
+        paragraphs: [
+          'Write down what happened as soon as you can, with dates, names and who else was there. Keep emails, messages, invoices and any shift notes. A short timeline is easier for everyone to follow than a long account.',
+          'You do not have to do this alone. An independent advocate, a support coordinator, a trusted family member or friend can help you prepare and attend meetings. This article is general information, not legal advice.',
+        ],
+      },
+      {
+        heading: 'What to expect afterwards',
+        paragraphs: [
+          'A provider or the Commission will usually acknowledge your complaint and may ask for more information. Ask how long a response is likely to take and ask for the outcome in writing. If you are not satisfied with the result, ask what options exist to have it looked at again.',
+          'You should not be treated worse for raising a concern. If you think that is happening, say so in writing and tell the body overseeing the complaint.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'your-rights-as-an-ndis-participant-choice-control-and-safety',
+    title: 'Your rights as an NDIS participant: choice, control and safety',
+    summary: 'Knowing what you can expect from providers and workers makes it easier to speak up. Here is a plain-language summary of rights and responsibilities.',
+    category: 'Your rights',
+    publishedAt: '2026-10-12T12:40:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/condition-intellectual.jpg',
+    coverAlt: 'Three women smiling together against a red wall',
+    source: { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers') },
+      { label: 'NDIS Quality and Safeguards Commission', url: 'https://www.ndiscommission.gov.au/' },
+    ],
+    sections: [
+      {
+        heading: 'Choice and control',
+        paragraphs: [
+          'You have the right to make decisions about your own life and supports, including which providers to use, what your supports look like day to day and when to change them. Other people can help you decide, but the decisions are yours unless a formal arrangement says otherwise.',
+          'You can ask questions, ask for information in a format you can use, and take time to decide before you sign anything.',
+        ],
+      },
+      {
+        heading: 'Respect, privacy and dignity',
+        paragraphs: [
+          'You should be treated with respect, and your personal information should be kept private and shared only for good reasons and with your consent. That includes what is written in shift notes, shared with other services or passed to someone else in your life.',
+        ],
+      },
+      {
+        heading: 'Safe, competent support',
+        paragraphs: [
+          'The NDIS Code of Conduct sets expectations for providers and workers, whether or not they are registered. In summary, it asks them to act with respect for your rights, respect your privacy, provide supports safely and competently, act with honesty and transparency, raise and act on concerns about safety and quality, and take steps to prevent and respond to violence, exploitation, neglect, abuse and sexual misconduct.',
+          'You should not accept less than that. If a worker or provider falls short, there are ways to raise it, set out in our guide to making a complaint.',
+        ],
+      },
+      {
+        heading: 'What is expected of you',
+        paragraphs: [
+          'Rights come with some responsibilities. These include giving accurate information, using your funding for the supports it was approved for, keeping records where required, and telling the NDIA about important changes in your circumstances. Check the official page for the current list.',
+          'This is general information, not legal advice. If you need help understanding your rights in a particular situation, an independent advocacy service can help.',
+        ],
+      },
+      {
+        heading: 'Putting your rights into practice',
+        paragraphs: [
+          'Rights are easier to use when you have simple phrases ready. “I would like time to think about that.” “Please put that in writing.” “I would prefer a different worker.” “Please do not share that without asking me.” A good provider will take requests like these in its stride.',
+          'Keep a note of anything that concerns you while it is fresh, and tell someone you trust. Speaking up early usually makes it easier to fix.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'ndis-jargon-explained-terms-you-will-hear',
+    title: 'NDIS jargon explained: the terms you will hear and what they mean',
+    summary: 'Plans, supports, coordinators, managers, registered providers: a plain-language glossary of the words that come up most often.',
+    category: 'Plans and funding',
+    publishedAt: '2026-10-12T12:30:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/guides-3.jpg',
+    coverAlt: 'A woman reading a notebook at a cafe table',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Creating your plan', url: ndis('/participants/creating-plan') },
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'About your plan',
+        paragraphs: [
+          'A participant is a person with an approved NDIS plan. Your plan sets out your goals and the funding for supports to help you reach them. “Reasonable and necessary” is the test used to decide whether a support can be funded: broadly, that it relates to your disability, helps you pursue your goals and is good value.',
+          'A plan review or reassessment is a scheduled look at how your plan has worked and what should change. A plan variation is a change to an existing plan, usually when something has changed in your circumstances.',
+        ],
+      },
+      {
+        heading: 'About money',
+        paragraphs: [
+          'Funding has traditionally been grouped into Core, Capacity Building and Capital budgets. Pricing arrangements set the maximum amounts that can be charged for many supports. A claim is a request for payment for a support that has been delivered, usually made by a provider, plan manager or you if you self-manage.',
+          'Management type describes who looks after the money: the NDIA, a plan manager, or you.',
+        ],
+      },
+      {
+        heading: 'About the people',
+        paragraphs: [
+          'A support coordinator helps you use your plan. A plan manager handles payments and budget tracking. A local area coordinator, where the NDIA works through them, helps people understand the NDIS and prepare for planning. A nominee is someone formally appointed to act for you or receive information on your behalf.',
+          'A registered provider has been approved by the NDIS Quality and Safeguards Commission; an unregistered provider has not, but still must follow the Code of Conduct.',
+        ],
+      },
+      {
+        heading: 'About homes and equipment',
+        paragraphs: [
+          'Specialist Disability Accommodation (SDA) is a type of housing designed for people with very high support needs. Supported Independent Living (SIL) is help with daily tasks in a shared or individual home. Assistive technology means equipment that helps you do things you would otherwise find hard, and home modifications are changes to your home to make it safer or more accessible.',
+          'If you hear a term you do not know, ask for it to be explained. A good provider or coordinator will not mind. This is general information, not advice about your plan.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'keeping-records-of-your-ndis-supports-a-simple-system',
+    title: 'Keeping records of your NDIS supports: a simple system',
+    summary: 'Good records make plan reviews, claim queries and changes of provider far easier. Here is a light-touch way to keep them.',
+    category: 'Plans and funding',
+    publishedAt: '2026-10-12T12:20:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/funding-veterans.jpg',
+    coverAlt: 'A woman sitting in an armchair going through papers',
+    source: { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Self-managed funding', url: ndis('/participants/using-your-funding/self-managed-funding') },
+      { label: 'NDIS: Plan-managed funding', url: ndis('/participants/using-your-funding/plan-managed-funding') },
+    ],
+    sections: [
+      {
+        heading: 'Why bother',
+        paragraphs: [
+          'Records are your evidence. They show what supports you used, what they cost and what difference they made. That helps at a plan review, when a claim is queried, when you change provider or when something goes wrong and you need to explain what happened.',
+          'If you self-manage, there are record-keeping expectations for the funding you spend, so check the official page for what applies to you.',
+        ],
+      },
+      {
+        heading: 'What to keep',
+        paragraphs: [
+          'Keep a copy of your current plan and any earlier ones, and your service agreements. Keep invoices and receipts for supports and purchases, and any statements from your plan manager. Keep reports from therapists and doctors, and a log of important phone calls and emails with dates and names.',
+          'Notes about how supports are going, such as what worked, what did not and what changed, are surprisingly useful at review time.',
+        ],
+      },
+      {
+        heading: 'A system that is easy to keep up',
+        paragraphs: [
+          'One folder, on paper or on a device, is enough. Inside, use a few simple sections: plan, agreements, invoices, reports and notes. Name files with the date first so they sort in order. Take a photo of paper documents as soon as you receive them.',
+          'Set a monthly reminder to check that invoices match what was delivered and to compare your budget statement with what you expected. Small errors are easier to fix when they are fresh.',
+        ],
+      },
+      {
+        heading: 'Privacy and backups',
+        paragraphs: [
+          'These records contain private information, so keep them somewhere secure and share only what is needed. Keep a backup in a second place, and let a trusted person know where to find things if you are unwell or away. This is general information, not advice about your obligations.',
+        ],
+      },
+      {
+        heading: 'Using your records at a review',
+        paragraphs: [
+          'Before a plan review, sort your notes by goal. For each goal, write down what you did, what helped and what did not, with a date and a document to back it up. A one-page summary with reports attached is far more persuasive than a pile of invoices.',
+          'Note also any supports you could not get, and why. That shows the difference between not needing something and not being able to find it.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'nominees-and-supporters-helping-someone-with-their-ndis-plan',
+    title: 'Nominees and supporters: helping someone with their NDIS plan',
+    summary: 'Family and friends often help with the NDIS. Here is the difference between informal support and a formal nominee, and how to keep the person at the centre.',
+    category: 'Your rights',
+    publishedAt: '2026-10-12T12:10:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/older-people-3.jpg',
+    coverAlt: 'Two older women standing together in a park, one using a wheelchair',
+    source: { label: 'NDIS: Creating your plan', url: ndis('/participants/creating-plan'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities') },
+      { label: 'NDIS: Preparing for your plan meeting', url: ndis('/participants/creating-plan/preparing-your-plan-meeting') },
+    ],
+    sections: [
+      {
+        heading: 'Support without a formal role',
+        paragraphs: [
+          'Many people have a family member, friend or carer who comes to meetings, helps read letters and talks through decisions. That is informal support, and it does not need any special arrangement. The important thing is that the person still makes their own choices, with help to understand the options.',
+        ],
+      },
+      {
+        heading: 'What a nominee is',
+        paragraphs: [
+          'A nominee is a person formally appointed with the NDIA to act on a participant’s behalf. There are different kinds. Some nominees can make decisions about the plan, and others can only receive correspondence. The NDIA has a process for appointing and ending a nominee arrangement, and it can depend on the person’s circumstances.',
+          'Appointing a nominee is a serious step. It is not needed just because someone wants help, and many people only need informal support.',
+        ],
+      },
+      {
+        heading: 'Keeping the person at the centre',
+        paragraphs: [
+          'Whether you are a supporter or a nominee, start with what the person wants. Ask, listen and explain choices in a way they can understand. Give them time. Check in about whether the plan reflects their goals, not just what is easiest for others.',
+          'Agree what information can be shared with whom, and write it down. If the person can make some decisions but not others, work with them on which is which.',
+        ],
+      },
+      {
+        heading: 'Practical tips for supporters',
+        paragraphs: [
+          'Go to meetings prepared, with a short list of what matters most. Keep records of what is agreed. Take care of your own wellbeing too, because supporters who are exhausted make poorer decisions. If you are unsure about your role, ask the NDIA or an independent advocacy service to explain it. This is general information, not legal advice.',
+        ],
+      },
+      {
+        heading: 'Reviewing the arrangement over time',
+        paragraphs: [
+          'A person’s ability to make decisions can change, and so can their circumstances. Review any nominee arrangement from time to time and ask whether it is still needed, whether it should be narrower, or whether the person can take on more themselves.',
+          'If an arrangement is no longer needed, contact the NDIA about how to end it. The person’s own wishes should guide this wherever possible.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'a-back-up-plan-for-your-ndis-supports-emergencies-and-disruptions',
+    title: 'A back-up plan for your supports: emergencies and disruptions',
+    summary: 'Illness, a provider closing, bad weather or a power outage can all interrupt support. A short back-up plan makes those days easier.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T12:00:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/condition-mobility.jpg',
+    coverAlt: 'A man sitting on a mobility walker outside a building',
+    source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'What can go wrong',
+        paragraphs: [
+          'A regular worker is unwell. A provider has a staffing gap or closes. A storm, fire, flood or heatwave makes travel unsafe. A power cut affects equipment that needs electricity. You or a family carer end up in hospital. These are all ordinary events, and a plan made in advance turns a crisis into an inconvenience.',
+        ],
+      },
+      {
+        heading: 'Write down the essentials',
+        paragraphs: [
+          'Put one page together with your key contacts, your providers and how to reach them, your health information and medication, the equipment you rely on, and the routines that matter most. Include who knows how you like things done, and how a new person could be shown quickly.',
+          'Keep a copy where it can be found, share it with someone you trust and update it when things change.',
+        ],
+      },
+      {
+        heading: 'Ask providers about continuity',
+        paragraphs: [
+          'Ask each provider what they do when a worker is away or when conditions make visits unsafe, how you will be told and what they will and will not cover. Ask who to call out of hours and whether they have a plan for emergencies or extreme weather.',
+          'If a support is critical, such as personal care or medication prompts, ask what the back-up is before you need it.',
+        ],
+      },
+      {
+        heading: 'People and options around you',
+        paragraphs: [
+          'Think about who could step in for a short time: a relative, neighbour, friend or another provider. Ask whether a second provider could be used on short notice. Check local services such as community transport, meal delivery or emergency information lines for your area.',
+          'In an emergency, call emergency services first. Review your plan each year, and after anything that changes your supports. This is general information, not emergency or medical advice.',
+        ],
+      },
+      {
+        heading: 'A short checklist to finish',
+        paragraphs: [
+          'Have a one-page summary of your supports and health information. Know who your first and second contacts are. Know what each provider will do if they cannot attend. Keep spare medication, charging cables and essential items together. Check equipment that relies on power and know what you would do in an outage. Tell your support network where the plan is kept.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'your-first-month-with-a-new-ndis-plan',
+    title: 'Your first month with a new NDIS plan: what to do and in what order',
+    summary: 'A new plan can feel like a pile of unknowns. Here is a sensible order for reading it, setting things up and starting supports.',
+    category: 'Plans and funding',
+    publishedAt: '2026-10-12T11:55:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/guides.jpg',
+    coverAlt: 'A woman reading a book with a mug beside a plant',
+    source: { label: 'NDIS: Creating your first plan', url: ndis('/participants/creating-plan/creating-your-first-plan'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Understanding your plan meeting', url: ndis('/participants/creating-plan/understanding-plan-meeting') },
+      { label: 'NDIS: Using your funding', url: ndis('/participants/using-your-funding') },
+    ],
+    sections: [
+      {
+        heading: 'Week one: read it properly',
+        paragraphs: [
+          'Read your plan from start to finish, preferably with someone you trust. Note your goals, how long the plan runs, which budgets you have and how each is managed. Highlight anything that is unclear or that does not match what you discussed, and make a list of questions.',
+          'If something looks wrong, ask early. There are time limits for asking for a review of some decisions, so do not leave it.',
+        ],
+      },
+      {
+        heading: 'Week two: set up the money side',
+        paragraphs: [
+          'Decide how you will manage each part of the plan if you have a choice, and set up a plan manager if you are using one. Make sure you know how to see your budget, whether through the portal, statements or your plan manager.',
+          'If your plan includes support coordination, make contact and agree what you want help with first.',
+        ],
+      },
+      {
+        heading: 'Weeks three and four: start the supports that matter most',
+        paragraphs: [
+          'Choose two or three supports that will make the biggest difference and start with those, rather than everything at once. Contact a few providers for each, ask the same questions and agree a start date. Put each arrangement in a service agreement before supports begin.',
+          'Spreading your start dates lets you see how each support is working and adjust.',
+        ],
+      },
+      {
+        heading: 'Then: keep an eye on it',
+        paragraphs: [
+          'Check your budget every month, compare it with what you expected to have used and note anything that looks off. Keep records as you go. Put the review date in your diary with a reminder a few months ahead so you have time to gather evidence. This is general information, not advice about your plan.',
+        ],
+      },
+      {
+        heading: 'If something is not working',
+        paragraphs: [
+          'Do not wait for the review date if a support is not suiting you. Talk to the provider first, then your support coordinator, and ask the NDIA how to change something if you need to. Keep notes of what you tried and what you were told so you can explain the situation clearly.',
+          'It is normal for the first few weeks to include adjustments. The aim is to end the month with supports that fit, not to get everything perfect immediately.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'community-participation-and-social-supports-how-to-choose',
+    title: 'Community and social supports: how to choose what suits you',
+    summary: 'Social and community participation supports are about doing things you enjoy, with the right amount of help. Here is how to match the support to the person.',
+    category: 'Everyday supports',
+    publishedAt: '2026-10-12T11:45:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/multicultural.jpg',
+    coverAlt: 'Three friends laughing together outdoors',
+    source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers') },
+    ],
+    sections: [
+      {
+        heading: 'Start with what you enjoy',
+        paragraphs: [
+          'Community and social supports work best when they start with your interests, not with what a provider happens to run. Write down things you have enjoyed, things you would like to try, and places you would like to go. Think about people as well as activities.',
+          'The aim is usually to take part in community life, build skills and confidence, and meet people, with a level of help that suits you.',
+        ],
+      },
+      {
+        heading: 'One-to-one or group',
+        paragraphs: [
+          'A support worker who goes with you to an activity gives you personal attention and flexibility. A group program can be more social and may be more affordable, but it follows a set programme. Some people use both. Think about how much help you need, how you feel in groups and how important choice of activity is.',
+        ],
+      },
+      {
+        heading: 'Questions to ask',
+        paragraphs: [
+          'Ask what a typical session involves, who else attends, how many staff there are and how activities are chosen. Ask about transport, costs beyond the support itself such as entry fees, and what happens if you want to stop or change.',
+          'Ask whether you can try it once before committing, and how the provider will check that it is working for you.',
+        ],
+      },
+      {
+        heading: 'Mainstream and local options',
+        paragraphs: [
+          'Not everything has to be an NDIS service. Libraries, clubs, community centres, councils, sporting groups and volunteering organisations may all offer ways to take part, sometimes with a support worker alongside. Mixing funded supports with local community options can make life more varied and sustainable.',
+          'Tell your coordinator or plan manager what you plan to do so you know how it will be funded. This is general information, not advice about your plan.',
+        ],
+      },
+      {
+        heading: 'Start small and review',
+        paragraphs: [
+          'Try an activity for a few weeks before deciding whether to continue. Set one simple goal, such as “go once a week” or “introduce myself to someone new”, and check in on it. Ask the worker or provider how they think it is going, and tell them what you think.',
+          'It is fine to change your mind. Interests shift, and the best arrangements are the ones that keep changing as you do.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'starting-as-an-independent-support-worker-what-to-set-up-first',
+    title: 'Starting as an independent support worker: what to set up first',
+    summary: 'Working for yourself brings freedom and responsibility. This checklist covers the checks, paperwork and boundaries to get right before you take on your first client.',
+    category: 'For workers',
+    publishedAt: '2026-10-12T11:35:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/employment.jpg',
+    coverAlt: 'People working at laptops in a bright shared workspace',
+    source: { label: 'NDIS: Support workers and recovery coaches', url: ndis('/participants/working-providers/support-workers-and-recovery-coaches'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers') },
+      { label: 'NDIS Quality and Safeguards Commission', url: 'https://www.ndiscommission.gov.au/' },
+    ],
+    sections: [
+      {
+        heading: 'Know what you are agreeing to',
+        paragraphs: [
+          'The NDIS Code of Conduct applies to workers whether or not they are registered, and it sets expectations about respect, privacy, safety, honesty and preventing harm. Read it before your first shift and make sure you can meet it, including knowing when to ask for help.',
+          'Decide which supports you are qualified and comfortable delivering. Some tasks need specific training or qualifications, so be honest about your limits.',
+        ],
+      },
+      {
+        heading: 'Checks and training',
+        paragraphs: [
+          'Find out what screening applies to your role and your state or territory, including NDIS worker screening, and complete it before you start. Keep your first aid and any other training current, and consider training in areas you will meet often, such as manual handling, infection control or supporting people with particular conditions.',
+        ],
+      },
+      {
+        heading: 'Business basics',
+        paragraphs: [
+          'Working independently usually means you are running a small business. Check what you need for tax, an ABN, record keeping and insurance, and get advice from the relevant official bodies or a professional. Do not assume a client or a provider will cover these for you.',
+          'Agree rates and invoicing in writing before the first session, and check how clients will pay you, whether directly or through a plan manager.',
+        ],
+      },
+      {
+        heading: 'Agreements, boundaries and records',
+        paragraphs: [
+          'Put the arrangement in a short written agreement covering the supports, times, price, cancellations and how either side can end it. Keep clear professional boundaries, and keep notes of what you did and anything that happened.',
+          'Make your profile accurate and specific about what you offer and where you work. This is general information, not legal, tax or financial advice.',
+        ],
+      },
+      {
+        heading: 'Looking after yourself',
+        paragraphs: [
+          'Support work can be rewarding and demanding. Plan how you will handle difficult days, who you can talk to, and how you will say no when a request is outside your skills or comfort. Working alone is a safety consideration too: tell someone where you are working and when you expect to finish.',
+          'Consider connecting with other workers for peer support, and keep learning. Good workers are those who know when to ask for help.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'ndis-or-my-aged-care-which-system-supports-you',
+    title: 'NDIS or My Aged Care: which system supports you?',
+    summary: 'Two government systems support people with disability and older people. Here is how to think about which one applies and what to do if you are not sure.',
+    category: 'Plans and funding',
+    publishedAt: '2026-10-12T11:25:00+11:00',
+    checkedAt: CHECKED,
+    coverImage: '/images/banners/older-people.jpg',
+    coverAlt: 'An older woman and a younger woman laughing together in a garden',
+    source: { label: 'NDIS: Where to begin', url: ndis('/understanding-ndis/where-begin'), date: 'Current guidance page' },
+    additionalSources: [
+      { label: 'NDIS: Life transitions', url: ndis('/participants/life-transitions') },
+      { label: 'My Aged Care', url: 'https://www.myagedcare.gov.au/' },
+    ],
+    sections: [
+      {
+        heading: 'Two systems, different purposes',
+        paragraphs: [
+          'The NDIS provides funding for supports related to a permanent and significant disability. My Aged Care is the gateway to government-funded supports for older people, including help at home, residential care and short-term support. They are separate systems with separate rules, eligibility and providers.',
+        ],
+      },
+      {
+        heading: 'Age matters, but it is not everything',
+        paragraphs: [
+          'The NDIS generally applies to people who are under 65 when they first apply, while My Aged Care generally applies to older people who need support. People who are already NDIS participants when they turn 65 are generally able to choose whether to stay or to move to aged care. These rules are specific, so confirm how they apply to your situation.',
+          'If you are close to the age threshold, or if disability and ageing both play a part, it is worth asking before making a decision, because the supports available are not identical.',
+        ],
+      },
+      {
+        heading: 'You cannot have the same support funded twice',
+        paragraphs: [
+          'The two systems are not designed to pay for the same support. If you receive a service through one, you usually cannot also have it funded through the other. A support coordinator, or the NDIA or My Aged Care, can explain which system is responsible for a particular support.',
+        ],
+      },
+      {
+        heading: 'What to do if you are not sure',
+        paragraphs: [
+          'Contact both services to ask what is available to you, and keep notes of what you are told. Ask a family member, advocate or support coordinator to help you compare. Look at the providers each system uses, because a provider listed on one register may or may not deliver the other’s supports.',
+          'This is general information, not advice about your eligibility. Check the linked official pages and speak to the relevant agency about your own circumstances.',
+        ],
+      },
+      {
+        heading: 'Questions to ask when comparing',
+        paragraphs: [
+          'Ask each system what supports you could receive, how they are arranged, who the providers are, what it might cost you and how long the process takes. Ask what would happen to your current supports if you moved from one to the other.',
+          'Take notes, ask for answers in writing where you can, and consider having an advocate or a family member with you. The decision is a big one, and you are entitled to take your time.',
         ],
       },
     ],

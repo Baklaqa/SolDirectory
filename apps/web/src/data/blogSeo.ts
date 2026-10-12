@@ -122,6 +122,18 @@ const RELATED_BY_CATEGORY: Record<string, { label: string; to: string }[]> = {
     { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
     { label: 'NDIS funding explained', to: '/funding' },
   ],
+  'Your rights': [
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'NDIS funding explained', to: '/funding' },
+    { label: 'Find an NDIS provider', to: '/find-a-provider' },
+    { label: 'Practical guides', to: '/guides' },
+  ],
+  'For workers': [
+    { label: 'Independent support workers', to: '/independent-workers' },
+    { label: 'Create a worker profile', to: '/signup?type=worker' },
+    { label: 'Practical guides', to: '/guides' },
+    { label: 'Browse providers by location', to: '/locations' },
+  ],
   'Service notices': [
     { label: 'All practical guides', to: '/guides' },
     { label: 'NDIS funding explained', to: '/funding' },
