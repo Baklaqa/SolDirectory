@@ -128,6 +128,12 @@ const RELATED_BY_CATEGORY: Record<string, { label: string; to: string }[]> = {
     { label: 'Find an NDIS provider', to: '/find-a-provider' },
     { label: 'Practical guides', to: '/guides' },
   ],
+  'For providers': [
+    { label: 'List your business on SolDirectory', to: '/providers' },
+    { label: 'How to choose a provider', to: '/guides/choosing-a-provider' },
+    { label: 'Understanding the NDIS price guide', to: '/guides/ndis-price-guide' },
+    { label: 'Independent support workers', to: '/independent-workers' },
+  ],
   'For workers': [
     { label: 'Independent support workers', to: '/independent-workers' },
     { label: 'Create a worker profile', to: '/signup?type=worker' },

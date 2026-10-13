@@ -9,6 +9,8 @@ import { EDITORIAL_BLOG_POSTS } from './blog.js';
  * shows an empty "related reading" box.
  *
  * Themes: choosing, registration, agreement, workers, funding, plan, housing, assistive, local, regional, moving, news.
+ * worker-business and provider-business are for the business side of working or running a service (the Independent
+ * workers and For providers pages); participant-facing pages do not ask for them.
  */
 const META = {
   'how-to-choose-an-ndis-provider-questions-to-ask': { themes: ['choosing', 'agreement'], boost: 2 },
@@ -40,7 +42,21 @@ const META = {
   'a-back-up-plan-for-your-ndis-supports-emergencies-and-disruptions': { themes: ['regional', 'choosing'] },
   'your-first-month-with-a-new-ndis-plan': { themes: ['plan', 'funding'] },
   'community-participation-and-social-supports-how-to-choose': { themes: ['choosing'] },
-  'starting-as-an-independent-support-worker-what-to-set-up-first': { themes: ['workers'] },
+  'starting-as-an-independent-support-worker-what-to-set-up-first': { themes: ['workers', 'worker-business'], boost: 2 },
+  'ndis-worker-screening-check-who-needs-one-and-how-it-works': { themes: ['worker-business'] },
+  'ndis-code-of-conduct-for-support-workers-what-it-means-in-everyday-work': { themes: ['worker-business', 'provider-business'] },
+  'abn-tax-and-insurance-for-independent-support-workers-what-to-sort-out': { themes: ['worker-business'] },
+  'independent-contractor-or-employee-getting-your-support-work-arrangement-right': { themes: ['worker-business'] },
+  'setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers': { themes: ['worker-business', 'provider-business'] },
+  'service-agreements-notes-and-invoices-the-paperwork-independent-workers-need': { themes: ['worker-business'] },
+  'how-to-become-a-registered-ndis-provider-the-steps-and-what-to-prepare': { themes: ['provider-business'], boost: 2 },
+  'registered-or-unregistered-which-path-suits-your-ndis-support-business': { themes: ['provider-business', 'worker-business'] },
+  'ndis-quality-audits-verification-or-certification-what-to-expect': { themes: ['provider-business'] },
+  'ndis-practice-standards-in-plain-english-for-new-providers': { themes: ['provider-business'] },
+  'reportable-incidents-and-incident-management-what-ndis-providers-need-to-know': { themes: ['provider-business'] },
+  'handling-complaints-well-a-guide-for-ndis-providers': { themes: ['provider-business'] },
+  'writing-a-provider-profile-that-helps-people-choose-you': { themes: ['provider-business'] },
+  'responding-to-enquiries-a-practical-checklist-for-ndis-and-aged-care-providers': { themes: ['provider-business'] },
   'ndis-or-my-aged-care-which-system-supports-you': { themes: ['funding', 'plan', 'choosing', 'aged-care'], both: true },
   'support-at-home-explained-how-in-home-aged-care-works': { services: ['Personal care', 'Domestic assistance', 'Nursing', 'Transport'], themes: ['aged-care', 'funding', 'choosing'] },
   'getting-an-aged-care-assessment-what-to-expect': { themes: ['aged-care', 'plan'] },

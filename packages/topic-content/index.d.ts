@@ -62,6 +62,8 @@ export interface EditorialBlogPost {
   expiresAt?: string;
   coverImage: string;
   coverAlt: string;
+  /** A few short bullets shown in an “In short” box above the article. */
+  keyPoints?: string[];
   source: EditorialBlogSource;
   additionalSources: { label: string; url: string }[];
   sections: EditorialBlogSection[];
@@ -72,7 +74,7 @@ export const EDITORIAL_BLOG_POSTS: readonly EditorialBlogPost[];
 export interface RelatedArticlesQuery {
   /** A service name from the catalogue, e.g. "Personal care". */
   service?: string;
-  /** Themes: choosing, registration, agreement, workers, funding, plan, housing, assistive, local, regional, moving, news. */
+  /** Themes: choosing, registration, agreement, workers, funding, plan, housing, assistive, local, regional, moving, news, worker-business, provider-business. */
   themes?: string[];
   exclude?: string[];
   limit?: number;

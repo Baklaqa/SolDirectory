@@ -30,7 +30,10 @@ function escapeHtml(value: string): string {
 
 function editorialToPost(article: EditorialBlogPost): WPBlogPost {
   const category = EDITORIAL_CATEGORIES.find((item) => item.name === article.category)!;
-  const contentHtml = article.sections.map((section) =>
+  const keyPoints = article.keyPoints?.length
+    ? `<aside class="blog-keypoints" aria-label="In short"><h2>In short</h2><ul>${article.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join('')}</ul></aside>`
+    : '';
+  const contentHtml = keyPoints + article.sections.map((section) =>
     `<section><h2>${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</section>`
   ).join('');
   return {

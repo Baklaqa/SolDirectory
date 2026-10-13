@@ -48,6 +48,22 @@ export const BLOG_COVERS = {
   'moving-to-a-new-town-or-state-with-the-ndis': { photo: 'banners/locations-tas.jpg', alt: 'A sunny waterfront with boats and a bridge in Tasmania' },
   // for workers
   'starting-as-an-independent-support-worker-what-to-set-up-first': { photo: 'banners/personal-care.jpg', alt: 'A support worker chatting with older residents in a common room' },
+  // for workers
+  'ndis-worker-screening-check-who-needs-one-and-how-it-works': { photo: 'banners/therapy-3.jpg', alt: 'Two professionals standing together in a therapy room' },
+  'ndis-code-of-conduct-for-support-workers-what-it-means-in-everyday-work': { photo: 'banners/community-3.jpg', alt: 'A group of friends smiling together outdoors' },
+  'abn-tax-and-insurance-for-independent-support-workers-what-to-sort-out': { photo: 'banners/employment-3.jpg', alt: 'A woman on the phone at her desk' },
+  'independent-contractor-or-employee-getting-your-support-work-arrangement-right': { photo: 'banners/transport-3.jpg', alt: 'Three people talking beside a van' },
+  'setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers': { photo: 'banners/employment.jpg', alt: 'A woman working at a laptop in a busy office' },
+  'service-agreements-notes-and-invoices-the-paperwork-independent-workers-need': { photo: 'why-sol-directory.jpg', alt: 'A support worker and a woman using a walker looking at a notebook together' },
+  // for providers
+  'how-to-become-a-registered-ndis-provider-the-steps-and-what-to-prepare': { photo: 'login-hero.jpg', alt: 'A woman in a wheelchair at her desk while colleagues talk by a whiteboard' },
+  'registered-or-unregistered-which-path-suits-your-ndis-support-business': { photo: 'banners/condition-sensory.jpg', alt: 'A smiling young woman outdoors' },
+  'ndis-quality-audits-verification-or-certification-what-to-expect': { photo: 'banners/condition-neuro-2.jpg', alt: 'A doctor talking with a patient in a medical room' },
+  'ndis-practice-standards-in-plain-english-for-new-providers': { photo: 'banners/condition-neuro.jpg', alt: 'A health professional fitting a wrist support to a patient’s hand' },
+  'reportable-incidents-and-incident-management-what-ndis-providers-need-to-know': { photo: 'banners/condition-mobility-2.jpg', alt: 'A person sitting on a bench in a paved square with a wheelchair beside them' },
+  'handling-complaints-well-a-guide-for-ndis-providers': { photo: 'banners/mental-health-3.jpg', alt: 'Two people talking on a sofa in a living room' },
+  'writing-a-provider-profile-that-helps-people-choose-you': { photo: 'banners/condition-intellectual-3.jpg', alt: 'A smiling woman in a white t-shirt' },
+  'responding-to-enquiries-a-practical-checklist-for-ndis-and-aged-care-providers': { photo: 'banners/language-asia-pacific.jpg', alt: 'Two women chatting and laughing by a lake' },
   // aged care
   'support-at-home-explained-how-in-home-aged-care-works': { photo: 'banners/personal-care-3.jpg', alt: 'Two older women sitting and talking' },
   'getting-an-aged-care-assessment-what-to-expect': { photo: 'banners/mental-health.jpg', alt: 'A woman and a man in a relaxed one-to-one conversation on a sofa' },

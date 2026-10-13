@@ -1,0 +1,60 @@
+/* Extra reading on the Independent workers and For providers pages. Builds on the shared .dx-* sections (DirectoryExtras.css). */
+.xp { max-width: var(--layout-content-max-width); margin: 0 auto; padding: clamp(40px, 5vw, 64px) clamp(20px, 5vw, 56px) clamp(16px, 3vw, 32px); }
+.xp .dx { margin-top: 0; }
+.xp .dx-h2 { max-width: 28ch; }
+
+/* Tiles that are links rather than buttons */
+a.dx-tile { text-decoration: none; color: inherit; }
+
+/* Where organisations are active: state filter chips and suburb links */
+.xp-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; padding: 0; list-style: none; }
+.xp-chip { padding: 9px 16px; border: 1px solid #DCE5F0; border-radius: 100px; background: #fff; color: #0B2343; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 150ms ease, border-color 150ms ease, color 150ms ease; }
+.xp-chip:hover { border-color: #1769E0; }
+.xp-chip[aria-pressed='true'] { background: #1769E0; border-color: #1769E0; color: #fff; }
+.xp-chip:focus-visible { outline: 3px solid #8CB8FF; outline-offset: 2px; }
+.xp-links { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.xp-links a { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border: 1px solid #DFE7F0; border-radius: 12px; background: #fff; color: #0B2343; font-size: 16px; font-weight: 600; text-decoration: none; transition: border-color 150ms ease, translate 150ms ease; }
+.xp-links a:hover { border-color: #1769E0; translate: 0 -2px; }
+.xp-count { flex: none; padding: 3px 9px; border-radius: 100px; background: #EAF2FD; color: #0F4FA8; font-size: 13px; font-weight: 800; }
+.xp-empty { margin: 18px 0 0; color: #40546D; font-size: 16px; }
+
+/* Support by suburb: a column per support */
+.xp-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 20px; margin-top: 28px; }
+.xp-col { padding: 22px 22px 20px; border: 1px solid #DFE7F0; border-radius: 16px; background: #fff; }
+.xp-col h3 { margin: 0 0 12px; color: #0B2343; font-size: 20px; }
+.xp-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.xp-col a { color: #0F4FA8; font-size: 16px; font-weight: 600; }
+.xp-col .xp-more { display: inline-block; margin-top: 14px; font-weight: 700; }
+
+/* State cards */
+.xp-states { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.xp-state { display: block; height: 100%; padding: 20px 22px; border: 1px solid #DFE7F0; border-radius: 14px; background: #fff; color: #0B2343; text-decoration: none; transition: border-color 150ms ease, translate 150ms ease, box-shadow 200ms ease; }
+.xp-state:hover { border-color: #1769E0; translate: 0 -3px; box-shadow: 0 18px 34px -22px rgba(11, 45, 92, 0.35); }
+.xp-state strong { display: block; font-size: 20px; }
+.xp-state span { display: block; margin-top: 6px; color: #40546D; font-size: 15px; line-height: 1.55; }
+
+/* Cards with a small heading, body and link (checklists, paths, safeguards) */
+.xp-cards { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.xp-card { height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 24px 24px 22px; border: 1px solid #DFE7F0; border-radius: 16px; background: #fff; }
+.xp-card-tint { background: linear-gradient(160deg, #EEF5FF 0%, #fff 75%); border-color: #C9DCF6; }
+.xp-card h3 { margin: 0; color: #0B2343; font-size: 20px; line-height: 1.3; }
+.xp-card p { margin: 0; color: #40546D; font-size: 16.5px; line-height: 1.7; }
+.xp-card a { margin-top: auto; padding-top: 6px; color: #0F4FA8; font-size: 16px; font-weight: 700; }
+.xp-tick { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #E2F3EA; color: #19794A; font-size: 17px; font-weight: 800; }
+
+/* Pointer to the participant side */
+.xp-aside { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; padding: 26px 28px; border: 1px solid #C9DCF6; border-radius: 18px; background: linear-gradient(120deg, #EEF5FF 0%, #fff 70%); }
+.xp-aside h2 { margin: 0 0 6px; color: #0B2343; font-size: clamp(22px, 2.4vw, 28px); }
+.xp-aside p { margin: 0; max-width: 62ch; color: #40546D; font-size: 16.5px; line-height: 1.7; }
+.xp-aside-links { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.xp-aside-links a { color: #0F4FA8; font-size: 16px; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-links a, .xp-state, .xp-chip { transition: none; }
+  .xp-links a:hover, .xp-state:hover { translate: none; }
+}
+
+/* Six steps sit best as 3 x 2 */
+.xp .dx-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 960px) { .xp .dx-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .xp .dx-steps { grid-template-columns: minmax(0, 1fr); } }

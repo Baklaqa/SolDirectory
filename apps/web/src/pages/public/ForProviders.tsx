@@ -4,7 +4,8 @@ import { PublicHeader, PublicFooter } from './PublicLayout';
 import PhotoSlot from '../../components/PhotoSlot';
 import Counter from '../../components/Counter';
 import { useSiteStats } from '../../hooks/useSiteStats';
-import { applySeoTags } from '../../lib/seo';
+import { applySeoTags, setJsonLd } from '../../lib/seo';
+import ProviderExtras from '../../components/extras/ProviderExtras';
 import './Home.css';
 import './ForProviders.css';
 
@@ -38,6 +39,30 @@ const FAQS: { q: string; a: string }[] = [
     q: 'How do participants find me?',
     a: 'Participants and support coordinators search the public directory by suburb, service type and funding, or submit a "Get matched" request that we compare against your listed service areas and confirmed capacity.',
   },
+  {
+    q: 'Can I list if I am registered for only some supports?',
+    a: 'Yes. State the supports you are registered for and the supports you deliver. People compare listings on exactly that, so a precise profile helps the right enquiries reach you.',
+  },
+  {
+    q: 'What does the NDIS Commission expect of registered providers?',
+    a: 'Registered providers are audited against the NDIS Practice Standards, must follow the Code of Conduct, have complaints and incident systems, screen workers in certain roles, notify the Commission of changes and reportable incidents, and meet audit requirements. Our guides to registration, audits and the Practice Standards explain each in plain English, and link to the Commission’s own pages.',
+  },
+  {
+    q: 'Can unregistered providers deliver NDIS supports?',
+    a: 'Yes, for supports that do not require registration, and only to participants who self-manage or plan-manage their funding. The Code of Conduct still applies, and the Commission recommends that unregistered providers have workers screened.',
+  },
+  {
+    q: 'Where do I confirm the current NDIS price limits?',
+    a: 'On the NDIS website’s pricing arrangements page, which publishes the pricing schedules. The maximum prices apply to NDIA-managed and plan-managed participants. Confirm the current schedule there rather than relying on a figure elsewhere.',
+  },
+  {
+    q: 'How should I reply to an enquiry?',
+    a: 'Quickly, plainly and without pressure. Say whether you can help, in which area and on which days, when you could start, what it would cost and what happens next. If you cannot help, say so and point to where they might look. Our guide to responding to enquiries has a checklist.',
+  },
+  {
+    q: 'What should I do if someone complains?',
+    a: 'Acknowledge it, give a straight answer, act, and apologise where it is due. Threatening anyone, or discouraging a complaint, is against the law. The Commission’s expectations and the “four As” approach are covered in our guide to handling complaints well.',
+  },
 ];
 
 export default function ForProviders() {
@@ -52,6 +77,11 @@ export default function ForProviders() {
       canonicalUrl: `${window.location.origin}/providers`,
       ogImage: `${window.location.origin}/images/providers.jpg`,
     });
+    setJsonLd('providers-faq', {
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    });
+    return () => setJsonLd('providers-faq', null);
   }, []);
 
   return (
@@ -215,6 +245,8 @@ export default function ForProviders() {
           </div>
         </div>
       </section>
+
+      <ProviderExtras />
 
       <section className="fp-cta-band">
         <h2>Create or claim your provider profile</h2>

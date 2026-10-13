@@ -1118,11 +1118,14 @@ function activeEditorialBlogPosts(): EditorialBlogPost[] {
 }
 
 function editorialBlogContent(post: EditorialBlogPost): string {
+  const keyPoints = post.keyPoints?.length
+    ? `<aside><h2>In short</h2><ul>${post.keyPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul></aside>`
+    : '';
   const sections = post.sections.map((section) =>
     `<section><h2>${esc(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</section>`
   ).join('');
   const sources = [post.source, ...post.additionalSources];
-  return sections +
+  return keyPoints + sections +
     `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener">${esc(source.label)}</a></li>`).join('')}</ul>` +
     `<p>Source checked ${esc(contentDate(post.checkedAt))}. Rules and guidance can change; verify current details with the responsible agency.</p></section>`;
 }
