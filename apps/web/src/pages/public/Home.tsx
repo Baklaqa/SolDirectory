@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PublicHeader, PublicFooter } from './PublicLayout';
-import HubReading from '../../components/extras/HubReading';
+import HomeAbout from '../../components/home/HomeAbout';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import Counter from '../../components/Counter';
 import PhotoSlot from '../../components/PhotoSlot';
@@ -352,6 +352,8 @@ export default function Home() {
         </div>
       </section>
 
+      <HomeAbout />
+
       <section id="providers" className="providers-cta-section">
         <div data-reveal>
           <span className="eyebrow">
@@ -395,8 +397,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <HubReading path="/" eyebrow="About SolDirectory" />
 
       <PublicFooter />
     </>

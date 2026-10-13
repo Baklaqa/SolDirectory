@@ -1,0 +1,47 @@
+/* The lower home bands. Built from the home page's own pieces: full-width bands inside --layout-content-max-width, the
+   .eyebrow and .section-heading type, white cards on a pale band, and the accent-tint band used by the locations section. */
+.ha-band { background: #ffffff; }
+.ha-band-tint { background: #F1F6FB; border-block: 1px solid #DFE8F2; }
+.ha-band-accent { background: color-mix(in srgb, var(--color-accent) 7%, #ffffff); border-top: 1px solid color-mix(in srgb, var(--color-accent) 14%, transparent); }
+.ha-inner { max-width: var(--layout-content-max-width); margin: 0 auto; padding: clamp(56px, 7vw, 96px) clamp(20px, 5vw, 56px); }
+
+.ha-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(36px, 6vw, 88px); align-items: center; }
+.ha-split-faq { align-items: start; }
+.ha-copy { max-width: 52ch; margin: 22px 0 0; }
+.ha-note { margin: 22px 0 0; max-width: 52ch; padding: 16px 20px; border-left: 3px solid var(--color-accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--color-accent) 7%, #ffffff); color: #2f4560; font-size: 16px; line-height: 1.65; font-weight: 500; }
+
+/* How it works: one white card with numbered steps */
+.ha-how { padding: clamp(26px, 3.4vw, 40px); border: 1px solid #E0E8F2; border-radius: var(--radius-md); background: #ffffff; box-shadow: 0 16px 40px rgba(11, 45, 92, 0.1); }
+.ha-how h3 { margin: 0 0 22px; color: #0B2343; font-size: 22px; font-weight: 700; letter-spacing: 0; }
+.ha-how ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.ha-how li { display: grid; grid-template-columns: 38px 1fr; gap: 16px; align-items: start; color: #40546D; font-size: 16.5px; line-height: 1.65; font-weight: 500; }
+.ha-step-num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-500) 100%); color: #ffffff; font-size: 15px; font-weight: 700; }
+
+/* Who it is for: four white cards, like the service cards */
+.ha-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: clamp(18px, 2.2vw, 30px); margin-top: clamp(28px, 3.4vw, 44px); }
+.ha-card { display: flex; flex-direction: column; align-items: flex-start; padding: 30px 28px; border-radius: var(--radius-md); background: #ffffff; box-shadow: var(--shadow-sm); transition: box-shadow 200ms ease; }
+.ha-card:hover { box-shadow: var(--shadow-lg); }
+.ha-card-tag { display: inline-block; margin-bottom: 16px; padding: 4px 12px; border-radius: 100px; background: color-mix(in srgb, var(--color-accent) 10%, #ffffff); color: var(--color-accent-700); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.ha-card h3 { margin: 0 0 10px; color: #0B2343; font-size: 21px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+.ha-card p { flex: 1; margin: 0 0 18px; color: color-mix(in srgb, var(--color-text) 72%, transparent); font-size: 15.5px; line-height: 1.65; }
+.ha-card a { color: var(--color-accent-700); font-size: 15px; font-weight: 600; text-decoration: none; }
+.ha-card a:hover { text-decoration: underline; }
+
+/* Reading links and the questions */
+.ha-pills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.ha-pills a { padding: 13px 20px; border-radius: var(--radius-md); background: #ffffff; box-shadow: var(--shadow-sm); color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none; transition: color 150ms ease, box-shadow 200ms ease; }
+.ha-pills a:hover { color: var(--color-accent-700); box-shadow: var(--shadow-md); }
+.ha-faq h3 { margin: 0 0 18px; color: #0B2343; font-size: 22px; font-weight: 700; letter-spacing: 0; }
+.ha-faq-item { margin-bottom: 12px; border-radius: var(--radius-md); background: #ffffff; box-shadow: var(--shadow-sm); overflow: hidden; }
+.ha-faq-item.is-open { box-shadow: var(--shadow-md); }
+.ha-faq-item button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 22px; border: 0; background: transparent; color: #0B2343; font: inherit; font-size: 16.5px; font-weight: 600; line-height: 1.4; text-align: left; cursor: pointer; }
+.ha-faq-item button:focus-visible { outline: 3px solid #8CB8FF; outline-offset: -3px; }
+.ha-faq-icon { flex: none; color: var(--color-accent); font-size: 24px; line-height: 1; }
+.ha-faq-item p { margin: 0; padding: 0 22px 20px; color: #40546D; font-size: 15.5px; line-height: 1.7; }
+
+@media (max-width: 860px) {
+  .ha-split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ha-card, .ha-pills a { transition: none; }
+}
