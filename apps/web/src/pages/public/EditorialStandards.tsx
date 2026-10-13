@@ -13,7 +13,7 @@ import './ReferencePages.css';
 export default function EditorialStandards() {
   useEffect(() => {
     applySeoTags({
-      title: 'Editorial standards: how we write and check our guides | SolDirectory',
+      title: 'Editorial standards: how we check our guides | SolDirectory',
       description: 'How SolDirectory writes, sources and checks its NDIS and aged care guides: original writing, official sources cited, dates shown, and how to report a mistake.',
       canonicalUrl: `${window.location.origin}/editorial-standards`,
     });

@@ -1,0 +1,6 @@
+﻿template,pattern,approx_pages,where_to_list,seo_levers
+Register provider page (NDIS),/ndis-providers/<provider-slug>,"see sitemap-register-*.xml (combined ~32,000 with aged care and suburb pages)",https://directory.solbusinessconsultant.com.au/sitemap-register-1.xml ... -4.xml,title built from name + suburb; verify/ask-the-provider copy; related guides; breadcrumb + Organization schema
+Register provider page (aged care),/aged-care-providers/<provider-slug>,included in sitemap-register-*.xml,same files,same as above
+Register suburb page,/ndis-providers/<state>/<suburb> and /aged-care-providers/<state>/<suburb>,included in sitemap-register-*.xml,same files,suburb + support terms; count of listings; links to listings
+Service by suburb page,/services/<service>/<state>/<suburb>,"23,751",sitemap-services-1.xml ... -3.xml,service + suburb term; FAQ schema; related guides; only exists where the register has real listings
+Member provider profile,/directory/<provider-slug>,grows as members join,sitemap-pages.xml,profile completeness; services and areas; Organization schema

@@ -143,7 +143,8 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
 
   useEffect(() => {
     if (!state || loading) return;
-    const title = `${kind.label} providers in ${areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
+    // Keep in step with the server-rendered title (registerShell.controller.ts).
+    const title = `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
     applySeoTags({
       title,
       description: trimTo(

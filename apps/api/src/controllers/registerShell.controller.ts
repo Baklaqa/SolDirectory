@@ -220,7 +220,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
 
   return {
     status: 200,
-    title: `${kind.label} providers in ${areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
+    // "Australian Capital Territory" would push the title past what search results show, so the title says the ACT.
+    title: `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
     description: trimTo(`${fmt(total)} ${kind.label} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,

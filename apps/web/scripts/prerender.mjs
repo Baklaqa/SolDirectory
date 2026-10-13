@@ -193,7 +193,7 @@ pages.push({
   });
   pages.push({
     path: '/editorial-standards',
-    title: 'Editorial standards: how we write and check our guides | SolDirectory',
+    title: 'Editorial standards: how we check our guides | SolDirectory',
     description: 'How SolDirectory writes, sources and checks its NDIS and aged care guides: original writing, official sources cited, dates shown, and how to report a mistake.',
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Editorial standards', path: '/editorial-standards' }],
     jsonLd: [{ '@type': 'AboutPage', name: 'Editorial standards', url: `${site}/editorial-standards`, about: { '@type': 'Organization', name: 'SolDirectory', url: site } }],
