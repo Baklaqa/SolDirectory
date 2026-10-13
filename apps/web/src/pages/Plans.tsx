@@ -4,6 +4,7 @@ import { getBilling, getPlans, openBillingPortal, startCheckout, type Billing } 
 import { ApiError } from '../api/client';
 import type { PlanConfig } from '@soldirectory/shared-types';
 import './Plans.css';
+import '../components/ui/Button.css';
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 

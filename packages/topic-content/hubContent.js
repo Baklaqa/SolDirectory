@@ -160,11 +160,11 @@ const NDIS_PROVIDERS = {
     {
       heading: 'How to use the register well',
       list: [
-        { text: 'Choose your state, then your suburb, and narrow by the type of support you need.' },
-        { text: 'Open the listing and note the registered support groups and where the provider works.' },
-        { text: 'Confirm the provider’s current status on the Commission’s official register before you rely on it.' },
-        { text: 'Contact two or three providers and ask each the same questions.', to: blog('how-to-choose-an-ndis-provider-questions-to-ask'), label: '12 questions to ask a provider' },
-        { text: 'Put the arrangement in writing before support starts.', to: blog('ndis-service-agreement-what-to-check-before-you-sign'), label: 'What to check in a service agreement' },
+        { title: 'Choose your state and suburb', text: 'Choose your state, then your suburb, and narrow by the type of support you need.' },
+        { title: 'Open the listing', text: 'Note the registered support groups and where the provider works.' },
+        { title: 'Confirm on the official register', text: 'Check the provider’s current status on the Commission’s official register before you rely on it.' },
+        { title: 'Contact two or three providers', text: 'Ask each the same questions so the answers can be compared fairly.', to: blog('how-to-choose-an-ndis-provider-questions-to-ask'), label: '12 questions to ask a provider' },
+        { title: 'Put it in writing', text: 'Agree the supports, price and cancellation terms before support starts.', to: blog('ndis-service-agreement-what-to-check-before-you-sign'), label: 'What to check in a service agreement' },
       ],
     },
     {
@@ -196,9 +196,9 @@ const AGED_CARE_PROVIDERS = {
     {
       heading: 'How aged care support is arranged',
       list: [
-        { text: 'An aged care assessment works out which government-funded services you are eligible for. It is the gateway to most government-funded aged care.', to: blog('getting-an-aged-care-assessment-what-to-expect'), label: 'What to expect from an assessment' },
-        { text: 'Support at Home helps older people keep living at home. When funding is available you choose a provider and agree a service agreement.', to: blog('support-at-home-explained-how-in-home-aged-care-works'), label: 'Support at Home explained' },
-        { text: 'What you pay depends on the type of help, the provider, your finances and the services you use.', to: blog('aged-care-costs-what-you-may-be-asked-to-contribute'), label: 'Aged care costs' },
+        { title: 'Start with an assessment', text: 'An aged care assessment works out which government-funded services you are eligible for. It is the gateway to most government-funded aged care.', to: blog('getting-an-aged-care-assessment-what-to-expect'), label: 'What to expect from an assessment' },
+        { title: 'Choose a provider and agree the services', text: 'Support at Home helps older people keep living at home. When funding is available you choose a provider and agree a service agreement.', to: blog('support-at-home-explained-how-in-home-aged-care-works'), label: 'Support at Home explained' },
+        { title: 'Know what you may pay', text: 'What you pay depends on the type of help, the provider, your finances and the services you use.', to: blog('aged-care-costs-what-you-may-be-asked-to-contribute'), label: 'Aged care costs' },
       ],
     },
     {
@@ -240,12 +240,12 @@ const GUIDES = {
     {
       heading: 'Where to start, by situation',
       list: [
-        { text: 'You are comparing providers.', to: blog('how-to-choose-an-ndis-provider-questions-to-ask'), label: '12 questions to ask before you commit' },
-        { text: 'You are deciding how your funding is managed.', to: blog('self-managed-plan-managed-or-ndia-managed-how-to-decide'), label: 'Self-managed, plan-managed or NDIA-managed' },
-        { text: 'You are preparing for a plan review.', to: blog('how-to-prepare-for-an-ndis-plan-review'), label: 'How to prepare for a plan review' },
-        { text: 'You have a new plan.', to: blog('your-first-month-with-a-new-ndis-plan'), label: 'Your first month with a new plan' },
-        { text: 'You are looking at aged care.', to: blog('support-at-home-explained-how-in-home-aged-care-works'), label: 'Support at Home explained' },
-        { text: 'You are a worker or provider.', to: '/blog', label: 'Guides for workers and providers' },
+        { title: 'Comparing providers', text: 'Twelve questions to ask each provider about the support, the cost, the people and safety, and what happens when something changes.', to: blog('how-to-choose-an-ndis-provider-questions-to-ask'), label: '12 questions to ask before you commit' },
+        { title: 'Deciding how funding is managed', text: 'How NDIA-managed, plan-managed and self-managed funding differ, and how to choose between them.', to: blog('self-managed-plan-managed-or-ndia-managed-how-to-decide'), label: 'Self-managed, plan-managed or NDIA-managed' },
+        { title: 'Preparing for a plan review', text: 'How to look at how the plan has worked and gather the evidence a review needs.', to: blog('how-to-prepare-for-an-ndis-plan-review'), label: 'How to prepare for a plan review' },
+        { title: 'Starting a new plan', text: 'What to do in the first month, and in what order.', to: blog('your-first-month-with-a-new-ndis-plan'), label: 'Your first month with a new plan' },
+        { title: 'Looking at aged care', text: 'How in-home aged care works under Support at Home, from approval to choosing a provider.', to: blog('support-at-home-explained-how-in-home-aged-care-works'), label: 'Support at Home explained' },
+        { title: 'Working or running a service', text: 'Guides for independent workers and providers on screening, the Code of Conduct, registration and more.', to: '/blog', label: 'Guides for workers and providers' },
       ],
     },
     {
@@ -271,9 +271,9 @@ const FUNDING = {
         'NDIS funding can be managed by the NDIA, by a plan manager, or by you. Which applies is recorded in your plan and can differ between parts of it. It affects who pays providers, how you track your budget and which providers you can use.',
       ],
       list: [
-        { text: 'NDIA-managed: providers claim directly from the NDIA. Least paperwork for you, but you are generally limited to registered providers.' },
-        { text: 'Plan-managed: a plan manager pays invoices and keeps your budget statements. A good balance of choice and admin.', to: blog('what-does-an-ndis-plan-manager-do-and-how-to-choose-one'), label: 'What a plan manager does' },
-        { text: 'Self-managed: you pay providers, keep records and claim. The most choice and the most responsibility.', to: blog('self-managed-plan-managed-or-ndia-managed-how-to-decide'), label: 'How to decide' },
+        { title: 'NDIA-managed', text: 'Providers claim directly from the NDIA. Least paperwork for you, but you are generally limited to registered providers.' },
+        { title: 'Plan-managed', text: 'A plan manager pays invoices and keeps your budget statements. A good balance of choice and admin.', to: blog('what-does-an-ndis-plan-manager-do-and-how-to-choose-one'), label: 'What a plan manager does' },
+        { title: 'Self-managed', text: 'You pay providers, keep records and claim. The most choice and the most responsibility.', to: blog('self-managed-plan-managed-or-ndia-managed-how-to-decide'), label: 'How to decide' },
       ],
     },
     {

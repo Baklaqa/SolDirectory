@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { hubCopy } from '@soldirectory/topic-content';
 import { setJsonLd } from '../../lib/seo';
-import '../directory/DirectoryExtras.css';
-import './PageExtras.css';
+import AccordionRows from '../ui/AccordionRows';
+import './HubReading.css';
 
 /**
  * The reading section at the foot of a hub page: what the page is, how to use it, and the questions people ask. The
  * words come from packages/topic-content/hubContent.js, the same copy the server writes into the page's HTML for search
- * engines, so what a visitor reads and what a crawler reads are the same.
+ * engines. It sits inside the page's own container (no padding of its own) and lays each topic out as a heading on the
+ * left with its content on the right, titled points as rows that slide open, so it reads as part of the page.
  */
 export default function HubReading({ path, eyebrow = 'About this page' }: { path: string; eyebrow?: string }) {
   const copy = hubCopy(path);
-  const [open, setOpen] = useState<number | null>(0);
   const faqs = copy?.faqs ?? [];
   const id = `hub-faq-${path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'home'}`;
 
@@ -28,67 +28,59 @@ export default function HubReading({ path, eyebrow = 'About this page' }: { path
   if (!copy) return null;
 
   return (
-    <div className="xp">
-      <div className="dx">
-        {copy.sections.map((section, index) => (
-          <section className="dx-section" key={section.heading} aria-labelledby={`${id}-s${index}`}>
-            {index === 0 && <span className="eyebrow"><span className="eyebrow-rule" />{eyebrow}</span>}
-            <h2 id={`${id}-s${index}`} className="dx-h2">{section.heading}</h2>
-            {section.paragraphs?.map((p, i) => <p key={i} className={i === 0 ? 'dx-lede' : 'dx-note'}>{p}</p>)}
+    <div className="hr">
+      {copy.sections.map((section, index) => {
+        const titled = section.list?.some((item) => item.title);
+        return (
+          <section className="hr-row" key={section.heading} aria-labelledby={`${id}-s${index}`}>
+            <div className="hr-head">
+              {index === 0 && <span className="eyebrow"><span className="eyebrow-rule" />{eyebrow}</span>}
+              <h2 id={`${id}-s${index}`}>{section.heading}</h2>
+            </div>
+            <div className="hr-body">
+              {section.paragraphs?.map((p) => <p key={p}>{p}</p>)}
 
-            {section.list && section.list.some((item) => item.title) && (
-              <ul className="xp-cards">
-                {section.list.map((item) => (
-                  <li key={item.title ?? item.text} className="xp-card">
-                    {item.title && <h3>{item.title}</h3>}
-                    <p>{item.text}</p>
-                    {item.to && <Link to={item.to}>{item.label ?? 'Read more'} →</Link>}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {section.list && !section.list.some((item) => item.title) && (
-              <ul className="hr-list">
-                {section.list.map((item) => (
-                  <li key={item.text}>
-                    <span className="xp-tick" aria-hidden="true">✓</span>
-                    <span>
-                      {item.text}
-                      {item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+              {section.list && titled && (
+                <AccordionRows
+                  label={section.heading}
+                  items={section.list.map((item) => ({
+                    title: item.title ?? item.label ?? item.text,
+                    body: <>{item.text}{item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}</>,
+                  }))}
+                />
+              )}
+              {section.list && !titled && (
+                <ul className="hr-ticks">
+                  {section.list.map((item) => (
+                    <li key={item.text}>
+                      <span className="hr-tick" aria-hidden="true">✓</span>
+                      <span>{item.text}{item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            {section.links && section.links.length > 0 && (
-              <p className="hr-links">
-                {section.links.map((l) => <Link key={l.to} to={l.to}>{l.label} →</Link>)}
-              </p>
-            )}
-          </section>
-        ))}
-
-        {faqs.length > 0 && (
-          <section className="dx-section" aria-labelledby={`${id}-faq`}>
-            <span className="eyebrow"><span className="eyebrow-rule" />Questions people ask</span>
-            <h2 id={`${id}-faq`} className="dx-h2">Frequently asked questions</h2>
-            <div className="dx-faq">
-              {faqs.map((f, i) => (
-                <div key={f.question} className="dx-faq-item">
-                  <h3>
-                    <button type="button" aria-expanded={open === i} aria-controls={`${id}-a${i}`} onClick={() => setOpen(open === i ? null : i)}>
-                      <span>{f.question}</span>
-                      <span className="dx-faq-icon" aria-hidden="true">{open === i ? '−' : '+'}</span>
-                    </button>
-                  </h3>
-                  {open === i && <p id={`${id}-a${i}`}>{f.answer}</p>}
+              {section.links && section.links.length > 0 && (
+                <div className="hr-pills">
+                  {section.links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
                 </div>
-              ))}
+              )}
             </div>
           </section>
-        )}
-      </div>
+        );
+      })}
+
+      {faqs.length > 0 && (
+        <section className="hr-row" aria-labelledby={`${id}-faq`}>
+          <div className="hr-head">
+            <span className="eyebrow"><span className="eyebrow-rule" />Questions people ask</span>
+            <h2 id={`${id}-faq`}>Frequently asked questions</h2>
+          </div>
+          <div className="hr-body">
+            <AccordionRows marker="question" label="Frequently asked questions" items={faqs.map((f) => ({ title: f.question, body: f.answer }))} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

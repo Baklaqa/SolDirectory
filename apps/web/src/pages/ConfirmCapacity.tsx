@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { confirmCapacityByToken } from '../api/resources';
 import '../styles/auth-shared.css';
+import './auth/Login.css';
 
 /**
  * Public landing page for the weekly capacity confirmation email link

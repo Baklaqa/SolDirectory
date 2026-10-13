@@ -6,6 +6,7 @@ import {
 import { timeAgo } from './adminFormat';
 import './AdminDashboard.css';
 import './AdminOperations.css';
+import './AdminEnquiries.css';
 import './AdminContent.css';
 
 type Tab = ContentStatus | 'recheck';

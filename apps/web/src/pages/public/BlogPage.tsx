@@ -10,6 +10,7 @@ import BlogShare from './BlogShare';
 import { blogThumb, fullImageFallback } from '../../components/blog/blogThumb';
 import { BLOG_FAQS, BLOG_TOPICS, relatedLinksFor } from '../../data/blogSeo';
 import { EDITORIAL_BLOG_POSTS, GUIDE_DOCS, type EditorialBlogPost } from '@soldirectory/topic-content';
+import './Directory.css';
 import './BlogPage.css';
 
 const SITE_ORIGIN = () => window.location.origin;

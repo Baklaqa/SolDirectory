@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../api/client';
 import { forgotPassword, resetPassword } from '../../api/resources';
 import './Login.css';
+import '../../styles/auth-shared.css';
 
 const MIN_PASSWORD_LENGTH = 8; // matches the API's own check in auth.controller.ts
 

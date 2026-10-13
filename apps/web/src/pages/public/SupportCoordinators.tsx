@@ -10,6 +10,8 @@ import './Home.css';
 import './Directory.css';
 import './register/register.css';
 import './ProfilePages.css';
+import '../wordpress/WordPressCPTPage.css';
+import '../../components/ui/Button.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const faqs = [

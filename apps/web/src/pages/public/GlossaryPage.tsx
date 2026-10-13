@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GLOSSARY } from '@soldirectory/topic-content';
+import PageHero from '../../components/topic/PageHero';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import './ReferencePages.css';
@@ -13,6 +14,7 @@ const termId = (term: string) => term.toLowerCase().replace(/[^a-z0-9]+/g, '-').
  * step writes into the page's static HTML, and each links to the guide that explains the term in full.
  */
 export default function GlossaryPage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
 
   const terms = useMemo(
@@ -57,58 +59,74 @@ export default function GlossaryPage() {
   return (
     <>
       <PublicHeader />
-      <main className="ref-page">
-        <nav className="ref-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link> <span aria-hidden="true">/</span> <span>Glossary</span>
-        </nav>
-        <span className="eyebrow"><span className="eyebrow-rule" />Plain-English reference</span>
-        <h1>NDIS and aged care glossary</h1>
-        <p className="ref-lede">
-          The terms you will hear from the NDIA, providers, plan managers and My Aged Care, explained in plain language. Each one links to the guide that
-          covers it properly. Definitions are general information, not advice about a particular plan, so check the official page for anything that affects you.
-        </p>
+      <main>
+        <PageHero
+          crumbs={[{ label: 'Home', to: '/' }, { label: 'Glossary' }]}
+          eyebrow="Plain-English reference"
+          title="NDIS and aged care glossary"
+          description="The terms you will hear from the NDIA, providers, plan managers and My Aged Care, explained in plain language and linked to the guide that covers each one."
+          image="/images/banners/guides.jpg"
+          imageAlt="A woman reading a book with a cup of coffee"
+          stats={<><span><strong>{terms.length}</strong> terms</span><span>Checked against official pages</span></>}
+          panel={{
+            title: 'Find a term',
+            checks: ['Definitions are general information', 'Each term links to its guide', 'Official pages hold the current detail'],
+            ctaLabel: 'Browse the guides →',
+            onCta: () => navigate('/guides'),
+            note: <>How we write them: <Link to="/editorial-standards">editorial standards</Link></>,
+          }}
+        />
 
-        <div className="ref-tools">
-          <label className="visually-hidden" htmlFor="glossary-search">Search the glossary</label>
-          <input
-            id="glossary-search"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search terms, for example SIL or plan manager"
-          />
-          <span className="ref-count" aria-live="polite">{visible.length} {visible.length === 1 ? 'term' : 'terms'}</span>
-        </div>
-
-        <nav className="ref-letters" aria-label="Jump to a letter">
-          {letters.map((letter) => (
-            <a key={letter} href={`#letter-${letter}`} className={groups.some(([l]) => l === letter) ? '' : 'is-empty'}>{letter}</a>
-          ))}
-        </nav>
-
-        {groups.length === 0 && <p className="ref-empty">No terms match “{query}”. Try a shorter word, or <Link to="/blog">browse our guides</Link>.</p>}
-
-        {groups.map(([letter, items]) => (
-          <section key={letter} className="ref-group" id={`letter-${letter}`} aria-label={`Terms starting with ${letter}`}>
-            <h2>{letter}</h2>
-            <dl>
-              {items.map((t) => (
-                <div key={t.id} id={t.id} className="ref-term">
-                  <dt>{t.term}</dt>
-                  <dd>
-                    <p>{t.definition}</p>
-                    <Link to={t.to}>{t.label} →</Link>
-                  </dd>
-                </div>
+        <div className="ref-wrap">
+          <div className="ref-bar">
+            <div className="ref-search">
+              <label className="visually-hidden" htmlFor="glossary-search">Search the glossary</label>
+              <input
+                id="glossary-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search terms, for example SIL or plan manager"
+              />
+              <span className="ref-count" aria-live="polite">{visible.length} {visible.length === 1 ? 'term' : 'terms'}</span>
+            </div>
+            <nav className="ref-letters" aria-label="Jump to a letter">
+              {letters.map((letter) => (
+                <a key={letter} href={`#letter-${letter}`} className={groups.some(([l]) => l === letter) ? '' : 'is-empty'}>{letter}</a>
               ))}
-            </dl>
-          </section>
-        ))}
+            </nav>
+          </div>
 
-        <p className="ref-note">
-          Found something out of date or unclear? Our <Link to="/editorial-standards">editorial standards</Link> explain how we write and check each page,
-          and how to tell us about a mistake.
-        </p>
+          {groups.length === 0 && <p className="ref-empty">No terms match “{query}”. Try a shorter word, or <Link to="/blog">browse our guides</Link>.</p>}
+
+          {groups.map(([letter, items]) => (
+            <section key={letter} className="ref-group" id={`letter-${letter}`} aria-label={`Terms starting with ${letter}`}>
+              <h2><span>{letter}</span></h2>
+              <dl className="ref-terms">
+                {items.map((t) => (
+                  <div key={t.id} id={t.id} className="ref-term">
+                    <dt>{t.term}</dt>
+                    <dd>
+                      <p>{t.definition}</p>
+                      <Link to={t.to}>{t.label} →</Link>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))}
+
+          <section className="ref-cta">
+            <div>
+              <h2>Still not sure what something means?</h2>
+              <p>Read the guide behind a term, or send one request and let suitable providers explain what applies to your situation.</p>
+            </div>
+            <div className="ref-cta-actions">
+              <Link className="btn-white btn-lg" to="/guides">Read the guides</Link>
+              <Link className="btn-outline-light btn-lg" to="/find-a-provider">Find a provider</Link>
+            </div>
+          </section>
+        </div>
       </main>
       <PublicFooter />
     </>

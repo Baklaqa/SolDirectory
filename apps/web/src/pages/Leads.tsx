@@ -5,6 +5,7 @@ import { ApiError } from '../api/client';
 import { useToast } from '../components/ui/Toast';
 import { isLeadUnlocked, type Lead } from '@soldirectory/shared-types';
 import './Leads.css';
+import '../components/ui/Chip.css';
 
 type Tab = 'all' | 'unlocked' | 'locked' | 'nearby';
 

@@ -1,0 +1,25 @@
+/* Hub reading section: lives inside the page's own container, so it adds no outer padding of its own. */
+.hr { margin-top: clamp(36px, 5vw, 72px); }
+.hr-row { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.35fr); gap: clamp(24px, 4vw, 64px); padding: clamp(28px, 4vw, 48px) 0; border-top: 1px solid #E1E9F4; }
+.hr-head { align-self: start; position: sticky; top: 120px; }
+.hr-head .eyebrow { margin-bottom: 14px; }
+.hr-head h2 { margin: 0; color: #0B2343; font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; max-width: 20ch; }
+.hr-body > p { margin: 0 0 16px; max-width: 70ch; color: #40546D; font-size: 17px; line-height: 1.75; }
+.hr-body > p:last-child { margin-bottom: 0; }
+.hr-body a { color: #0F4FA8; font-weight: 700; }
+.hr-ticks { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 14px; max-width: 74ch; }
+.hr-ticks li { display: flex; gap: 14px; align-items: flex-start; color: #3a4f69; font-size: 17px; line-height: 1.7; }
+.hr-tick { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; margin-top: 1px; border-radius: 50%; background: #E2F3EA; color: #19794A; font-size: 15px; font-weight: 800; }
+.hr-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hr-pills a { padding: 11px 18px; border: 1px solid #C9DCF6; border-radius: 999px; background: #F2F7FF; color: #0F4FA8; font-size: 15px; font-weight: 700; text-decoration: none; transition: background-color 150ms ease, border-color 150ms ease; }
+.hr-pills a:hover { background: #E4EEFC; border-color: #9FBFE8; }
+.hr-body .acc + .hr-pills { margin-top: 22px; }
+
+@media (max-width: 900px) {
+  .hr-row { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .hr-head { position: static; }
+  .hr-head h2 { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hr-pills a { transition: none; }
+}

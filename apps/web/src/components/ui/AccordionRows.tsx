@@ -20,7 +20,7 @@ export default function AccordionRows({
   label,
 }: {
   items: AccordionItem[];
-  marker?: 'number' | 'check';
+  marker?: 'number' | 'check' | 'question';
   tone?: 'light' | 'dark';
   defaultOpen?: number | null;
   label?: string;
@@ -44,7 +44,7 @@ export default function AccordionRows({
                 aria-controls={panelId}
                 onClick={() => setOpen(isOpen ? null : index)}
               >
-                <span className="acc-mark" aria-hidden="true">{marker === 'check' ? '✓' : String(index + 1).padStart(2, '0')}</span>
+                <span className="acc-mark" aria-hidden="true">{marker === 'check' ? '✓' : marker === 'question' ? '?' : String(index + 1).padStart(2, '0')}</span>
                 <span className="acc-title">{item.title}</span>
                 <span className="acc-chevron" aria-hidden="true" />
               </button>

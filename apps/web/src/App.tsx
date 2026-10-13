@@ -9,6 +9,7 @@ import SitePreloader from './components/SitePreloader';
 import CookieConsent from './components/CookieConsent';
 import ScrollToTop from './components/ScrollToTop';
 import './styles/global.css';
+import './styles/shared.css';
 
 export default function App() {
   return (
