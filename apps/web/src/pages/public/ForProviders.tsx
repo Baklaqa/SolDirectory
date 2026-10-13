@@ -9,7 +9,7 @@ import AccordionRows from '../../components/ui/AccordionRows';
 import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
-import { PROVIDER_FAQS, PROVIDER_PLANS, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_UNDERSTAND } from '@soldirectory/topic-content';
+import { PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED, PROVIDER_PLANS, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_UNDERSTAND } from '@soldirectory/topic-content';
 import './Home.css';
 import './ForProviders.css';
 
@@ -44,15 +44,25 @@ export default function ForProviders() {
   useEffect(() => {
     applySeoTags({
       title: 'List your provider business | SolDirectory',
-      description: 'Create or claim a provider profile, maintain services and capacity, and review relevant NDIS and aged care enquiries in your service areas.',
+      description: PROVIDER_PAGE_DESCRIPTION,
       canonicalUrl: `${window.location.origin}/providers`,
       ogImage: `${window.location.origin}/images/providers.jpg`,
+    });
+    setJsonLd('providers-page', {
+      '@type': 'WebPage',
+      name: 'List your provider business on SolDirectory',
+      description: PROVIDER_PAGE_DESCRIPTION,
+      url: `${window.location.origin}/providers`,
+      inLanguage: 'en-AU',
+      dateModified: PROVIDER_PAGE_UPDATED,
+      isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin },
+      publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${window.location.origin}/` },
     });
     setJsonLd('providers-faq', {
       '@type': 'FAQPage',
       mainEntity: FAQS.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
     });
-    return () => setJsonLd('providers-faq', null);
+    return () => { setJsonLd('providers-page', null); setJsonLd('providers-faq', null); };
   }, []);
 
   useEffect(() => {

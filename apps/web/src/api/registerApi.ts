@@ -61,7 +61,18 @@ export interface RegisterHub {
   categories: { category: string; count: number }[];
   suburbs: { state: string; slug: string; suburb: string; count: number }[];
 }
-export const getRegisterHub = (type: RegisterType): Promise<RegisterHub> => request(`/hub?type=${type}`);
+// A page can ask for the same hub from several components (the providers page asks twice), and moving between hub
+// pages asks again. One request is shared and reused for a few minutes; a failed one is not kept.
+const HUB_TTL_MS = 5 * 60 * 1000;
+const hubCache = new Map<RegisterType, { at: number; promise: Promise<RegisterHub> }>();
+export const getRegisterHub = (type: RegisterType): Promise<RegisterHub> => {
+  const hit = hubCache.get(type);
+  if (hit && Date.now() - hit.at < HUB_TTL_MS) return hit.promise;
+  const promise = request<RegisterHub>(`/hub?type=${type}`);
+  hubCache.set(type, { at: Date.now(), promise });
+  promise.catch(() => { if (hubCache.get(type)?.promise === promise) hubCache.delete(type); });
+  return promise;
+};
 
 export interface ServiceSuburbs {
   category: string;

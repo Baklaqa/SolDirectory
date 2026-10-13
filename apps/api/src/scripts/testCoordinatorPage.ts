@@ -2,9 +2,10 @@
  * npm run test:coordinator-page -w apps/api
  *
  * Checks the shared copy behind /support-coordinators (every link points at a page or article that exists, the markup is well
- * formed, the visible date is the date in the data) and the response-header middleware. No database or network.
+ * formed, the visible date is the date in the data), the /providers description and questions, and the response-header
+ * middleware. No database or network.
  */
-import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS } from '@soldirectory/topic-content';
+import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS, PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED } from '@soldirectory/topic-content';
 import { securityHeaders } from '../middleware/securityHeaders.js';
 
 let failed = 0;
@@ -54,6 +55,13 @@ check('FAQ questions are unique', new Set(questions).size === questions.length);
 check('every FAQ has an answer of a useful length', P.faqs.every((f) => f.answer.length > 60));
 check('the title and description fit a search result', P.seoTitle.length <= 65 && P.seoDescription.length >= 70 && P.seoDescription.length <= 170, `${P.seoTitle.length} / ${P.seoDescription.length}`);
 check('the section ids used by in-site links exist', [P.referral.id, P.urgent.id, P.checks.id].join() === 'referrals,urgent-referrals,provider-checks');
+
+// ---- /providers ----
+const providerQuestions = PROVIDER_FAQS.map((f) => f.question);
+check('provider FAQ questions are unique', new Set(providerQuestions).size === providerQuestions.length);
+check('provider FAQs include the listing how-to and the profile contents', providerQuestions.some((q) => /list my NDIS provider business/i.test(q)) && providerQuestions.some((q) => /provider profile include/i.test(q)));
+check('the /providers description fits a search result (150-160 characters)', PROVIDER_PAGE_DESCRIPTION.length >= 150 && PROVIDER_PAGE_DESCRIPTION.length <= 160, String(PROVIDER_PAGE_DESCRIPTION.length));
+check('the /providers date is a real, past date', !Number.isNaN(Date.parse(PROVIDER_PAGE_UPDATED)) && Date.parse(`${PROVIDER_PAGE_UPDATED}T00:00:00Z`) <= now + 24 * 3600 * 1000);
 
 // ---- the headers ----
 function run(headers: Record<string, string>, protocol = 'http') {

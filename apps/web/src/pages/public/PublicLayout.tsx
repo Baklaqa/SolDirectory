@@ -31,6 +31,16 @@ function ScrollToTopButton() {
   );
 }
 
+/** Moves keyboard focus to the page's <main>, so a keyboard user can pass the header and menu in one step. */
+function skipToMain(event: React.MouseEvent<HTMLAnchorElement>) {
+  const main = document.querySelector('main');
+  if (!main) return;
+  event.preventDefault();
+  main.setAttribute('tabindex', '-1');
+  main.focus();
+  main.scrollIntoView({ block: 'start' });
+}
+
 export function PublicHeader() {
   const { openMatchModal } = useMatchModal();
   // Phones and small tablets get a hamburger; the link group is always in the
@@ -41,6 +51,8 @@ export function PublicHeader() {
   const getMatched = () => { setMenuOpen(false); openMatchModal(); };
 
   return (
+    <>
+    <a className="skip-link" href="#main-content" onClick={skipToMain}>Skip to main content</a>
     <header className="public-header">
       <div className="utility-bar">
         <div className="utility-bar-inner">
@@ -71,7 +83,7 @@ export function PublicHeader() {
       <nav className="public-nav" aria-label="Main">
         <div className="public-nav-inner">
           <Link to="/" className="public-brand-link">
-            <img className="public-brand-logo" src="/images/sol-directory-logo-black-transparent-v2.png" alt="Sol Directory by Sol Business Consultant" />
+            <img className="public-brand-logo" src="/images/sol-directory-logo-black-transparent-v2-640.png" alt="Sol Directory by Sol Business Consultant" />
           </Link>
 
           <button type="button" onClick={getMatched} className="public-cta-btn public-cta-btn--bar">
@@ -112,6 +124,7 @@ export function PublicHeader() {
         </div>
       </nav>
     </header>
+    </>
   );
 }
 
@@ -120,7 +133,7 @@ export function PublicFooter() {
     <footer className="public-footer">
       <div className="public-footer-inner">
         <div className="public-footer-brand">
-          <img className="public-footer-logo" src="/images/sol-directory-logo-white-transparent-v2.png" alt="Sol Directory by Sol Business Consultant" />
+          <img className="public-footer-logo" src="/images/sol-directory-logo-white-transparent-v2-640.png" alt="Sol Directory by Sol Business Consultant" />
           <p className="public-footer-tagline">
             An independent directory and enquiry service for people seeking NDIS
             and aged care provider information in Australia.

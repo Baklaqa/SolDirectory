@@ -64,7 +64,7 @@ const trim = (s, n) => (s.length <= n ? s : `${s.slice(0, n - 1).replace(/\s+\S*
 const a = (href, text) => `<a href="${esc(href)}">${esc(text)}</a>`;
 const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
 const crumbs = (items) => `<nav aria-label="Breadcrumb">${items.map((c) => (c.to ? a(c.to, c.label) : esc(c.label))).join(' / ')}</nav>`;
-const SHARE_IMAGE = `${site}/images/providers.jpg`;
+const SHARE_IMAGE = `${site}/images/share-default.jpg`;
 
 const STATES = [['nsw', 'New South Wales'], ['vic', 'Victoria'], ['qld', 'Queensland'], ['wa', 'Western Australia'], ['sa', 'South Australia'], ['tas', 'Tasmania'], ['act', 'Australian Capital Territory'], ['nt', 'Northern Territory']];
 const serviceTab = STATIC_MEGA_MENU_FALLBACK.find((t) => t.key === 'service');
@@ -286,7 +286,10 @@ for (const page of pages) {
     `<meta property="og:title" content="${esc(page.title)}" />`,
     `<meta property="og:description" content="${esc(page.description)}" />`,
     `<meta property="og:image" content="${esc(SHARE_IMAGE)}" />`,
-    '<meta name="twitter:card" content="summary" />',
+    '<meta property="og:image:width" content="1200" />',
+    '<meta property="og:image:height" content="630" />',
+    '<meta property="og:image:alt" content="Two people holding hands, a moment of care and support" />',
+    '<meta name="twitter:card" content="summary_large_image" />',
     ...ld.map((d, i) => `<script type="application/ld+json" id="jsonld-prerender-${i}">${JSON.stringify({ '@context': 'https://schema.org', ...d }).replace(/</g, '\\u003c')}</script>`),
   ].join('\n    ');
 

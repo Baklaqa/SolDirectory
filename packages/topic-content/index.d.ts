@@ -90,6 +90,9 @@ export function relatedArticles(query?: RelatedArticlesQuery): EditorialBlogPost
 export interface PageFaq { question: string; answer: string }
 export const INDEPENDENT_WORKER_FAQS: readonly PageFaq[];
 export const PROVIDER_FAQS: readonly PageFaq[];
+/** ISO date the /providers guidance last changed. */
+export const PROVIDER_PAGE_UPDATED: string;
+export const PROVIDER_PAGE_DESCRIPTION: string;
 export const WORKER_PAGE_GUIDES: readonly string[];
 export const PROVIDER_PAGE_GUIDES: readonly string[];
 export const WORKER_SETUP_STEPS: readonly { title: string; body: string; link: { to: string; label: string } }[];

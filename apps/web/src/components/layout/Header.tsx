@@ -179,7 +179,7 @@ export default function Header() {
       </a>
       <div className="app-header-inner">
         <Link to="/dashboard" className="app-brand" aria-label="Sol Directory, back to your dashboard">
-          <img className="app-brand-logo" src="/images/sol-directory-logo-white-transparent-v2.png" alt="Sol Directory by Sol Business Consultant" />
+          <img className="app-brand-logo" src="/images/sol-directory-logo-white-transparent-v2-640.png" alt="Sol Directory by Sol Business Consultant" />
         </Link>
 
         <nav className="app-tabs" aria-label="Main" ref={tabsRef}>

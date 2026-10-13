@@ -18,6 +18,8 @@ import {
   relatedToArticle,
   hubCopy,
   COORDINATOR_PAGE,
+  PROVIDER_PAGE_DESCRIPTION,
+  PROVIDER_PAGE_UPDATED,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -297,9 +299,9 @@ function providerTitle(name: string, label: string, where: string): string {
 }
 
 // Pages with no photo of their own still get a share card, from an image the site already uses.
-const DEFAULT_SHARE_IMAGE = '/images/providers.jpg';
+const DEFAULT_SHARE_IMAGE = '/images/share-default.jpg';
 const DEFAULT_SHARE_IMAGE_ALT = 'Two people holding hands, a moment of care and support';
-const DEFAULT_SHARE_IMAGE_SIZE = { width: 1920, height: 1280 };
+const DEFAULT_SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
 
 /**
  * "Helpful reading" for crawlers: the same blog articles the website shows under each kind of page (see
@@ -895,9 +897,19 @@ function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | '
     },
     providers: {
       title: 'List your provider business | SolDirectory',
-      description: 'Create or claim a provider profile, maintain services and capacity, and review relevant NDIS and aged care enquiries in your service areas.',
+      description: PROVIDER_PAGE_DESCRIPTION,
       canonical: '/providers',
-      jsonLd: [breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'For providers', path: '/providers' }])],
+      jsonLd: [
+        breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'For providers', path: '/providers' }]),
+        {
+          id: 'providers-page',
+          data: {
+            '@type': 'WebPage', name: 'List your provider business on SolDirectory', description: PROVIDER_PAGE_DESCRIPTION, url: `${site}/providers`, inLanguage: 'en-AU', dateModified: PROVIDER_PAGE_UPDATED,
+            isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+            publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
+          },
+        },
+      ],
       body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / For providers</nav><h1>List your provider business on SolDirectory</h1>` +
         `<p>Create or claim a profile that explains your supports, service areas, accepted funding and current intake status. SolDirectory compares those details with enquiries submitted by participants, families and support coordinators so your team can assess relevant requests.</p>` +
         `<h2>Understand what an enquiry means</h2><p>An enquiry is a request for information, not an exclusive referral, confirmed client or booking. More than one relevant provider may be notified, and the person decides whether to respond or proceed. Enquiry volume depends on local demand, profile accuracy, services, funding compatibility and confirmed capacity; no plan guarantees leads or work.</p>` +

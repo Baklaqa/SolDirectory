@@ -52,7 +52,7 @@ export default function SitePreloader() {
       <div className="site-preloader__content">
         <img
           className="site-preloader__logo"
-          src="/images/sol-directory-logo-black-transparent-v2.png"
+          src="/images/sol-directory-logo-black-transparent-v2-640.png"
           alt=""
           aria-hidden="true"
         />

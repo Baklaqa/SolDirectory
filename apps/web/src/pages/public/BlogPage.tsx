@@ -362,7 +362,7 @@ export default function BlogPage() {
                     {article.excerpt && <p className="blog-article-deck">{article.excerpt}</p>}
                     <div className="blog-article-byline">
                       {article.authorName === 'SolDirectory'
-                        ? <img className="blog-byline-logo" src="/images/sol-directory-logo-white-transparent-v2.png" alt="SolDirectory" />
+                        ? <img className="blog-byline-logo" src="/images/sol-directory-logo-white-transparent-v2-640.png" alt="SolDirectory" />
                         : <span className="blog-byline-name">{article.authorName}</span>}
                       <span aria-hidden="true">·</span><time dateTime={article.date}>{formatDate(article.date)}</time>
                       <span aria-hidden="true">·</span><span>{readingMinutes(article.contentHtml)} min read</span>

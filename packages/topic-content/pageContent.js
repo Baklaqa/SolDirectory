@@ -55,8 +55,22 @@ export const INDEPENDENT_WORKER_FAQS = [
   },
 ];
 
+/** The date /providers guidance last changed (used for dateModified in the page's structured data). */
+export const PROVIDER_PAGE_UPDATED = '2026-10-13';
+
+/** The search-result description for /providers (the page and its crawler HTML both use it). */
+export const PROVIDER_PAGE_DESCRIPTION = 'Create or claim a free provider profile, set your service areas and capacity, and review relevant NDIS and aged care enquiries from people in your area.';
+
 /** Questions on /providers. */
 export const PROVIDER_FAQS = [
+  {
+    question: 'How do I list my NDIS provider business on SolDirectory?',
+    answer: 'Find your business in the directory and claim it, or create a new listing. Claiming is free. Then set the suburbs you cover, the supports you offer and where matches should be sent: email, SMS or both. When an enquiry fits your profile, your team can review it and decide whether to respond.',
+  },
+  {
+    question: 'What should an NDIS provider profile include?',
+    answer: 'The supports you actually deliver, the suburbs you cover, the funding arrangements you work with, your registration status, your current capacity and a way to reach you that is checked every day. Matching compares enquiries with these details, so accuracy saves your team time.',
+  },
   {
     question: 'Is a lead the same as a booked client?',
     answer: 'No. A lead is an enquiry from someone looking for support in your area. Several matched providers can see the same enquiry, and the person decides who to contact back. We do not guarantee a booking, a response, or a fixed volume of enquiries.',
