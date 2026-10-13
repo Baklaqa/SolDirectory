@@ -184,14 +184,16 @@ export default function AdminContent() {
       let ok = true;
       if (r.blocked) {
         ok = false;
-        text = `${base} The NDIS site is not letting the robot read its news list right now, so it has stepped back and will try again automatically. Nothing is lost.`;
+        text = `${base} The official sites are not letting the robot read their news lists right now (${r.paused.join(' | ') || 'no answer'}), so it has stepped back and will try again automatically. Nothing is lost.`;
+      } else if (r.paused.length && !r.problems.length) {
+        text = `${base} Paused for now: ${r.paused.join(' | ')} The other sources were read, and the paused ones are tried again automatically.`;
       } else if (r.detailsBlocked) {
         text = `${base} NDIS is not letting the robot open the full articles from this server, so items are recorded from its news list (title, date, category and summary). You can still create briefs. Section outlines stay blank, and it quietly tries the articles again every few hours.`;
       } else if (r.problems.length) {
         ok = false;
         text = `${base} Problems: ${r.problems.join(' | ')}`;
       }
-      setScanNote({ ok, text, info: r.detailsBlocked && !r.blocked });
+      setScanNote({ ok, text, info: (r.detailsBlocked || r.paused.length > 0) && !r.blocked && !r.problems.length });
       setPage(1);
       refresh();
     } catch (e) {

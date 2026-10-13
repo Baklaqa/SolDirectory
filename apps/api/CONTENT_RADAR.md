@@ -66,6 +66,11 @@ ndis.gov.au sits behind bot protection. The crawler obeys robots.txt, identifies
   the queue still fills with title, date, category and summary, and briefs can still be created. Section outlines stay
   blank until articles can be read again, when they are filled in automatically.
 
+- If a site does not **answer at all** (some sites silently drop automated requests rather than refusing them; the page
+  times out after 25 s, robots.txt after 15 s) it is treated the same way: that site is paused for
+  `OFFICIAL_SOURCES_NO_RESPONSE_MINUTES` (30) and reported as "paused" with the reason. One source being paused never
+  stops the others from being read, so an unreachable My Aged Care does not hold up the NDIS lists, and the reverse.
+
 If article pages stay refused, ask the NDIA web team (https://www.ndis.gov.au/contact/feedback-and-enquiries) to allow
 the user agent `SolDirectoryBot` from the server's IP, or to provide a feed. Do not work round the block.
 
@@ -86,6 +91,7 @@ OFFICIAL_SOURCES_GAP_MS=1500
 OFFICIAL_SOURCES_MAX_DETAILS=15
 OFFICIAL_SOURCES_BACKOFF_MINUTES=60
 OFFICIAL_SOURCES_DETAIL_BACKOFF_MINUTES=360
+OFFICIAL_SOURCES_NO_RESPONSE_MINUTES=30
 ```
 
 ## Cron

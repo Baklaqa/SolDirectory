@@ -54,16 +54,18 @@ function ruleMatches(rulePath: string, path: string): boolean {
   return new RegExp(`^${pattern}${anchored ? '$' : ''}`).test(path);
 }
 
-async function allowedByRobots(url: URL): Promise<boolean> {
+async function allowedByRobots(url: URL, scope: FetchScope): Promise<boolean> {
   const cached = robotsCache.get(url.origin);
   let rules = cached && Date.now() - cached.at < 6 * 3600_000 ? cached.rules : null;
   if (!rules) {
+    let res: Response;
     try {
-      const res = await fetch(`${url.origin}/robots.txt`, { headers: { 'user-agent': USER_AGENT }, signal: AbortSignal.timeout(15_000) });
-      rules = res.ok ? parseRobots(await res.text()) : [];
-    } catch {
-      rules = [];
+      res = await fetch(`${url.origin}/robots.txt`, { headers: { 'user-agent': USER_AGENT }, signal: AbortSignal.timeout(ROBOTS_TIMEOUT_MS) });
+    } catch (err) {
+      // If the site will not even answer for robots.txt we cannot know its rules, so we leave it alone for a while.
+      throw await noteNoResponse(url.origin, scope, err, ROBOTS_TIMEOUT_MS);
     }
+    rules = res.ok ? parseRobots(await res.text()) : [];
     robotsCache.set(url.origin, { at: Date.now(), rules });
   }
   // Longest matching rule wins; Allow wins a tie (the standard interpretation).
@@ -78,15 +80,21 @@ async function allowedByRobots(url: URL): Promise<boolean> {
 /** Thrown when a site has refused automated requests. The crawl stops and stays away for a while. */
 export class BlockedError extends Error {
   until: Date;
-  constructor(message: string, until: Date) {
+  origin: string;
+  constructor(message: string, until: Date, origin: string) {
     super(message);
     this.until = until;
+    this.origin = origin;
   }
 }
 
 /** A refusal on the news lists pauses everything for a short while. A refusal on article pages only pauses article reading, for longer. */
 const LIST_BACKOFF_MINUTES = Math.max(5, Number(process.env.OFFICIAL_SOURCES_BACKOFF_MINUTES) || 60);
 const DETAIL_BACKOFF_MINUTES = Math.max(15, Number(process.env.OFFICIAL_SOURCES_DETAIL_BACKOFF_MINUTES) || 360);
+/** A site that does not answer at all is left alone for a shorter while: it may only be slow or briefly down. */
+const NO_RESPONSE_BACKOFF_MINUTES = Math.max(5, Number(process.env.OFFICIAL_SOURCES_NO_RESPONSE_MINUTES) || 30);
+const PAGE_TIMEOUT_MS = 25_000;
+const ROBOTS_TIMEOUT_MS = 15_000;
 
 type FetchScope = 'list' | 'detail';
 const stateKey = (origin: string, scope: FetchScope) => `${origin}#${scope}`;
@@ -97,7 +105,13 @@ async function assertNotBlocked(origin: string, scope: FetchScope): Promise<void
   const states = await CrawlState.find({ origin: { $in: keys } }).lean().catch(() => []);
   for (const state of states) {
     if (state.blockedUntil && state.blockedUntil.getTime() > Date.now()) {
-      throw new BlockedError(`${origin} refused automated requests recently (${state.reason ?? 'blocked'}); paused until ${state.blockedUntil.toISOString().slice(11, 16)} UTC.`, state.blockedUntil);
+      const until = state.blockedUntil.toISOString().slice(11, 16);
+      const refused = /^HTTP/.test(state.reason ?? '');
+      throw new BlockedError(
+        refused ? `${origin} refused automated requests recently (${state.reason}); paused until ${until} UTC.` : `${origin} did not respond recently; paused until ${until} UTC.`,
+        state.blockedUntil,
+        origin,
+      );
     }
   }
 }
@@ -108,21 +122,44 @@ async function noteBlocked(origin: string, scope: FetchScope, status: number, re
   const minutes = Number.isFinite(seconds) && seconds > 0 ? Math.max(5, Math.ceil(seconds / 60)) : fallback;
   const until = new Date(Date.now() + minutes * 60_000);
   await CrawlState.updateOne({ origin: stateKey(origin, scope) }, { blockedUntil: until, reason: `HTTP ${status}`, updatedAt: new Date() }, { upsert: true }).catch(() => {});
-  return new BlockedError(`${origin} refused automated requests (HTTP ${status}). The crawler is backing off for ${minutes} minutes and will not retry sooner.`, until);
+  return new BlockedError(`${origin} refused automated requests (HTTP ${status}). The crawler is backing off for ${minutes} minutes and will not retry sooner.`, until, origin);
+}
+
+function describeFetchFailure(err: unknown, timeoutMs: number): string {
+  const e = err as { name?: string; message?: string; cause?: { code?: string } };
+  if (e?.name === 'TimeoutError' || e?.name === 'AbortError' || /aborted|timed? ?out/i.test(e?.message ?? '')) return `no answer within ${Math.round(timeoutMs / 1000)} seconds`;
+  if (e?.cause?.code) return `the connection failed: ${e.cause.code}`;
+  return e?.message || 'the connection failed';
+}
+
+/** The site did not answer. Some sites drop automated requests silently rather than refusing them, so this is treated like a refusal: stop, wait, try again later. */
+async function noteNoResponse(origin: string, scope: FetchScope, err: unknown, timeoutMs: number): Promise<BlockedError> {
+  const until = new Date(Date.now() + NO_RESPONSE_BACKOFF_MINUTES * 60_000);
+  await CrawlState.updateOne({ origin: stateKey(origin, scope) }, { blockedUntil: until, reason: 'no response', updatedAt: new Date() }, { upsert: true }).catch(() => {});
+  return new BlockedError(
+    `${origin} did not respond (${describeFetchFailure(err, timeoutMs)}). It may be slow, or quietly turning automated requests away. The crawler is pausing for ${NO_RESPONSE_BACKOFF_MINUTES} minutes and will try again.`,
+    until,
+    origin,
+  );
 }
 
 export async function politeFetch(rawUrl: string, scope: FetchScope = 'list'): Promise<string> {
   const url = new URL(rawUrl);
   await assertNotBlocked(url.origin, scope);
-  if (!(await allowedByRobots(url))) throw new Error(`robots.txt asks crawlers not to fetch ${url.pathname}`);
+  if (!(await allowedByRobots(url, scope))) throw new Error(`robots.txt asks crawlers not to fetch ${url.pathname}`);
   const wait = (lastRequest.get(url.origin) ?? 0) + REQUEST_GAP_MS - Date.now();
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   lastRequest.set(url.origin, Date.now());
-  const res = await fetch(url, {
-    headers: { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml' },
-    signal: AbortSignal.timeout(25_000),
-    redirect: 'follow',
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml' },
+      signal: AbortSignal.timeout(PAGE_TIMEOUT_MS),
+      redirect: 'follow',
+    });
+  } catch (err) {
+    throw await noteNoResponse(url.origin, scope, err, PAGE_TIMEOUT_MS);
+  }
   // A refusal is respected, not worked around: remember it and stop.
   if (res.status === 403 || res.status === 429 || res.status === 503) throw await noteBlocked(url.origin, scope, res.status, res.headers.get('retry-after'));
   if (!res.ok) throw new Error(`${url.href} returned HTTP ${res.status}`);
@@ -274,9 +311,10 @@ SOURCES.push({
   },
 });
 
-export async function discover(): Promise<{ items: Discovered[]; problems: string[] }> {
+export async function discover(): Promise<{ items: Discovered[]; problems: string[]; paused: { label: string; message: string; origin: string }[] }> {
   const byUrl = new Map<string, Discovered>();
   const problems: string[] = [];
+  const paused: { label: string; message: string; origin: string }[] = [];
   for (const source of SOURCES) {
     try {
       const html = await politeFetch(source.listUrl);
@@ -288,10 +326,12 @@ export async function discover(): Promise<{ items: Discovered[]; problems: strin
         if (!existing || (item.teaser && !existing.teaser)) byUrl.set(item.url, existing ? { ...existing, ...item, publishedAt: existing.publishedAt ?? item.publishedAt } : item);
       }
     } catch (err) {
-      problems.push(`${source.label}: ${(err as Error).message}`);
+      // A refusal or silence is an expected state, reported on its own so one quiet site never hides what the others returned.
+      if (err instanceof BlockedError) paused.push({ label: source.label, message: err.message, origin: err.origin });
+      else problems.push(`${source.label}: ${(err as Error).message}`);
     }
   }
-  return { items: [...byUrl.values()], problems };
+  return { items: [...byUrl.values()], problems, paused };
 }
 
 // ---------- reading one page ------------------------------------------------------------------------------------------
@@ -378,10 +418,12 @@ export interface ScanResult {
   changed: number;
   rechecked: number;
   enriched: number;
-  /** The news lists themselves were refused: nothing could be read. */
+  /** Every news list was refused or did not answer: nothing could be read. */
   blocked: boolean;
   /** Only the article pages were refused: items were still recorded from the lists. */
   detailsBlocked: boolean;
+  /** Sources that refused or did not answer this time, with the reason. The other sources were still read. */
+  paused: string[];
   problems: string[];
 }
 
@@ -393,10 +435,15 @@ const fingerprint = (parts: (string | undefined)[]) => createHash('sha256').upda
  * useful queue; section headings and body fingerprints are filled in on a later run.
  */
 export async function scanSources(options: { dryRun?: boolean } = {}): Promise<ScanResult> {
-  const { items, problems } = await discover();
-  const result: ScanResult = { discovered: items.length, added: 0, changed: 0, rechecked: 0, enriched: 0, blocked: false, detailsBlocked: false, problems };
-  if (problems.some((p) => /refused automated requests|paused until/i.test(p))) result.blocked = true;
+  const { items, problems, paused } = await discover();
+  const result: ScanResult = {
+    discovered: items.length, added: 0, changed: 0, rechecked: 0, enriched: 0,
+    blocked: !items.length && paused.length > 0, detailsBlocked: false,
+    paused: paused.map((p) => `${p.label}: ${p.message}`), problems,
+  };
   if (!items.length) return result;
+  /** Origins that have refused or gone quiet this run; their pages are not opened, while other sites carry on. */
+  const blockedOrigins = new Set(paused.map((p) => p.origin));
 
   const existing = new Map<string, SourceUpdateDoc>();
   for (const d of await SourceUpdate.find({ url: { $in: items.map((i) => i.url) } })) existing.set(d.url, d);
@@ -406,14 +453,16 @@ export async function scanSources(options: { dryRun?: boolean } = {}): Promise<S
 
   /** Reads one page if the budget and the site allow; a refusal ends all further reading for this run. */
   const tryRead = async (url: string): Promise<PageFacts | null> => {
-    if (result.blocked || result.detailsBlocked || detailBudget <= 0) return null;
+    if (blockedOrigins.has(new URL(url).origin) || detailBudget <= 0) return null;
     detailBudget -= 1;
     try {
       return await readPage(url);
     } catch (err) {
       // A refusal of article pages is an expected, handled state, not a problem: the lists still fill the queue.
-      if (err instanceof BlockedError) result.detailsBlocked = true;
-      else problems.push(`${url}: ${(err as Error).message}`);
+      if (err instanceof BlockedError) {
+        blockedOrigins.add(err.origin);
+        result.detailsBlocked = true;
+      } else problems.push(`${url}: ${(err as Error).message}`);
       return null;
     }
   };
@@ -475,7 +524,7 @@ export async function scanSources(options: { dryRun?: boolean } = {}): Promise<S
   const lacking = await SourceUpdate.find({ detailAt: { $exists: false } }).sort({ priority: -1, publishedAt: -1 }).limit(8);
   for (const doc of lacking) {
     const facts = await tryRead(doc.url);
-    if (!facts) { if (result.blocked || result.detailsBlocked) break; continue; }
+    if (!facts) continue;
     const cls = classify({ title: facts.title || doc.title, categories: doc.categories, headings: facts.headings, kind: doc.source === 'ndis-news' ? 'news' : 'page', publishedAt: doc.publishedAt });
     doc.title = facts.title || doc.title;
     doc.headings = facts.headings;
@@ -494,7 +543,7 @@ export async function scanSources(options: { dryRun?: boolean } = {}): Promise<S
   const stale = await SourceUpdate.find({ status: { $in: ['brief', 'scheduled', 'published'] }, needsRecheck: false, detailAt: { $exists: true } }).sort({ lastSeenAt: 1 }).limit(RECHECK_PER_RUN);
   for (const doc of stale) {
     const facts = await tryRead(doc.url);
-    if (!facts) { if (result.blocked || result.detailsBlocked) break; continue; }
+    if (!facts) continue;
     doc.lastSeenAt = now;
     doc.detailAt = now;
     if (facts.contentHash !== doc.contentHash) {
