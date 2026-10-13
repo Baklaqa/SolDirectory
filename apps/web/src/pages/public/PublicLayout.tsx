@@ -152,6 +152,8 @@ export function PublicFooter() {
           <Link to="/guides/choosing-a-provider">Choosing a provider</Link>
           <Link to="/guides/plan-management-basics">Plan management basics</Link>
           <Link to="/guides/aged-care-support">Aged care support</Link>
+          <Link to="/glossary">Glossary</Link>
+          <Link to="/editorial-standards">Editorial standards</Link>
         </div>
         <div className="public-footer-col">
           <span className="public-footer-heading">Company</span>

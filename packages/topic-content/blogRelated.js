@@ -104,3 +104,9 @@ export function relatedArticles({ service, themes = [], exclude = [], limit = 3,
   }
   return picked.slice(0, limit);
 }
+
+/** The articles closest to one article (same services and themes), excluding itself, for "keep learning" links. */
+export function relatedToArticle(slug, { limit = 3, now = Date.now() } = {}) {
+  const meta = META[slug] ?? {};
+  return relatedArticles({ service: meta.services?.[0], themes: meta.themes ?? [], exclude: [slug], limit, now });
+}

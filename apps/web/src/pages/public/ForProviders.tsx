@@ -6,6 +6,7 @@ import Counter from '../../components/Counter';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import ProviderExtras from '../../components/extras/ProviderExtras';
+import { PROVIDER_FAQS } from '@soldirectory/topic-content';
 import './Home.css';
 import './ForProviders.css';
 
@@ -14,56 +15,7 @@ import './ForProviders.css';
 const STARTER_FEATURES = ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'];
 const GROWTH_FEATURES = ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'];
 
-const FAQS: { q: string; a: string }[] = [
-  {
-    q: 'Is a lead the same as a booked client?',
-    a: 'No. A lead is an enquiry from someone looking for support in your area. Several matched providers can see the same enquiry, and the person decides who to contact back. We do not guarantee a booking, a response, or a fixed volume of enquiries.',
-  },
-  {
-    q: 'Do I need to be NDIS registered?',
-    a: 'No, but your registration status is shown on your listing and some participants specifically search for registered providers. Unregistered providers can still list and be matched to self-managed or plan-managed enquiries.',
-  },
-  {
-    q: 'How much does it cost?',
-    a: 'Claiming and verifying your listing is free. The Growth plan is a flat monthly subscription that includes a set number of lead unlocks — see the comparison below for current pricing and inclusions.',
-  },
-  {
-    q: 'Will listing guarantee me new clients?',
-    a: 'No directory can guarantee that. Enquiry volume depends on demand in your service area, your capacity, and how complete your profile is. We only ask that your service area, funding types and contact details are accurate.',
-  },
-  {
-    q: 'Can I cancel any time?',
-    a: 'Yes. Growth is billed monthly with no lock-in contract — cancel from your dashboard whenever you like and you will not be billed again for the next cycle.',
-  },
-  {
-    q: 'How do participants find me?',
-    a: 'Participants and support coordinators search the public directory by suburb, service type and funding, or submit a "Get matched" request that we compare against your listed service areas and confirmed capacity.',
-  },
-  {
-    q: 'Can I list if I am registered for only some supports?',
-    a: 'Yes. State the supports you are registered for and the supports you deliver. People compare listings on exactly that, so a precise profile helps the right enquiries reach you.',
-  },
-  {
-    q: 'What does the NDIS Commission expect of registered providers?',
-    a: 'Registered providers are audited against the NDIS Practice Standards, must follow the Code of Conduct, have complaints and incident systems, screen workers in certain roles, notify the Commission of changes and reportable incidents, and meet audit requirements. Our guides to registration, audits and the Practice Standards explain each in plain English, and link to the Commission’s own pages.',
-  },
-  {
-    q: 'Can unregistered providers deliver NDIS supports?',
-    a: 'Yes, for supports that do not require registration, and only to participants who self-manage or plan-manage their funding. The Code of Conduct still applies, and the Commission recommends that unregistered providers have workers screened.',
-  },
-  {
-    q: 'Where do I confirm the current NDIS price limits?',
-    a: 'On the NDIS website’s pricing arrangements page, which publishes the pricing schedules. The maximum prices apply to NDIA-managed and plan-managed participants. Confirm the current schedule there rather than relying on a figure elsewhere.',
-  },
-  {
-    q: 'How should I reply to an enquiry?',
-    a: 'Quickly, plainly and without pressure. Say whether you can help, in which area and on which days, when you could start, what it would cost and what happens next. If you cannot help, say so and point to where they might look. Our guide to responding to enquiries has a checklist.',
-  },
-  {
-    q: 'What should I do if someone complains?',
-    a: 'Acknowledge it, give a straight answer, act, and apologise where it is due. Threatening anyone, or discouraging a complaint, is against the law. The Commission’s expectations and the “four As” approach are covered in our guide to handling complaints well.',
-  },
-];
+const FAQS = PROVIDER_FAQS as { question: string; answer: string }[];
 
 export default function ForProviders() {
   const navigate = useNavigate();
@@ -79,7 +31,7 @@ export default function ForProviders() {
     });
     setJsonLd('providers-faq', {
       '@type': 'FAQPage',
-      mainEntity: FAQS.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      mainEntity: FAQS.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
     });
     return () => setJsonLd('providers-faq', null);
   }, []);
@@ -264,17 +216,17 @@ export default function ForProviders() {
             {FAQS.map((item, i) => {
               const open = openFaq === i;
               return (
-                <div key={item.q} className="fp-faq-item">
+                <div key={item.question} className="fp-faq-item">
                   <button
                     type="button"
                     className="fp-faq-question"
                     aria-expanded={open}
                     onClick={() => setOpenFaq(open ? null : i)}
                   >
-                    {item.q}
+                    {item.question}
                     <span className="fp-faq-chevron" aria-hidden="true">{open ? '−' : '+'}</span>
                   </button>
-                  {open && <p className="fp-faq-answer">{item.a}</p>}
+                  {open && <p className="fp-faq-answer">{item.answer}</p>}
                 </div>
               );
             })}

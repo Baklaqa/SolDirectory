@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { WORKER_PAGE_GUIDES, WORKER_SETUP_STEPS } from '@soldirectory/topic-content';
 import { getRegisterHub, getServiceSuburbs, type RegisterHub } from '../../api/registerApi';
 import { STATE_INFO } from '../../data/locationInfo';
 import { slugify } from '../../data/slugHelpers';
@@ -22,49 +23,9 @@ const SUPPORTS: { name: string; photo: string }[] = [
   { name: 'Nursing', photo: 'nursing' },
 ];
 
-const SETUP: { title: string; body: string; link: { to: string; label: string } }[] = [
-  {
-    title: 'Decide how you will work',
-    body: 'Contractor or employee is decided by how the arrangement really works, not by what it is called. Settle it before the first shift.',
-    link: { to: '/blog/independent-contractor-or-employee-getting-your-support-work-arrangement-right', label: 'Contractor or employee?' },
-  },
-  {
-    title: 'Get your business basics in place',
-    body: 'An ABN if you are entitled to one, a plan for tax, GST and super, and a conversation about insurance with whoever engages you.',
-    link: { to: '/blog/abn-tax-and-insurance-for-independent-support-workers-what-to-sort-out', label: 'ABN, tax and insurance' },
-  },
-  {
-    title: 'Understand worker screening',
-    body: 'Whether you need an NDIS Worker Screening Check depends on who engages you. Find out before you pay for one.',
-    link: { to: '/blog/ndis-worker-screening-check-who-needs-one-and-how-it-works', label: 'The screening check explained' },
-  },
-  {
-    title: 'Know the Code of Conduct',
-    body: 'It applies to workers as well as providers, and it covers privacy, safety, honesty, raising concerns and fair prices.',
-    link: { to: '/blog/ndis-code-of-conduct-for-support-workers-what-it-means-in-everyday-work', label: 'The Code in everyday work' },
-  },
-  {
-    title: 'Set a rate you can explain',
-    body: 'Price limits are a ceiling, not a target. Know which limits apply to the participant, and what your rate has to cover.',
-    link: { to: '/blog/setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers', label: 'Setting your rates' },
-  },
-  {
-    title: 'Keep simple, safe paperwork',
-    body: 'A written agreement, short factual shift notes, a one-page incident process and invoices that match what was delivered.',
-    link: { to: '/blog/service-agreements-notes-and-invoices-the-paperwork-independent-workers-need', label: 'The paperwork you need' },
-  },
-];
+const SETUP = WORKER_SETUP_STEPS as { title: string; body: string; link: { to: string; label: string } }[];
 
-const GUIDE_SLUGS = [
-  'starting-as-an-independent-support-worker-what-to-set-up-first',
-  'ndis-worker-screening-check-who-needs-one-and-how-it-works',
-  'ndis-code-of-conduct-for-support-workers-what-it-means-in-everyday-work',
-  'abn-tax-and-insurance-for-independent-support-workers-what-to-sort-out',
-  'independent-contractor-or-employee-getting-your-support-work-arrangement-right',
-  'setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers',
-  'service-agreements-notes-and-invoices-the-paperwork-independent-workers-need',
-  'registered-or-unregistered-which-path-suits-your-ndis-support-business',
-];
+const GUIDE_SLUGS = WORKER_PAGE_GUIDES as string[];
 
 const BY_SUPPORT = ['Personal care', 'Domestic assistance', 'Transport'];
 const fmt = (n: number) => n.toLocaleString('en-AU');

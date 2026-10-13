@@ -1,65 +1,76 @@
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { useLayoutEffect, type ReactElement } from 'react';
+import { lazy, Suspense, useLayoutEffect, type ReactElement } from 'react';
 import { resetSeoTags } from '../lib/seo';
-import AppShell from '../components/layout/AppShell';
-import Home from '../pages/public/Home';
-import Directory from '../pages/public/Directory';
-import Services from '../pages/public/Services';
-import Locations from '../pages/public/Locations';
-import ForProviders from '../pages/public/ForProviders';
-import IndependentWorkers from '../pages/public/IndependentWorkers';
-import Login from '../pages/auth/Login';
-import Signup from '../pages/auth/Signup';
-import ConfirmCapacity from '../pages/ConfirmCapacity';
-import { ForgotPassword, ResetPassword } from '../pages/auth/AccountRecovery';
-import LegalPage from '../pages/public/LegalPage';
-import PhotoCredits from '../pages/public/PhotoCredits';
-import GuidePage, { GuidesHubPage } from '../pages/public/GuidePage';
-import BlogPage from '../pages/public/BlogPage';
-import Dashboard from '../pages/Dashboard';
-import WorkerDirectory from '../pages/workers/WorkerDirectory';
-import WorkerProfile from '../pages/workers/WorkerProfile';
-import Leads from '../pages/Leads';
-import LeadDetailPage from '../pages/LeadDetailPage';
-import Plans from '../pages/Plans';
-import Onboarding from '../pages/Onboarding';
-import Verification from '../pages/Verification';
-import AdminProviders from '../pages/admin/AdminProviders';
-import AdminProviderDetail from '../pages/admin/AdminProviderDetail';
-import AdminWorkers from '../pages/admin/AdminWorkers';
-import AdminWorkerDetail from '../pages/admin/AdminWorkerDetail';
-import AdminUsers from '../pages/admin/AdminUsers';
-import AdminMemberPlans from '../pages/admin/AdminMemberPlans';
-import AdminServices from '../pages/admin/AdminServices';
-import AdminConditions from '../pages/admin/AdminConditions';
-import AdminDiagnostics from '../pages/admin/AdminDiagnostics';
-import AdminOperations from '../pages/admin/AdminOperations';
-import AdminEnquiries from '../pages/admin/AdminEnquiries';
-import AdminContent from '../pages/admin/AdminContent';
-import TrackRequest from '../pages/public/TrackRequest';
-import AdminClaims from '../pages/admin/AdminClaims';
-import AdminRegisterListings from '../pages/admin/AdminRegisterListings';
-import AdminWorkerReviews from '../pages/admin/AdminWorkerReviews';
-import ProviderPublicPage from '../pages/public/ProviderPublicPage';
-import WorkerFinder from '../pages/public/WorkerFinder';
-import WorkerPublicProfile from '../pages/public/WorkerPublicProfile';
-import MyWorkerProfilePage from '../pages/workers/MyWorkerProfile';
-import MyListingPage from '../pages/providers/MyListing';
-import ProviderListingPage, { ConditionsHubPage } from '../pages/public/ProviderListingPage';
-import FundingTopicPage, { FundingHubPage } from '../pages/public/FundingTopicPage';
-import LanguageTopicPage, { LanguageHubPage } from '../pages/public/LanguageTopicPage';
-import SupportCoordinators from '../pages/public/SupportCoordinators';
-import ProviderDirectory from '../pages/providers/ProviderDirectory';
-import ProviderProfilePage from '../pages/providers/ProviderProfilePage';
-import SavedProviders from '../pages/providers/SavedProviders';
-import AdminUserDetail from '../pages/admin/AdminUserDetail';
 import { useAuth } from '../context/AuthContext';
-import ServiceLocationPage from '../pages/public/ServiceLocationPage';
-import WordPressCPTPage from '../pages/wordpress/WordPressCPTPage';
 import { CPT_ROUTES } from '../lib/cptRouteConfig';
-import WordPressCatchAllPage from '../pages/wordpress/WordPressCatchAllPage';
-import { RegisterHubRoute, RegisterSingleRoute, RegisterSuburbRoute } from '../pages/public/register/RegisterRoutes';
 import type { Role } from '@soldirectory/shared-types';
+
+// Every page is its own chunk: a visitor downloads the code for the page they open, not the whole site.
+const AppShell = lazy(() => import('../components/layout/AppShell'));
+const Home = lazy(() => import('../pages/public/Home'));
+const Directory = lazy(() => import('../pages/public/Directory'));
+const Services = lazy(() => import('../pages/public/Services'));
+const Locations = lazy(() => import('../pages/public/Locations'));
+const ForProviders = lazy(() => import('../pages/public/ForProviders'));
+const IndependentWorkers = lazy(() => import('../pages/public/IndependentWorkers'));
+const Login = lazy(() => import('../pages/auth/Login'));
+const Signup = lazy(() => import('../pages/auth/Signup'));
+const ConfirmCapacity = lazy(() => import('../pages/ConfirmCapacity'));
+const ForgotPassword = lazy(() => import('../pages/auth/AccountRecovery').then((m) => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('../pages/auth/AccountRecovery').then((m) => ({ default: m.ResetPassword })));
+const LegalPage = lazy(() => import('../pages/public/LegalPage'));
+const PhotoCredits = lazy(() => import('../pages/public/PhotoCredits'));
+const GlossaryPage = lazy(() => import('../pages/public/GlossaryPage'));
+const EditorialStandards = lazy(() => import('../pages/public/EditorialStandards'));
+const GuidePage = lazy(() => import('../pages/public/GuidePage'));
+const GuidesHubPage = lazy(() => import('../pages/public/GuidePage').then((m) => ({ default: m.GuidesHubPage })));
+const BlogPage = lazy(() => import('../pages/public/BlogPage'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const WorkerDirectory = lazy(() => import('../pages/workers/WorkerDirectory'));
+const WorkerProfile = lazy(() => import('../pages/workers/WorkerProfile'));
+const Leads = lazy(() => import('../pages/Leads'));
+const LeadDetailPage = lazy(() => import('../pages/LeadDetailPage'));
+const Plans = lazy(() => import('../pages/Plans'));
+const Onboarding = lazy(() => import('../pages/Onboarding'));
+const Verification = lazy(() => import('../pages/Verification'));
+const AdminProviders = lazy(() => import('../pages/admin/AdminProviders'));
+const AdminProviderDetail = lazy(() => import('../pages/admin/AdminProviderDetail'));
+const AdminWorkers = lazy(() => import('../pages/admin/AdminWorkers'));
+const AdminWorkerDetail = lazy(() => import('../pages/admin/AdminWorkerDetail'));
+const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
+const AdminMemberPlans = lazy(() => import('../pages/admin/AdminMemberPlans'));
+const AdminServices = lazy(() => import('../pages/admin/AdminServices'));
+const AdminConditions = lazy(() => import('../pages/admin/AdminConditions'));
+const AdminDiagnostics = lazy(() => import('../pages/admin/AdminDiagnostics'));
+const AdminOperations = lazy(() => import('../pages/admin/AdminOperations'));
+const AdminEnquiries = lazy(() => import('../pages/admin/AdminEnquiries'));
+const AdminContent = lazy(() => import('../pages/admin/AdminContent'));
+const TrackRequest = lazy(() => import('../pages/public/TrackRequest'));
+const AdminClaims = lazy(() => import('../pages/admin/AdminClaims'));
+const AdminRegisterListings = lazy(() => import('../pages/admin/AdminRegisterListings'));
+const AdminWorkerReviews = lazy(() => import('../pages/admin/AdminWorkerReviews'));
+const ProviderPublicPage = lazy(() => import('../pages/public/ProviderPublicPage'));
+const WorkerFinder = lazy(() => import('../pages/public/WorkerFinder'));
+const WorkerPublicProfile = lazy(() => import('../pages/public/WorkerPublicProfile'));
+const MyWorkerProfilePage = lazy(() => import('../pages/workers/MyWorkerProfile'));
+const MyListingPage = lazy(() => import('../pages/providers/MyListing'));
+const ProviderListingPage = lazy(() => import('../pages/public/ProviderListingPage'));
+const ConditionsHubPage = lazy(() => import('../pages/public/ProviderListingPage').then((m) => ({ default: m.ConditionsHubPage })));
+const FundingTopicPage = lazy(() => import('../pages/public/FundingTopicPage'));
+const FundingHubPage = lazy(() => import('../pages/public/FundingTopicPage').then((m) => ({ default: m.FundingHubPage })));
+const LanguageTopicPage = lazy(() => import('../pages/public/LanguageTopicPage'));
+const LanguageHubPage = lazy(() => import('../pages/public/LanguageTopicPage').then((m) => ({ default: m.LanguageHubPage })));
+const SupportCoordinators = lazy(() => import('../pages/public/SupportCoordinators'));
+const ProviderDirectory = lazy(() => import('../pages/providers/ProviderDirectory'));
+const ProviderProfilePage = lazy(() => import('../pages/providers/ProviderProfilePage'));
+const SavedProviders = lazy(() => import('../pages/providers/SavedProviders'));
+const AdminUserDetail = lazy(() => import('../pages/admin/AdminUserDetail'));
+const ServiceLocationPage = lazy(() => import('../pages/public/ServiceLocationPage'));
+const WordPressCPTPage = lazy(() => import('../pages/wordpress/WordPressCPTPage'));
+const WordPressCatchAllPage = lazy(() => import('../pages/wordpress/WordPressCatchAllPage'));
+const RegisterHubRoute = lazy(() => import('../pages/public/register/RegisterRoutes').then((m) => ({ default: m.RegisterHubRoute })));
+const RegisterSingleRoute = lazy(() => import('../pages/public/register/RegisterRoutes').then((m) => ({ default: m.RegisterSingleRoute })));
+const RegisterSuburbRoute = lazy(() => import('../pages/public/register/RegisterRoutes').then((m) => ({ default: m.RegisterSuburbRoute })));
 
 /** Old /directory/for/:condition path -> new permalink-style /condition/:slug/. */
 function RedirectToCondition() {
@@ -146,6 +157,7 @@ export default function AppRoutes() {
   useLayoutEffect(() => { resetSeoTags(); }, [pathname]);
 
   return (
+    <Suspense fallback={<div style={{ minHeight: '70vh' }} aria-busy="true" />}>
     <Routes>
       {/* Public marketing pages */}
       <Route path="/" element={<Home />} />
@@ -207,6 +219,8 @@ export default function AppRoutes() {
       <Route path="/privacy" element={<LegalPage slug="privacy" />} />
       <Route path="/terms" element={<LegalPage slug="terms" />} />
       <Route path="/photo-credits" element={<PhotoCredits />} />
+      <Route path="/glossary" element={<GlossaryPage />} />
+      <Route path="/editorial-standards" element={<EditorialStandards />} />
       <Route path="/provider-agreement" element={<LegalPage slug="provider-agreement" />} />
       <Route path="/lead-disclaimer" element={<LegalPage slug="lead-disclaimer" />} />
       <Route path="/guides" element={<GuidesHubPage />} />
@@ -273,5 +287,6 @@ export default function AppRoutes() {
 
       <Route path="*" element={<WordPressCatchAllPage />} />
     </Routes>
+    </Suspense>
   );
 }

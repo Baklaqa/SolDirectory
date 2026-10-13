@@ -1,5 +1,7 @@
 export { GUIDE_DOCS } from './guides.js';
 export { EDITORIAL_BLOG_POSTS } from './blog.js';
+export { GLOSSARY } from './glossary.js';
+export { INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS } from './pageContent.js';
 
 const group = (categoryGroup, names) => names.map(([slug, name]) => ({ slug, name, categoryGroup }));
 
@@ -269,4 +271,4 @@ export function languageShellEditorial(topic) {
     ],
   };
 }
-export { relatedArticles } from './blogRelated.js';
+export { relatedArticles, relatedToArticle } from './blogRelated.js';

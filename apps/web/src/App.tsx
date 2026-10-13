@@ -14,7 +14,7 @@ export default function App() {
   return (
     <>
       <SitePreloader />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollToTop />
         <AuthProvider>
           <ToastProvider>

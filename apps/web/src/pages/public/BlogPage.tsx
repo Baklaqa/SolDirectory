@@ -44,7 +44,7 @@ function editorialToPost(article: EditorialBlogPost): WPBlogPost {
     excerpt: article.summary,
     featuredImage: { url: article.coverImage, alt: article.coverAlt },
     terms: [category],
-    seo: { title: `${article.title} | SolDirectory`, description: article.summary, ogImage: article.coverImage, noindex: false },
+    seo: { title: `${article.seoTitle ?? article.title} | SolDirectory`, description: article.summary, ogImage: article.coverImage, noindex: false },
     date: article.publishedAt,
     modified: article.checkedAt,
     authorName: 'SolDirectory',
@@ -239,6 +239,7 @@ export default function BlogPage() {
         mainEntityOfPage: canonical,
         url: canonical,
         inLanguage: 'en-AU',
+        publishingPrinciples: `${SITE_ORIGIN()}/editorial-standards`,
         articleSection: article.categories[0]?.name,
         keywords: ['NDIS', ...article.categories.map((c) => c.name)].join(', '),
         ...(article.featuredImage?.url ? { image: [article.featuredImage.url] } : {}),
@@ -388,7 +389,7 @@ export default function BlogPage() {
                       <aside className="blog-source-card">
                         <span className="blog-source-card-label">Primary source · checked {formatDate(article.editorialSource.checkedAt)}</span>
                         <a href={article.editorialSource.url} target="_blank" rel="noopener noreferrer">{article.editorialSource.label} <span aria-hidden="true">↗</span></a>
-                        <p>Read the current official notice before acting. Guidance and effective dates can change.</p>
+                        <p>Read the current official notice before acting. Guidance and effective dates can change. <Link to="/editorial-standards">How we write and check our guides</Link>.</p>
                       </aside>
                     )}
 

@@ -8,6 +8,7 @@ import './Home.css';
 import './IndependentWorkers.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
 import WorkerExtras from '../../components/extras/WorkerExtras';
+import { INDEPENDENT_WORKER_FAQS } from '@soldirectory/topic-content';
 
 const PROFILE_DETAILS = [
   ['Services and experience', 'The supports you deliver, relevant experience and the participant groups you work with.'],
@@ -29,56 +30,7 @@ const HERO_CHECKS = [
   'No guarantee of work: you choose what to accept',
 ];
 
-const FAQS = [
-  {
-    question: 'Who can create an independent worker profile?',
-    answer: 'Support workers, nurses and allied health assistants who work independently can register. You are responsible for holding the checks, qualifications, insurance and registrations required for the supports you offer.',
-  },
-  {
-    question: 'Does SolDirectory employ independent workers?',
-    answer: 'No. SolDirectory is an independent directory and connection service. It does not employ workers, set employment conditions, supervise support delivery or act as a registered NDIS provider.',
-  },
-  {
-    question: 'Does a profile guarantee work?',
-    answer: 'No. A profile makes your information searchable to eligible organisations using the worker directory. Contact, engagement and ongoing work depend on each organisation’s requirements and your suitability and availability.',
-  },
-  {
-    question: 'What should I confirm before accepting work?',
-    answer: 'Confirm the support requirements, role expectations, location, schedule, rate, insurance arrangements, service agreement and whether the engagement is employment or independent contracting. Obtain professional advice if you are unsure.',
-  },
-  {
-    question: 'Can participants use this page to hire a worker directly?',
-    answer: 'This page is for worker registration. Access to worker profiles is currently available to authorised organisations through the worker directory. Participants and representatives can use the public provider directory or submit a provider enquiry request.',
-  },
-  {
-    question: 'Do I need an ABN to work independently?',
-    answer: 'Working independently usually means invoicing under your own Australian Business Number, but not everyone is entitled to one, and applying when you are not can have serious consequences. Read the Australian Business Register’s guidance and our guide to ABN, tax and insurance, and ask a registered tax agent if you are unsure.',
-  },
-  {
-    question: 'Do I need an NDIS Worker Screening Check?',
-    answer: 'It depends on who engages you. Registered providers must have workers in risk-assessed roles screened. Unregistered providers and self-managed or plan-managed participants can choose to require one, and some self-employed workers need one themselves. Ask the person or organisation engaging you before you apply, because a check costs money.',
-  },
-  {
-    question: 'Do I have to be registered with the NDIS Commission?',
-    answer: 'Not to work as an individual delivering supports that do not require registration for participants who self-manage or plan-manage. Some supports can only be delivered by registered providers, and if you work under another provider’s registration, that provider is responsible for the supports and for claiming payment. Our guide to registered and unregistered paths explains the difference.',
-  },
-  {
-    question: 'Am I a contractor or an employee?',
-    answer: 'That depends on how the arrangement really works, not on what it is called. The Fair Work Ombudsman lists factors such as control, financial risk, equipment and whether you can send someone else. Our guide sets out the questions to ask before you agree, and legal advice is the safe way to be sure.',
-  },
-  {
-    question: 'How do I set my rates?',
-    answer: 'NDIA price limits apply to NDIA-managed and plan-managed participants and are a ceiling, not a target. Work out what your rate has to cover, such as tax, super, insurance, travel and unpaid time, and be ready to justify it, because the Code of Conduct expects fair pricing.',
-  },
-  {
-    question: 'What records should I keep?',
-    answer: 'A written service agreement, short factual notes for each shift, a written process for incidents, and invoices that match what you delivered. Keep them private and secure, and ask the people you work for how long they expect them to be kept.',
-  },
-  {
-    question: 'Which guides should I read first?',
-    answer: 'Start with setting up as an independent worker, then worker screening, the Code of Conduct and your rates. All are in the guides section of this page, with links to the official pages they rely on.',
-  },
-];
+const FAQS = INDEPENDENT_WORKER_FAQS as { question: string; answer: string }[];
 
 export default function IndependentWorkers() {
   const navigate = useNavigate();

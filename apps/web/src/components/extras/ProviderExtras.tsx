@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PROVIDER_LISTING_CHECKS, PROVIDER_PAGE_GUIDES } from '@soldirectory/topic-content';
 import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { STATE_INFO } from '../../data/locationInfo';
 import { KIND_BY_TYPE, registerPath, stateByCode } from '../../lib/registerMeta';
@@ -13,14 +14,7 @@ import './PageExtras.css';
  * NDIS Commission or to a guide that cites it.
  */
 
-const LISTING_CHECKS: { title: string; body: string }[] = [
-  { title: 'Supports you actually deliver', body: 'Name each support in the words a participant would use, and leave out anything you do not currently provide.' },
-  { title: 'The suburbs you cover', body: 'List the areas you really work in. Matching compares enquiries with your service areas, so accuracy saves your team time.' },
-  { title: 'How funding can be arranged', body: 'Say whether you work with self-managed, plan-managed and NDIA-managed participants, and for aged care, which programs.' },
-  { title: 'Your registration status', body: 'State it plainly, with the support types you are registered for if you are registered. People check.' },
-  { title: 'Capacity and availability', body: 'Keep your availability current. A short “not taking new people in this area at the moment” is better than silence.' },
-  { title: 'A route to reach you', body: 'Use an intake address that is checked every day, and say how quickly you aim to reply.' },
-];
+const LISTING_CHECKS = PROVIDER_LISTING_CHECKS as { title: string; body: string }[];
 
 const PATHS: { title: string; body: string; link: { to: string; label: string }; tint?: boolean }[] = [
   {
@@ -74,16 +68,7 @@ const SAFEGUARDS: { title: string; body: string; link: { to: string; label: stri
   },
 ];
 
-const GUIDE_SLUGS = [
-  'how-to-become-a-registered-ndis-provider-the-steps-and-what-to-prepare',
-  'registered-or-unregistered-which-path-suits-your-ndis-support-business',
-  'ndis-quality-audits-verification-or-certification-what-to-expect',
-  'ndis-practice-standards-in-plain-english-for-new-providers',
-  'reportable-incidents-and-incident-management-what-ndis-providers-need-to-know',
-  'handling-complaints-well-a-guide-for-ndis-providers',
-  'writing-a-provider-profile-that-helps-people-choose-you',
-  'responding-to-enquiries-a-practical-checklist-for-ndis-and-aged-care-providers',
-];
+const GUIDE_SLUGS = PROVIDER_PAGE_GUIDES as string[];
 
 const fmt = (n: number) => n.toLocaleString('en-AU');
 

@@ -51,7 +51,10 @@ async function loadTs(relPath) {
   return mod;
 }
 
-const { GUIDE_DOCS, fundingShellEditorial } = await import(pathToFileURL(path.resolve(webRoot, '../../packages/topic-content/index.js')).href);
+const {
+  GUIDE_DOCS, fundingShellEditorial, EDITORIAL_BLOG_POSTS, GLOSSARY,
+  INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS,
+} = await import(pathToFileURL(path.resolve(webRoot, '../../packages/topic-content/index.js')).href);
 const { FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT } = await loadTs('src/data/fundingContent.ts');
 const { STATIC_MEGA_MENU_FALLBACK } = await loadTs('src/data/staticMegaMenuFallback.ts');
 
@@ -69,6 +72,18 @@ const allServiceLinks = serviceTab.columns.flatMap((c) => c.links);
 const breadcrumbLd = (items) => ({
   '@type': 'BreadcrumbList',
   itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: `${site}${it.path}` })),
+});
+
+
+// Blog articles a page links to, as "title: summary" links, and its questions as FAQ markup, from the same copy the page reads.
+const articleList = (slugs) => ul(slugs
+  .map((slug) => EDITORIAL_BLOG_POSTS.find((post) => post.slug === slug))
+  .filter(Boolean)
+  .map((post) => `${a(`/blog/${post.slug}`, post.title)}: ${esc(post.summary)}`));
+const faqHtml = (faqs) => faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('');
+const faqLd = (faqs) => ({
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
 });
 
 const pages = [];
@@ -131,9 +146,14 @@ pages.push({
   title: 'List your business on SolDirectory',
   description: 'Providers can create an account to list their supports and service areas and receive enquiries from people looking for NDIS and aged care support.',
   crumbs: [{ name: 'Home', path: '/' }, { name: 'List your business', path: '/providers' }],
+  jsonLd: [faqLd(PROVIDER_FAQS)],
   body: (c) => `${c}<h1>List your business on SolDirectory</h1>` +
     '<p>SolDirectory is a directory and enquiry service. Providers create an account, describe the supports they deliver and the areas they cover, confirm their availability, and respond to enquiries from people looking for support.</p>' +
-    ul([a('/signup', 'Create a provider account'), a('/login', 'Log in'), a('/guides/choosing-a-provider', 'How people choose a provider'), a('/lead-disclaimer', 'Enquiry disclaimer'), a('/provider-agreement', 'Provider agreement')]),
+    ul([a('/signup', 'Create a provider account'), a('/login', 'Log in'), a('/guides/choosing-a-provider', 'How people choose a provider'), a('/lead-disclaimer', 'Enquiry disclaimer'), a('/provider-agreement', 'Provider agreement')]) +
+    '<h2>What a strong listing includes</h2>' + ul(PROVIDER_LISTING_CHECKS.map((c2) => `<strong>${esc(c2.title)}.</strong> ${esc(c2.body)}`)) +
+    '<h2>Guides for running a provider business</h2>' + articleList(PROVIDER_PAGE_GUIDES) +
+    '<h2>The public NDIS register by state</h2>' + ul(STATES.map(([slug, name]) => a(`/ndis-providers/${slug}`, `NDIS providers in ${name}`))) +
+    '<h2>Frequently asked questions</h2>' + faqHtml(PROVIDER_FAQS),
 });
 
 pages.push({
@@ -141,10 +161,57 @@ pages.push({
   title: 'Independent Support Workers | SolDirectory',
   description: 'Create an independent worker profile with your services, experience, location and availability so eligible organisations can find and contact you.',
   crumbs: [{ name: 'Home', path: '/' }, { name: 'Independent workers', path: '/independent-workers' }],
+  jsonLd: [faqLd(INDEPENDENT_WORKER_FAQS)],
   body: (c) => `${c}<h1>Independent support workers</h1>` +
     '<p>Independent support workers can create a profile with their services, experience, location and availability, so eligible organisations can find and contact them. A profile is only shown publicly if the worker opts in and it is approved.</p>' +
-    ul([a('/signup', 'Create a worker profile'), a('/independent-workers/find', 'Find a worker'), a('/login', 'Log in')]),
+    ul([a('/signup', 'Create a worker profile'), a('/independent-workers/find', 'Find a worker'), a('/login', 'Log in')]) +
+    '<h2>Six things to settle before your first shift</h2>' + ul(WORKER_SETUP_STEPS.map((st) => `${a(st.link.to, st.title)}: ${esc(st.body)}`)) +
+    '<h2>Guides for independent workers</h2>' + articleList(WORKER_PAGE_GUIDES) +
+    '<h2>Supports you can offer</h2>' + ul([a('/services/personal-care', 'Personal care'), a('/services/domestic-assistance', 'Domestic assistance'), a('/services/transport', 'Transport'), a('/services/therapy-services', 'Therapy services'), a('/services/nursing', 'Nursing')]) +
+    '<h2>Independent support work by state and territory</h2>' + ul(STATES.map(([slug, name]) => a(`/ndis-providers/${slug}`, name))) +
+    '<h2>Independent worker questions</h2>' + faqHtml(INDEPENDENT_WORKER_FAQS),
 });
+
+// ---- Reference pages ----
+{
+  const terms = [...GLOSSARY].sort((x, y) => x.term.localeCompare(y.term, 'en-AU'));
+  const termId = (t) => t.term.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  pages.push({
+    path: '/glossary',
+    title: 'NDIS and aged care glossary: terms explained | SolDirectory',
+    description: 'Plain-English definitions of NDIS and aged care terms, from plan management and SIL to Support at Home and the Code of Conduct, each linked to a guide.',
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'Glossary', path: '/glossary' }],
+    jsonLd: [{
+      '@type': 'DefinedTermSet',
+      name: 'NDIS and aged care glossary',
+      url: `${site}/glossary`,
+      hasDefinedTerm: terms.map((t) => ({ '@type': 'DefinedTerm', name: t.term, description: t.definition, url: `${site}/glossary#${termId(t)}`, inDefinedTermSet: `${site}/glossary` })),
+    }],
+    body: (c) => `${c}<h1>NDIS and aged care glossary</h1>` +
+      '<p>The terms you will hear from the NDIA, providers, plan managers and My Aged Care, explained in plain language. Each one links to the guide that covers it properly. Definitions are general information, not advice about a particular plan.</p>' +
+      '<dl>' + terms.map((t) => `<dt id="${termId(t)}">${esc(t.term)}</dt><dd>${esc(t.definition)} ${a(t.to, t.label)}</dd>`).join('') + '</dl>',
+  });
+  pages.push({
+    path: '/editorial-standards',
+    title: 'Editorial standards: how we write and check our guides | SolDirectory',
+    description: 'How SolDirectory writes, sources and checks its NDIS and aged care guides: original writing, official sources cited, dates shown, and how to report a mistake.',
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'Editorial standards', path: '/editorial-standards' }],
+    jsonLd: [{ '@type': 'AboutPage', name: 'Editorial standards', url: `${site}/editorial-standards`, about: { '@type': 'Organization', name: 'SolDirectory', url: site } }],
+    body: (c) => `${c}<h1>Editorial standards</h1>` +
+      '<p>People use our guides to make decisions about support, money and safety, so they should be able to see where each statement comes from and when it was last checked.</p>' +
+      '<h2>What SolDirectory is, and is not</h2><p>SolDirectory is an independent directory and enquiry service. It is not the NDIA, the NDIS Quality and Safeguards Commission, My Aged Care or any other government body, and nothing here is an official decision about your plan or eligibility.</p>' +
+      '<h2>How an article is written</h2>' + ul([
+        'Original writing: we do not copy text, images or logos from other sites. Official content is restated in our own words and the source is cited.',
+        'One official source at the centre: each article names the official page it is based on and lists any further pages it draws on.',
+        'The pages were opened: sources are read when an article is written or updated, and the date they were last checked is shown on the article.',
+        'Things that change are not stated as figures: prices, thresholds and deadlines change, so we describe how something works and send you to the official page for the current number.',
+        'Plain statements of limits: articles say what to confirm for your own plan, and do not tell you what you are entitled to.',
+      ]) +
+      '<h2>Monitoring official announcements</h2><p>An automated monitor notes when the NDIS and My Aged Care news pages publish something new and prepares a private brief for an editor. It never publishes anything: a person writes each article.</p>' +
+      '<h2>Reporting a mistake</h2><p>If you think something is wrong, unclear or out of date, tell us which page and what you saw, using the contact details in the footer. We will compare it with the official source and correct the page if it needs it.</p>' +
+      `<p>${a('/glossary', 'NDIS and aged care glossary')} &middot; ${a('/guides', 'Guides')} &middot; ${a('/blog', 'Blog')}</p>`,
+  });
+}
 
 // ---- Guides ----
 pages.push({

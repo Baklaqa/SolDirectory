@@ -28,7 +28,7 @@ const LANGUAGE_ROUTES = ['/language', ...LANGUAGE_TOPICS.map((topic) => `/langua
 const STATIC_PUBLIC_ROUTES = [
   '/', '/find-a-provider', '/services', '/locations', '/providers',
   '/independent-workers', '/ndis-providers',
-  '/aged-care-providers', '/support-coordinators', ...GUIDE_ROUTES, ...FUNDING_ROUTES, ...CONDITION_ROUTES, ...LANGUAGE_ROUTES,
+  '/aged-care-providers', '/support-coordinators', '/glossary', '/editorial-standards', ...GUIDE_ROUTES, ...FUNDING_ROUTES, ...CONDITION_ROUTES, ...LANGUAGE_ROUTES,
 ];
 function editorialBlogRoutes(): string[] {
   const active = EDITORIAL_BLOG_POSTS.filter((post) => !post.expiresAt || new Date(post.expiresAt).getTime() > Date.now());

@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import type mapboxgl from 'mapbox-gl';
 import './ProviderMap.css';
+
+// The map library is large (well over 1 MB), so it is not part of any page's own code: it is fetched only when a map
+// is about to be seen, and not at all on a page whose map the visitor never scrolls to.
+type MapboxModule = typeof mapboxgl;
 
 export interface MapProviderMarker {
   id: string;
@@ -41,6 +44,7 @@ type MapStatus = 'loading' | 'ready' | 'error';
 
 export default function ProviderMap({ providers, selectedProviderId, onMarkerClick, address }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapboxRef = useRef<MapboxModule | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<globalThis.Map<string, mapboxgl.Marker>>(new globalThis.Map());
   const [status, setStatus] = useState<MapStatus>(ACCESS_TOKEN ? 'loading' : 'error');
@@ -53,21 +57,15 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
   // WebGL context on every render — the marker effect below is what
   // reacts to data changes instead.
   useEffect(() => {
-    if (!ACCESS_TOKEN || !containerRef.current) return;
-    mapboxgl.accessToken = ACCESS_TOKEN;
+    const container = containerRef.current;
+    if (!ACCESS_TOKEN || !container) return;
 
     let cancelled = false;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
-      attributionControl: true,
-    });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    let map: mapboxgl.Map | null = null;
+    let observer: IntersectionObserver | null = null;
 
     function handleLoad() {
-      if (cancelled) return;
+      if (cancelled || !map) return;
       mapRef.current = map;
       setStatus('ready');
     }
@@ -78,16 +76,54 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
       setErrorDetail('The map failed to load — the access token may be invalid or restricted for this domain.');
     }
 
-    map.on('load', handleLoad);
-    map.on('error', handleError as any);
+    async function start() {
+      try {
+        const [module] = await Promise.all([import('mapbox-gl'), import('mapbox-gl/dist/mapbox-gl.css')]);
+        if (cancelled) return;
+        const gl = module.default;
+        mapboxRef.current = gl;
+        gl.accessToken = ACCESS_TOKEN as string;
+        map = new gl.Map({
+          container: container as HTMLDivElement,
+          style: MAP_STYLE,
+          center: DEFAULT_CENTER,
+          zoom: DEFAULT_ZOOM,
+          attributionControl: true,
+        });
+        map.addControl(new gl.NavigationControl({ showCompass: false }), 'top-right');
+        map.on('load', handleLoad);
+        map.on('error', handleError as any);
+      } catch (error) {
+        if (cancelled) return;
+        console.error('[ProviderMap] Could not load the map library:', error);
+        setStatus('error');
+        setErrorDetail('The map could not be loaded. Check your connection and try again.');
+      }
+    }
+
+    // Start loading when the map is within a screen of being visible.
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer?.disconnect();
+          void start();
+        }
+      }, { rootMargin: '400px 0px' });
+      observer.observe(container);
+    } else {
+      void start();
+    }
 
     return () => {
       cancelled = true;
-      map.off('load', handleLoad);
-      map.off('error', handleError as any);
+      observer?.disconnect();
+      if (map) {
+        map.off('load', handleLoad);
+        map.off('error', handleError as any);
+      }
       markersRef.current.forEach((m) => m.remove());
       markersRef.current.clear();
-      map.remove();
+      map?.remove();
       mapRef.current = null;
     };
   }, []);
@@ -96,7 +132,8 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
   // list changes, or the selection changes.
   useEffect(() => {
     const map = mapRef.current;
-    if (status !== 'ready' || !map) return;
+    const gl = mapboxRef.current;
+    if (status !== 'ready' || !map || !gl) return;
 
     markersRef.current.forEach((m) => m.remove());
     markersRef.current.clear();
@@ -109,8 +146,8 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
     for (const p of withLocation) {
       const isSelected = p.id === selectedProviderId;
       const el = buildMarkerElement(p, isSelected, onMarkerClick);
-      const popup = buildPopup(p);
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      const popup = buildPopup(gl, p);
+      const marker = new gl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([p.location.lng, p.location.lat])
         .setPopup(popup)
         .addTo(map);
@@ -122,7 +159,7 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
       // a fixed, sensible neighborhood-level zoom reads better.
       map.easeTo({ center: [withLocation[0].location.lng, withLocation[0].location.lat], zoom: 12, duration: 0 });
     } else {
-      const bounds = new mapboxgl.LngLatBounds();
+      const bounds = new gl.LngLatBounds();
       withLocation.forEach((p) => bounds.extend([p.location.lng, p.location.lat]));
       map.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 0 });
     }
@@ -179,8 +216,8 @@ function buildMarkerElement(p: MapProviderMarker, isSelected: boolean, onMarkerC
   return el;
 }
 
-function buildPopup(p: MapProviderMarker): mapboxgl.Popup {
-  const popup = new mapboxgl.Popup({ offset: 28, closeButton: true, maxWidth: '260px' });
+function buildPopup(gl: MapboxModule, p: MapProviderMarker): mapboxgl.Popup {
+  const popup = new gl.Popup({ offset: 28, closeButton: true, maxWidth: '260px' });
   const root = document.createElement('div');
   root.className = 'provider-map-popup';
 

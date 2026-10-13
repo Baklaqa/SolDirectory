@@ -64,12 +64,17 @@ export interface EditorialBlogPost {
   coverAlt: string;
   /** A few short bullets shown in an “In short” box above the article. */
   keyPoints?: string[];
+  /** Shorter title for search results and link previews (the page heading stays `title`). */
+  seoTitle?: string;
   source: EditorialBlogSource;
   additionalSources: { label: string; url: string }[];
   sections: EditorialBlogSection[];
 }
 
 export const EDITORIAL_BLOG_POSTS: readonly EditorialBlogPost[];
+
+/** Articles that sit closest to a given article, for “keep learning” links. */
+export function relatedToArticle(slug: string, options?: { limit?: number; now?: number }): EditorialBlogPost[];
 
 export interface RelatedArticlesQuery {
   /** A service name from the catalogue, e.g. "Personal care". */
@@ -81,3 +86,14 @@ export interface RelatedArticlesQuery {
   now?: number;
 }
 export function relatedArticles(query?: RelatedArticlesQuery): EditorialBlogPost[];
+
+export interface PageFaq { question: string; answer: string }
+export const INDEPENDENT_WORKER_FAQS: readonly PageFaq[];
+export const PROVIDER_FAQS: readonly PageFaq[];
+export const WORKER_PAGE_GUIDES: readonly string[];
+export const PROVIDER_PAGE_GUIDES: readonly string[];
+export const WORKER_SETUP_STEPS: readonly { title: string; body: string; link: { to: string; label: string } }[];
+export const PROVIDER_LISTING_CHECKS: readonly { title: string; body: string }[];
+
+export interface GlossaryTerm { term: string; definition: string; to: string; label: string }
+export const GLOSSARY: readonly GlossaryTerm[];

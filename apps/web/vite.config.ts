@@ -16,6 +16,16 @@ export default defineConfig(({ mode }) => {
         transformIndexHtml: (html: string) => html.replace('%ROBOTS%', robots),
       },
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          // The framework changes rarely, so it gets its own file that browsers keep cached across releases.
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+          },
+        },
+      },
+    },
     server: {
       port: 5173,
       proxy: { '/api': 'http://localhost:4000' },

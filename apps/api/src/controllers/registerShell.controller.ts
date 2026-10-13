@@ -15,6 +15,7 @@ import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
   CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
+  relatedToArticle,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -88,6 +89,17 @@ async function loadShell(): Promise<string> {
     shellCache.checkedAt = Date.now();
   }
   return shellCache.html;
+}
+
+/** Pages the web build wrote as static HTML at <dist>/<slug>/index.html (apps/web/scripts/prerender.mjs). */
+async function prerenderedPage(slug: string): Promise<string | null> {
+  if (!SLUG_RE.test(slug)) return null;
+  const file = path.join(process.env.WEB_DIST_DIR || path.resolve(process.cwd(), '../web/dist'), slug, 'index.html');
+  try {
+    return await fs.readFile(file, 'utf8');
+  } catch {
+    return null;
+  }
 }
 
 // --- hub numbers, cached: they're aggregated over every listing ---
@@ -867,6 +879,16 @@ class WordPressUnavailable extends Error {}
 const WP_TTL_MS = 5 * 60 * 1000;
 const wpItemCache = new Map<string, { at: number; item: any | null }>();
 
+/**
+ * Once WordPress has failed, further calls fail straight away for a short while. Without this, every page that needs
+ * WordPress waits out the full timeout while it is slow or down, which is a slow page for crawlers and visitors alike.
+ */
+const WP_DOWN_MS = 30_000;
+let wpDownUntil = 0;
+function assertWordPressUp(): void {
+  if (Date.now() < wpDownUntil) throw new WordPressUnavailable('WordPress was unavailable a moment ago');
+}
+
 /** WordPress returns titles with HTML entities ("&amp;", "&#8217;"). */
 function decodeEntities(s: string): string {
   return s
@@ -876,14 +898,15 @@ function decodeEntities(s: string): string {
 }
 const plain = (html: string) => decodeEntities(String(html ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
 
-async function fetchWpItem(restBase: 'pages' | 'services' | 'locations' | 'posts', slug: string): Promise<any | null> {
+async function fetchWpItem(restBase: 'pages' | 'services' | 'locations' | 'posts', slug: string, timeoutMs = 6000): Promise<any | null> {
   const cacheKey = `${restBase}:${slug}`;
   const hit = wpItemCache.get(cacheKey);
   if (hit && Date.now() - hit.at < WP_TTL_MS) return hit.item;
   const base = process.env.WORDPRESS_URL;
   if (!base) throw new WordPressUnavailable('WORDPRESS_URL is not set');
+  assertWordPressUp();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 6000);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const embed = restBase === 'posts' ? '&_embed=1' : '';
     const res = await fetch(`${base.replace(/\/$/, '')}/wp-json/wp/v2/${restBase}?slug=${encodeURIComponent(slug)}${embed}`, { signal: ctrl.signal });
@@ -891,9 +914,10 @@ async function fetchWpItem(restBase: 'pages' | 'services' | 'locations' | 'posts
     const list = await res.json();
     if (!Array.isArray(list)) throw new WordPressUnavailable('Unexpected WordPress response');
     const item = list[0] ?? null;
-    wpItemCache.set(cacheKey, { at: Date.now(), item }); // failures are never cached
+    wpItemCache.set(cacheKey, { at: Date.now(), item }); // a failure is not cached as an answer, only remembered briefly (wpDownUntil)
     return item;
   } catch (e) {
+    wpDownUntil = Date.now() + WP_DOWN_MS;
     throw e instanceof WordPressUnavailable ? e : new WordPressUnavailable(String((e as Error).message));
   } finally {
     clearTimeout(timer);
@@ -1090,22 +1114,29 @@ function safeWordPressBlocks(markup: string): string {
   return blocks.join('');
 }
 
+let blogListCache: { at: number; posts: any[] } | null = null;
+
 async function fetchPublishedBlogPosts(): Promise<any[]> {
   const base = process.env.WORDPRESS_URL;
   if (!base) throw new WordPressUnavailable('WORDPRESS_URL is not set');
+  if (blogListCache && Date.now() - blogListCache.at < 2 * 60 * 1000) return blogListCache.posts;
+  assertWordPressUp();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 6000);
+  const timer = setTimeout(() => ctrl.abort(), 4000);
   try {
     const params = new URLSearchParams({ status: 'publish', per_page: String(BLOG_PAGE_SIZE), page: '1', orderby: 'date', order: 'desc', _embed: '1' });
     const response = await fetch(`${base.replace(/\/$/, '')}/wp-json/wp/v2/posts?${params}`, { signal: ctrl.signal });
     if (!response.ok) throw new WordPressUnavailable(`WordPress responded ${response.status}`);
     const posts = await response.json();
     if (!Array.isArray(posts)) throw new WordPressUnavailable('Unexpected WordPress posts response');
-    return posts.filter((post: any) => post.slug !== 'hello-world'
+    const published = posts.filter((post: any) => post.slug !== 'hello-world'
       && post.meta?.seo_noindex !== true
       && post.meta?.seo_noindex !== '1'
       && post.yoast_head_json?.robots?.index !== 'noindex');
+    blogListCache = { at: Date.now(), posts: published };
+    return published;
   } catch (error) {
+    wpDownUntil = Date.now() + WP_DOWN_MS;
     throw error instanceof WordPressUnavailable ? error : new WordPressUnavailable(String((error as Error).message));
   } finally {
     clearTimeout(timer);
@@ -1125,9 +1156,14 @@ function editorialBlogContent(post: EditorialBlogPost): string {
     `<section><h2>${esc(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</section>`
   ).join('');
   const sources = [post.source, ...post.additionalSources];
-  return keyPoints + sections +
+  const nearby = relatedToArticle(post.slug, { limit: 4 });
+  const keepLearning = nearby.length
+    ? `<section><h2>Keep learning</h2><ul>${nearby.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul>` +
+      `<p>More in <a href="/blog">updates and insights</a>, our <a href="/guides">guides</a>, or <a href="/find-a-provider">the provider directory</a>.</p></section>`
+    : '';
+  return keyPoints + sections + keepLearning +
     `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener">${esc(source.label)}</a></li>`).join('')}</ul>` +
-    `<p>Source checked ${esc(contentDate(post.checkedAt))}. Rules and guidance can change; verify current details with the responsible agency.</p></section>`;
+    `<p>Source checked ${esc(contentDate(post.checkedAt))}. Rules and guidance can change; verify current details with the responsible agency. <a href="/editorial-standards">How we write and check our guides</a>.</p></section>`;
 }
 
 async function blogArchivePage(site: string): Promise<Page> {
@@ -1212,7 +1248,7 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
   const path = `/blog/${editorial.slug}`;
   return {
     status: 200,
-    title: `${editorial.title} | SolDirectory`,
+    title: `${editorial.seoTitle ?? editorial.title} | SolDirectory`,
     description: trimTo(editorial.summary, 158),
     canonical: path,
     noindex: expired,
@@ -1226,6 +1262,7 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
         author: { '@type': 'Organization', name: 'SolDirectory' },
         publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
         mainEntityOfPage: `${site}${path}`, url: `${site}${path}`,
+        publishingPrinciples: `${site}/editorial-standards`,
         image: [`${site}${editorial.coverImage}`], articleSection: editorial.category,
       } },
     ],
@@ -1244,7 +1281,8 @@ async function blogArticlePage(site: string, slug: string): Promise<Page> {
   const editorial = EDITORIAL_BLOG_POSTS.find((item) => item.slug === slug);
   let post: any = null;
   try {
-    post = await fetchWpItem('posts', slug);
+    // An article we hold ourselves never waits long for WordPress: if the CMS is slow, our own copy is served.
+    post = await fetchWpItem('posts', slug, editorial ? 2500 : 6000);
   } catch (error) {
     if (!editorial) throw error;
   }
@@ -1603,6 +1641,20 @@ export async function registerShell(req: Request, res: Response) {
     if (parts.length === 1) page = await hubPage(site, kindPath);
     else if (parts.length === 3 || STATE_CODES.includes(parts[1].toUpperCase() as never)) page = await listPage(site, kindPath, parts[1], parts[2] ?? null, pageNum, filtered);
     else page = await providerPage(site, kindPath, parts[1]);
+  } else if (parts.length === 1 && (await prerenderedPage(parts[0]))) {
+    // A page the web build wrote as static HTML (glossary, editorial standards): serve that file, with a 200.
+    const html = await prerenderedPage(parts[0]);
+    return res.status(200).set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' }).send(html);
+  } else if (parts.length === 1 && parts[0] === 'photo-credits') {
+    page = {
+      status: 200,
+      title: 'Photo credits | SolDirectory',
+      description: 'Credits for the photographs used across SolDirectory.',
+      canonical: '/photo-credits',
+      noindex: false,
+      jsonLd: [breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Photo credits', path: '/photo-credits' }])],
+      body: '<nav aria-label="Breadcrumb"><a href="/">Home</a> / Photo credits</nav><h1>Photo credits</h1><p>Credits for the photographs used across SolDirectory, with a link to each photographer and the photo it came from.</p>',
+    };
   } else if (parts.length === 1) {
     try {
       page = await genericWpPage(site, 'pages', parts[0]);
