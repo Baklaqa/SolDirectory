@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
 import { ensureDefaultPlans } from './models/PlanConfig.js';
+import { securityHeaders } from './middleware/securityHeaders.js';
 
 import authRoutes from './routes/auth.routes.js';
 import workersRoutes from './routes/workers.routes.js';
@@ -43,6 +44,8 @@ import statsRoutes from './routes/stats.routes.js';
 import searchAlertsRoutes from './routes/searchAlerts.routes.js';
 
 const app = express();
+app.disable('x-powered-by');
+app.use(securityHeaders);
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173' }));
 // Stripe signs the raw request body, so its webhook is mounted BEFORE express.json() parses it.

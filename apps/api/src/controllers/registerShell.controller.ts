@@ -17,6 +17,7 @@ import {
   relatedArticles,
   relatedToArticle,
   hubCopy,
+  COORDINATOR_PAGE,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -122,8 +123,12 @@ interface Page {
   jsonLd: { id: string; data: Record<string, unknown> }[];
   body: string;
   ogImage?: string; // absolute URL
+  ogImageAlt?: string; // what the share image shows; the site's default image has its own
   ogType?: 'website' | 'article';
 }
+
+/** Shared page copy writes links as [label](/path); this turns them into plain anchors (the web app renders the same markup). */
+const inline = (text: string) => esc(text).replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (_m, label: string, href: string) => `<a href="${href}">${label}</a>`);
 
 const li = (href: string, text: string, extra = '') => `<li><a href="${esc(href)}">${esc(text)}</a>${extra ? ` ${esc(extra)}` : ''}</li>`;
 
@@ -293,6 +298,8 @@ function providerTitle(name: string, label: string, where: string): string {
 
 // Pages with no photo of their own still get a share card, from an image the site already uses.
 const DEFAULT_SHARE_IMAGE = '/images/providers.jpg';
+const DEFAULT_SHARE_IMAGE_ALT = 'Two people holding hands, a moment of care and support';
+const DEFAULT_SHARE_IMAGE_SIZE = { width: 1920, height: 1280 };
 
 /**
  * "Helpful reading" for crawlers: the same blog articles the website shows under each kind of page (see
@@ -334,7 +341,7 @@ function relatedShellHtml(originalUrl: string): string {
   const articles = relatedArticles({ service, themes, limit: 3 });
   if (!articles.length) return '';
   const heading = service ? `Reading about ${service}` : 'Helpful reading';
-  return `<section><h2>${esc(heading)}</h2><ul>${articles.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul><p><a href="/blog">All SolDirectory articles</a></p></section>`;
+  return `<section><h2>${esc(heading)}</h2><ul>${articles.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul><p><a href="/blog">All NDIS and aged care articles</a></p></section>`;
 }
 
 /**
@@ -365,6 +372,8 @@ function hubCopyShell(originalUrl: string): { html: string; faqLd: object | null
 
 function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
+  const usingDefaultImage = !page.ogImage;
+  const imageAlt = page.ogImageAlt ?? (usingDefaultImage ? DEFAULT_SHARE_IMAGE_ALT : undefined);
   const head = [
     page.canonical ? `<link rel="canonical" href="${esc(site + page.canonical)}" />` : '',
     page.canonical ? `<meta property="og:url" content="${esc(site + page.canonical)}" />` : '',
@@ -372,8 +381,15 @@ function render(html: string, req: Request, page: Page, site: string): string {
     `<meta property="og:site_name" content="SolDirectory" />`,
     `<meta property="og:title" content="${esc(page.title)}" />`,
     `<meta property="og:description" content="${esc(page.description)}" />`,
+    `<meta property="og:locale" content="en_AU" />`,
     `<meta property="og:image" content="${esc(shareImage)}" />`,
-    `<meta name="twitter:card" content="${page.ogImage ? 'summary_large_image' : 'summary'}" />`,
+    ...(usingDefaultImage ? [`<meta property="og:image:width" content="${DEFAULT_SHARE_IMAGE_SIZE.width}" />`, `<meta property="og:image:height" content="${DEFAULT_SHARE_IMAGE_SIZE.height}" />`] : []),
+    ...(imageAlt ? [`<meta property="og:image:alt" content="${esc(imageAlt)}" />`] : []),
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${esc(page.title)}" />`,
+    `<meta name="twitter:description" content="${esc(page.description)}" />`,
+    `<meta name="twitter:image" content="${esc(shareImage)}" />`,
+    ...(imageAlt ? [`<meta name="twitter:image:alt" content="${esc(imageAlt)}" />`] : []),
     ...page.jsonLd.map((j) =>
       // "<" is escaped so a business name can never close the script tag.
       `<script type="application/ld+json" id="jsonld-${j.id}">${JSON.stringify({ '@context': 'https://schema.org', ...j.data }).replace(/</g, '\\u003c')}</script>`
@@ -781,42 +797,40 @@ function languageHubPage(site: string): Page {
 
 function supportCoordinatorsPage(site: string): Page {
   const path = '/support-coordinators';
-  const faq = [
-    ['Does SolDirectory recommend or rank providers?', 'No. Directory listings are not recommendations. Confirm suitability, registration, screening, insurance, capacity, pricing and service terms directly.'],
-    ['Can a coordinator submit an enquiry for a participant?', 'Yes, where the coordinator has authority and consent to share the information. Include only what providers need to assess the request.'],
-    ['Does a directory listing prove current capacity?', 'No. Availability can change and public-register listings do not indicate capacity. Confirm the proposed start date and roster directly.'],
-    ['What should I do for an immediate safety emergency?', 'Do not use a directory enquiry as an emergency response. Call 000 where there is immediate danger and use the participant’s crisis, clinical or safeguarding pathways.'],
-  ];
+  const P = COORDINATOR_PAGE;
+  const paras = (list: string[]) => list.map((t) => `<p>${inline(t)}</p>`).join('');
   return {
     status: 200,
-    title: 'Provider referrals for support coordinators | SolDirectory',
-    description: 'A practical guide for preparing referrals, comparing disability and aged care providers, checking capacity, consent, safeguards, fees and service agreements.',
+    title: P.seoTitle,
+    description: P.seoDescription,
     canonical: path,
     noindex: false,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Support coordinators', path }]),
-      { id: 'coordinator-page', data: { '@type': 'WebPage', name: 'Provider referrals for support coordinators', url: `${site}${path}`, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site } } },
-      { id: 'coordinator-faq', data: { '@type': 'FAQPage', mainEntity: faq.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) } },
+      {
+        id: 'coordinator-page',
+        data: {
+          '@type': 'WebPage', name: P.heading, description: P.seoDescription, url: `${site}${path}`, inLanguage: 'en-AU', dateModified: P.updated,
+          isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+          publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
+        },
+      },
+      { id: 'coordinator-faq', data: { '@type': 'FAQPage', mainEntity: P.faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } },
     ],
     body:
-      `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Support coordinators</nav><h1>Provider referrals for support coordinators</h1>` +
-      `<p>Prepare a clear request, compare providers consistently and keep the participant in control of each decision. SolDirectory is a directory and referral service; it does not deliver supports, choose a provider or replace due diligence.</p>` +
-      `<h2>Prepare a referral providers can assess</h2><p>Confirm authority and consent before sharing information. Describe the requested tasks, goals, schedule, location, start date, funding arrangement, communication preferences and person-specific risks. Include only what a provider needs to decide whether it can safely meet the request.</p>` +
-      `<ol><li>Describe tasks, frequency, preferred days, shift length and proposed start date.</li><li>Record service locations and travel expectations.</li><li>State funding and management arrangements, while checking budget and registration rules separately.</li><li>Include communication, access, cultural and worker preferences.</li><li>Describe required competencies, plans and equipment.</li><li>Name the decision-maker, contact pathway and any genuine deadline.</li></ol>` +
-      `<h2>Urgent and complex referrals</h2><p>Urgency should change escalation and planning, not lower the quality bar. A directory response is not guaranteed and is not an emergency service. For urgent non-emergency requests, explain the real deadline, interim supports, minimum safe staffing, required competencies, clinical responsibilities, equipment and environmental risks.</p>` +
-      `<h2>Compare providers consistently</h2><p>Confirm who will deliver support, relevant experience, qualifications, supervision, continuity, realistic start date, offered roster, backup arrangements, registration, worker screening, insurance, incident and complaint processes and required person-specific training.</p>` +
-      `<p>A directory or public-register listing is not an endorsement and does not prove suitability or availability. Check the relevant official register and current evidence directly.</p>` +
-      `<h2>Pricing, funding and service agreements</h2><p>Ask for complete proposed costs in writing, including rates, travel, non-face-to-face work, reports, minimum shifts, cancellations and exit terms. Review the service agreement with the participant in an accessible format before services begin.</p>` +
-      `<h2>Consent, privacy and records</h2><p>Share the minimum necessary information through secure channels. Record authority or consent, what was shared, providers contacted, responses, evidence checked, options considered, the participant’s decision and follow-up actions.</p>` +
-      `<h2>After a provider responds</h2><p>A fast response is not proof of fit. Arrange a conversation in the participant’s preferred format, verify outstanding evidence and agree how progress, incidents, missed shifts, complaints and changes in need will be communicated.</p>` +
-      `<h2>Related planning resources</h2><p>Use the <a href="/services">service guides</a> to clarify the requested support, review <a href="/funding">funding and plan-management topics</a>, and browse guidance by <a href="/condition">condition or support need</a>. The <a href="/guides/choosing-a-provider">provider selection guide</a> provides a reusable comparison checklist, while the <a href="/locations">location hub</a> helps identify nearby service areas.</p>` +
-      `<h2>Frequently asked questions</h2>${faq.map(([question, answer]) => `<h3>${esc(question)}</h3><p>${esc(answer)}</p>`).join('')}` +
-      `<h2>Official checks and guidance</h2><ul>` +
-      li('https://www.ndiscommission.gov.au/providers/provider-registers', 'NDIS Commission provider registers') +
-      li('https://www.ndiscommission.gov.au/workers/worker-screening', 'NDIS worker screening') +
-      li('https://www.ndis.gov.au/participants/working-providers', 'NDIS guidance on working with providers') +
-      li('https://www.myagedcare.gov.au/find-a-provider', 'My Aged Care provider search') +
-      `</ul><p><a href="/find-a-provider">Find providers</a> or submit a provider enquiry through SolDirectory.</p>`,
+      `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Support coordinators</nav><h1>${esc(P.heading)}</h1><p>${esc(P.subtitle)}</p>` +
+      `<h2>${esc(P.intro.heading)}</h2><p>${inline(P.intro.text)}</p>` +
+      `<aside aria-label="${esc(P.glanceHeading)}"><h2>${esc(P.glanceHeading)}</h2><ul>${P.glance.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Last updated <time datetime="${esc(P.updated)}">${esc(P.updatedLabel)}</time></p></aside>` +
+      `<h2>${esc(P.referral.heading)}</h2>${paras(P.referral.paragraphs)}<ol>${P.referral.steps.map((t) => `<li>${inline(t)}</li>`).join('')}</ol>` +
+      `<h2>${esc(P.urgent.heading)}</h2>${paras(P.urgent.paragraphs)}` +
+      `<h2>${esc(P.checks.heading)}</h2><p>${esc(P.checks.intro)}</p>${P.checks.cards.map((c) => `<h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>`).join('')}<p>${inline(P.checks.note)}</p>` +
+      `<h2>${esc(P.pricing.heading)}</h2>${paras(P.pricing.paragraphs)}` +
+      `<h2>${esc(P.records.heading)}</h2>${paras(P.records.paragraphs)}<ul>${P.records.list.map((t) => `<li>${esc(t)}</li>`).join('')}</ul><p>${inline(P.records.after)}</p>` +
+      `<h2>${esc(P.after.heading)}</h2>${paras(P.after.paragraphs)}` +
+      `<h2>${esc(P.resources.heading)}</h2><p>${inline(P.resources.text)}</p>` +
+      `<h2>${esc(P.faqsHeading)}</h2>${P.faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` +
+      `<h2>${esc(P.officialHeading)}</h2><ul>${P.official.map((l) => li(l.href, l.label)).join('')}</ul>` +
+      `<p><a href="/find-a-provider">Find providers</a> or submit a provider enquiry through SolDirectory.</p>`,
   };
 }
 
@@ -826,7 +840,11 @@ function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | '
       title: 'SolDirectory | Find NDIS and aged care providers',
       description: 'Search NDIS and aged care provider profiles by support and location, compare public-register listings, or submit one free provider enquiry.',
       canonical: '/',
-      jsonLd: [{ id: 'home-page', data: { '@type': 'WebPage', name: 'SolDirectory provider directory', url: `${site}/`, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: `${site}/` } } }],
+      jsonLd: [
+        { id: 'organization', data: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/`, logo: `${site}/images/sol-directory-logo-black-transparent-v2.png` } },
+        { id: 'website', data: { '@type': 'WebSite', name: 'SolDirectory', url: `${site}/`, inLanguage: 'en-AU' } },
+        { id: 'home-page', data: { '@type': 'WebPage', name: 'SolDirectory provider directory', url: `${site}/`, inLanguage: 'en-AU', isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: `${site}/` } } },
+      ],
       body: `<h1>Find NDIS and aged care providers near you</h1>` +
         `<p>SolDirectory helps participants, families and support coordinators search provider profiles by support and location. You can browse directly or submit one free enquiry so relevant member providers can assess the support, funding arrangement, area and preferred timeframe.</p>` +
         `<h2>Search in the way that suits you</h2><p>Start with the <a href="/find-a-provider">provider directory</a> when you know the support or suburb. Browse the <a href="/services">service guides</a> to understand common options and questions, use <a href="/locations">location pages</a> to search nearby areas, or explore providers by <a href="/condition">condition and support need</a>. Funding guides explain common <a href="/funding">NDIS, aged care, DVA and private arrangements</a>.</p>` +

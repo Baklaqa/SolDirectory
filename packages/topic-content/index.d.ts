@@ -127,3 +127,30 @@ export interface EditorialStandardsSection {
   links?: { to: string; label: string }[];
 }
 export const EDITORIAL_STANDARDS: { intro: string; sections: EditorialStandardsSection[]; see: { to: string; label: string }[] };
+
+/** The words on /support-coordinators. Inline links are written [label](/path). */
+export interface CoordinatorPage {
+  seoTitle: string;
+  seoDescription: string;
+  heading: string;
+  subtitle: string;
+  /** ISO date the guidance was last changed, and the same date as shown on the page. */
+  updated: string;
+  updatedLabel: string;
+  glanceHeading: string;
+  glance: string[];
+  intro: { label: string; heading: string; text: string };
+  referral: { id: string; heading: string; paragraphs: string[]; steps: string[] };
+  urgent: { id: string; heading: string; paragraphs: string[] };
+  checks: { id: string; heading: string; intro: string; cards: { title: string; text: string }[]; note: string };
+  pricing: { heading: string; paragraphs: string[] };
+  records: { heading: string; paragraphs: string[]; list: string[]; after: string };
+  after: { heading: string; paragraphs: string[] };
+  resources: { heading: string; text: string };
+  faqsHeading: string;
+  faqs: PageFaq[];
+  officialHeading: string;
+  official: { label: string; href: string }[];
+  contact: { heading: string; text: string };
+}
+export const COORDINATOR_PAGE: CoordinatorPage;

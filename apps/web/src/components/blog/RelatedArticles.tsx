@@ -32,7 +32,7 @@ export default function RelatedArticles({ service, themes = ['choosing'], headin
           <h2 id="ra-heading">{title}</h2>
           {intro && <p>{intro}</p>}
         </div>
-        <Link className="ra-all" to="/blog">All articles →</Link>
+        <Link className="ra-all" to="/blog">All NDIS and aged care articles →</Link>
       </div>
       <ul className="ra-list">
         {articles.map((a) => (
