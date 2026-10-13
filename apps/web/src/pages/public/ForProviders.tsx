@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { PublicHeader, PublicFooter } from './PublicLayout';
+import PageHero from '../../components/topic/PageHero';
 import PhotoSlot from '../../components/PhotoSlot';
 import Counter from '../../components/Counter';
+import ProviderExtras from '../../components/extras/ProviderExtras';
+import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
-import ProviderExtras from '../../components/extras/ProviderExtras';
 import { PROVIDER_FAQS } from '@soldirectory/topic-content';
 import './Home.css';
 import './ForProviders.css';
@@ -17,10 +19,52 @@ const GROWTH_FEATURES = ['15 lead unlocks per month', 'Full brief, budget and co
 
 const FAQS = PROVIDER_FAQS as { question: string; answer: string }[];
 
+const HERO_CHECKS = [
+  'Claiming and listing your profile is free',
+  'Enquiries compared with your service areas and capacity',
+  'No percentage taken from fees you agree',
+];
+
+const UNDERSTAND: { title: string; body: string }[] = [
+  {
+    title: 'Keep service and capacity information accurate',
+    body: 'Keep your service areas, funding types and contact details current. Before accepting work, confirm support requirements, timing, fees and any registration requirements directly with the person or their representative.',
+  },
+  {
+    title: 'Check the funding arrangement on every enquiry',
+    body: 'We also match aged care families with providers, so check the funding type and support requested each time. Directory totals include both, so they are not a count of NDIS-only demand.',
+  },
+  {
+    title: 'Notifications and contact access',
+    body: 'Claiming a basic listing is free and you are notified when an enquiry matches your service area. Unlocking full contact details is part of the Growth plan. A notification is not the same as a person agreeing to work with you.',
+  },
+  {
+    title: 'Judge a directory by what is included',
+    body: 'Compare billing terms, covered locations, service categories and how enquiries reach you, not the size of the register alone. A larger list does not by itself mean more suitable enquiries.',
+  },
+];
+
+const REACH: { title: string; body: string }[] = [
+  { title: 'Email notifications', body: 'Available enquiry details are sent to your nominated intake email address.' },
+  { title: 'SMS notifications', body: 'Eligible plans can receive a text alert when a relevant enquiry is available to review.' },
+  { title: 'Subscription-based access', body: 'SolDirectory does not deduct a percentage from fees agreed between you and a participant.' },
+  { title: 'Direct communication', body: 'Where your plan permits contact access, you can communicate directly with the person who submitted the enquiry.' },
+];
+
+const STEPS: { title: string; body: string }[] = [
+  { title: 'Claim your profile', body: 'Find your business in our directory and claim it, or create a new listing. Claiming is free.' },
+  { title: 'Set your service area and capacity', body: 'Tell us the suburbs you cover, the supports you offer, and where to send matches: email, SMS, or both.' },
+  { title: 'Review relevant enquiries', body: 'When an enquiry aligns with your profile, your team can review the available information and decide whether to respond.' },
+];
+
+const fmt = (n: number) => n.toLocaleString('en-AU');
+
 export default function ForProviders() {
   const navigate = useNavigate();
   const stats = useSiteStats();
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [ndis, setNdis] = useState<RegisterHub | null>(null);
+  const [aged, setAged] = useState<RegisterHub | null>(null);
 
   useEffect(() => {
     applySeoTags({
@@ -36,204 +80,191 @@ export default function ForProviders() {
     return () => setJsonLd('providers-faq', null);
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+    getRegisterHub('ndis').then((r) => { if (alive) setNdis(r); }).catch(() => {});
+    getRegisterHub('aged_care').then((r) => { if (alive) setAged(r); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  // Headline figures come from the public registers, so they describe the size of the field people search, and each
+  // is hidden until it is known. Member profiles are only shown once there are enough for the number to mean something.
+  const facts = useMemo(() => {
+    const rows: { value: number; label: string }[] = [];
+    if (ndis && ndis.total > 0) rows.push({ value: ndis.total, label: 'organisations on the public NDIS register' });
+    if (aged && aged.total > 0) rows.push({ value: aged.total, label: 'organisations on the My Aged Care register' });
+    const suburbs = new Set([...(ndis?.suburbs ?? []), ...(aged?.suburbs ?? [])].map((s) => `${s.state}|${s.slug}`)).size;
+    if (suburbs > 0) rows.push({ value: suburbs, label: 'suburbs with register listings' });
+    if (stats && stats.providersListed >= 25) rows.push({ value: stats.providersListed, label: 'provider profiles on SolDirectory' });
+    return rows;
+  }, [ndis, aged, stats]);
+
   return (
     <>
       <PublicHeader />
+      <main>
+        <PageHero
+          crumbs={[{ label: 'Home', to: '/' }, { label: 'For providers' }]}
+          eyebrow="For providers"
+          title="Receive relevant enquiries in your service area"
+          description="People looking for NDIS and aged care support send a request. SolDirectory compares it with provider service areas, funding arrangements and confirmed capacity, and delivers relevant enquiries by email or SMS for your team to assess."
+          image="/images/login-hero.jpg"
+          imageAlt="A provider team at work in an office"
+          panel={{
+            title: 'List your business',
+            checks: HERO_CHECKS,
+            ctaLabel: 'List your business →',
+            onCta: () => navigate('/signup?type=provider'),
+            note: (
+              <>
+                Already listed? <Link to="/login">Log in</Link> · <Link to="/find-a-provider">For support coordinators</Link>
+              </>
+            ),
+          }}
+        />
 
-      <section className="fp-hero">
-        <div className="fp-hero-inner">
-          <span className="fp-badge">
-            <span className="fp-badge-dot" aria-hidden="true" />
-            Now accepting providers
-          </span>
-          <h1 className="fp-hero-heading">Receive relevant enquiries from people seeking support in your service area</h1>
-          <p className="fp-hero-copy">
-            SolDirectory compares enquiry information with provider service areas, funding arrangements
-            and confirmed capacity. Relevant enquiries can be delivered by email or SMS for your team to assess.
-          </p>
-          <div className="fp-hero-actions">
-            <button className="btn-gradient btn-lg" onClick={() => navigate('/signup?type=provider')}>
-              List your business <span aria-hidden="true">→</span>
-            </button>
-            <button className="btn-tint" onClick={() => navigate('/login')}>
-              Log in
-            </button>
-            <a className="link-btn" href="#how-it-works">How it works →</a>
-            <button className="link-btn fp-coordinator-link" onClick={() => navigate('/find-a-provider')}>
-              For support coordinators →
-            </button>
-          </div>
+        <div className="fp-wrap">
+          {facts.length > 0 && (
+            <section className="fp-facts" aria-label="The registers at a glance">
+              <ul>
+                {facts.map((f) => (
+                  <li key={f.label}>
+                    <strong><Counter value={f.value} /></strong>
+                    <span>{f.label}</span>
+                  </li>
+                ))}
+              </ul>
+              <p>Counts come from the public NDIS and My Aged Care registers as last imported. They show how many organisations people compare you with, not how many enquiries there are.</p>
+            </section>
+          )}
+
+          <section className="fp-split" aria-labelledby="fp-understand-heading">
+            <div className="fp-split-intro">
+              <span className="eyebrow"><span className="eyebrow-rule" />Before you subscribe</span>
+              <h2 id="fp-understand-heading" className="fp-h2">Understand provider enquiries</h2>
+              <p>
+                An enquiry is a request for information about support. It is not an exclusive referral, a confirmed client or a service booking.
+                Review the process and plan inclusions before subscribing.
+              </p>
+            </div>
+            <div className="fp-grid-2">
+              {UNDERSTAND.map((card, index) => (
+                <article className="fp-card" key={card.title}>
+                  <span className="fp-card-num">{String(index + 1).padStart(2, '0')}</span>
+                  <h3>{card.title}</h3>
+                  <p>{card.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="fp-reach" aria-labelledby="fp-reach-heading">
+            <div className="fp-reach-photo">
+              <PhotoSlot src="/images/providers.jpg" alt="A support worker helping a participant" variant="care" />
+            </div>
+            <div className="fp-reach-body">
+              <span className="eyebrow"><span className="eyebrow-rule" />How enquiries reach you</span>
+              <h2 id="fp-reach-heading" className="fp-h2">Choose how your team is notified</h2>
+              <p className="fp-lede">Choose how your organisation receives notifications when an enquiry is relevant to your profile.</p>
+              <ul className="fp-reach-list">
+                {REACH.map((item) => (
+                  <li key={item.title}>
+                    <span className="fp-tick" aria-hidden="true">✓</span>
+                    <span><strong>{item.title}.</strong> {item.body}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          <section className="fp-how" id="how-it-works" aria-labelledby="fp-how-heading">
+            <div className="fp-how-head">
+              <span className="eyebrow"><span className="eyebrow-rule" />How it works</span>
+              <h2 id="fp-how-heading" className="fp-h2">From claiming your profile to your first enquiry</h2>
+              <p className="fp-lede">
+                Complete your profile and tell us where you have capacity. Listing does not guarantee enquiries: matching depends on demand and
+                how closely your profile fits what people are searching for.
+              </p>
+            </div>
+            <ol className="fp-steps">
+              {STEPS.map((step, index) => (
+                <li key={step.title}>
+                  <span className="fp-step-num">{index + 1}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </li>
+              ))}
+            </ol>
+            <button className="btn-gradient btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Claim your profile for free →</button>
+          </section>
+
+          <section className="fp-plans" aria-labelledby="fp-plans-heading">
+            <div className="fp-plans-head">
+              <span className="eyebrow"><span className="eyebrow-rule" />Plans</span>
+              <h2 id="fp-plans-heading" className="fp-h2">Free listing, or Growth</h2>
+              <p className="fp-lede">
+                A Starter listing provides directory visibility and limited enquiry information. Growth adds contact access and a monthly lead allowance.
+              </p>
+            </div>
+            <div className="fp-plan-grid">
+              <article className="fp-plan">
+                <span className="fp-plan-tier">Free</span>
+                <h3>Starter</h3>
+                <p className="fp-plan-price">$0<span>/month</span></p>
+                <ul>{STARTER_FEATURES.map((f) => <li key={f}>{f}</li>)}</ul>
+                <button className="btn-tint btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Claim your profile</button>
+              </article>
+              <article className="fp-plan fp-plan-featured">
+                <span className="fp-plan-tier">Growth</span>
+                <h3>Growth</h3>
+                <p className="fp-plan-price">$249<span>/month + GST</span></p>
+                <ul>{GROWTH_FEATURES.map((f) => <li key={f}>{f}</li>)}</ul>
+                <button className="btn-white btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Start on Growth</button>
+              </article>
+            </div>
+          </section>
         </div>
-      </section>
 
-      {stats && stats.providersListed > 0 && (
-        <section className="fp-stats-bar">
-          <div className="fp-stats-row">
+        <ProviderExtras />
+
+        <div className="fp-wrap">
+          <section className="fp-faq" aria-labelledby="fp-faq-heading">
+            <div className="fp-faq-head">
+              <span className="eyebrow"><span className="eyebrow-rule" />Questions</span>
+              <h2 id="fp-faq-heading" className="fp-h2">Provider questions</h2>
+              <p className="fp-lede">Not sure whether listing suits your business? Start with the basics here, or {' '}
+                <Link to="/blog">read our guides for providers</Link>.</p>
+            </div>
+            <div className="fp-faq-list">
+              {FAQS.map((item, index) => {
+                const open = openFaq === index;
+                return (
+                  <div className={`fp-faq-item${open ? ' is-open' : ''}`} key={item.question}>
+                    <h3>
+                      <button type="button" aria-expanded={open} aria-controls={`fp-faq-${index}`} onClick={() => setOpenFaq(open ? null : index)}>
+                        <span>{item.question}</span>
+                        <span className="fp-faq-chevron" aria-hidden="true">{open ? '−' : '+'}</span>
+                      </button>
+                    </h3>
+                    {open && <p id={`fp-faq-${index}`}>{item.answer}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="fp-cta">
             <div>
-              <span className="fp-stat-value"><Counter value={stats.providersListed} /></span>
-              <span className="fp-stat-label">Providers listed</span>
+              <h2>Create or claim your provider profile</h2>
+              <p>Publish accurate service information and choose how your team receives relevant NDIS and aged care enquiries.</p>
             </div>
-            {stats.suburbsCovered > 0 && (
-              <div>
-                <span className="fp-stat-value"><Counter value={stats.suburbsCovered} /></span>
-                <span className="fp-stat-label">Suburbs covered</span>
-              </div>
-            )}
-            {stats.enquiriesLast30Days > 0 && (
-              <div>
-                <span className="fp-stat-value"><Counter value={stats.enquiriesLast30Days} /></span>
-                <span className="fp-stat-label">Enquiries in the last 30 days</span>
-              </div>
-            )}
-          </div>
-          <p className="fp-stats-note">Figures are calculated from live directory records and enquiries, not projections.</p>
-        </section>
-      )}
-
-      <section className="fp-understand">
-        <div className="fp-understand-inner">
-          <h2 className="section-heading">Understand provider enquiries before you subscribe</h2>
-          <p className="section-copy">
-            An enquiry is a request for information about support. It is not an exclusive referral,
-            a confirmed client or a service booking. Review the process and plan inclusions before subscribing.
-          </p>
-          <div className="fp-understand-grid">
-            <div className="fp-understand-card">
-              <h3>Maintain accurate service and capacity information</h3>
-              <p>Keep your service areas, funding types and contact details current. Before accepting work, confirm support requirements, timing, fees and any registration requirements directly with the person or their representative.</p>
+            <div className="fp-cta-actions">
+              <button className="btn-white btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>List your business →</button>
+              <button className="btn-outline-light btn-lg" type="button" onClick={() => navigate('/login')}>Log in</button>
             </div>
-            <div className="fp-understand-card">
-              <h3>Review the funding arrangement for each enquiry</h3>
-              <p>We also match aged care families with providers. Check the funding type and support requested in every enquiry — the totals shown across the directory include both, so they are not a count of NDIS-only demand.</p>
-            </div>
-            <div className="fp-understand-card">
-              <h3>Listing notifications and contact access</h3>
-              <p>Claiming a basic listing is free and you are notified whenever an enquiry matches your service area. Unlocking full contact details is part of the Growth plan. A notification is not the same as a person agreeing to work with you.</p>
-            </div>
-            <div className="fp-understand-card">
-              <h3>Assess whether the service suits your organisation</h3>
-              <p>When comparing directories, look at what is actually included — billing terms, covered locations, service categories and how enquiries reach you — rather than the size of the register alone. A larger list does not by itself mean more suitable enquiries for your business.</p>
-            </div>
-          </div>
+          </section>
         </div>
-      </section>
-
-      <section className="fp-reach">
-        <div className="fp-reach-photo">
-          <PhotoSlot src="/images/providers.jpg" alt="A support worker helping a participant" variant="care" />
-        </div>
-        <div className="fp-reach-content">
-          <h2 className="section-heading">How enquiries reach you</h2>
-          <p className="section-copy">Choose how your organisation receives notifications when an enquiry is relevant to your profile.</p>
-          <ul className="fp-reach-list">
-            <li>
-              <strong>Email notifications.</strong> Available enquiry details are sent to your nominated intake email address.
-            </li>
-            <li>
-              <strong>SMS notifications.</strong> Eligible plans can receive a text alert when a relevant enquiry is available to review.
-            </li>
-            <li>
-              <strong>Subscription-based access.</strong> SolDirectory does not deduct a percentage from fees agreed between you and a participant.
-            </li>
-            <li>
-              <strong>Direct communication.</strong> Where your plan permits contact access, you can communicate directly with the person who submitted the enquiry.
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="fp-steps">
-        <div className="fp-steps-inner">
-          <h2 className="section-heading">How it works</h2>
-          <p className="section-copy">Complete your profile and tell us where you have capacity. Listing does not guarantee enquiries — matching depends on demand and how closely your profile fits what people are searching for.</p>
-          <div className="fp-steps-grid">
-            <div className="fp-step-card">
-              <span className="fp-step-num">1</span>
-              <h3>Claim your profile</h3>
-              <p>Find your business in our directory and claim it, or create a new listing. Claiming is free.</p>
-            </div>
-            <div className="fp-step-card">
-              <span className="fp-step-num">2</span>
-              <h3>Set your service area and capacity</h3>
-              <p>Tell us the suburbs you cover, the supports you offer, and where to send matches — email, SMS, or both.</p>
-            </div>
-            <div className="fp-step-card">
-              <span className="fp-step-num">3</span>
-              <h3>Review relevant enquiries</h3>
-              <p>When an enquiry aligns with your profile, your team can review the available information and decide whether to respond.</p>
-            </div>
-          </div>
-          <button className="btn-gradient" onClick={() => navigate('/signup?type=provider')}>
-            Claim your profile for free →
-          </button>
-        </div>
-      </section>
-
-      <section className="fp-pricing">
-        <div className="fp-pricing-inner">
-          <h2 className="section-heading" style={{ textAlign: 'center', maxWidth: 'none' }}>Free listing vs Growth</h2>
-          <p className="section-copy" style={{ textAlign: 'center', maxWidth: '52ch', margin: '0 auto 40px' }}>
-            A Starter listing provides directory visibility and limited enquiry information. Growth adds contact access and a monthly lead allowance.
-          </p>
-          <div className="fp-pricing-grid">
-            <div className="fp-pricing-card">
-              <span className="fp-pricing-tier">Free</span>
-              <h3 className="fp-pricing-name">Starter</h3>
-              <p className="fp-pricing-price">$0<span>/month</span></p>
-              <ul className="fp-pricing-features">
-                {STARTER_FEATURES.map((f) => <li key={f}>{f}</li>)}
-              </ul>
-              <button className="btn-white" onClick={() => navigate('/signup?type=provider')}>Claim your profile</button>
-            </div>
-            <div className="fp-pricing-card fp-pricing-card-featured">
-              <span className="fp-pricing-tier">Growth</span>
-              <h3 className="fp-pricing-name">Growth</h3>
-              <p className="fp-pricing-price">$249<span>/month + GST</span></p>
-              <ul className="fp-pricing-features">
-                {GROWTH_FEATURES.map((f) => <li key={f}>{f}</li>)}
-              </ul>
-              <button className="btn-gradient" onClick={() => navigate('/signup?type=provider')}>Start on Growth</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ProviderExtras />
-
-      <section className="fp-cta-band">
-        <h2>Create or claim your provider profile</h2>
-        <p>Publish accurate service information and choose how your team receives relevant NDIS and aged care enquiries.</p>
-        <div className="fp-cta-actions">
-          <button className="btn-white" onClick={() => navigate('/signup?type=provider')}>List your business →</button>
-          <button className="btn-outline-light" onClick={() => navigate('/login')}>Log in</button>
-        </div>
-      </section>
-
-      <section className="fp-faq">
-        <div className="fp-faq-inner">
-          <h2 className="section-heading" style={{ textAlign: 'center', maxWidth: 'none' }}>Frequently asked questions</h2>
-          <div className="fp-faq-list">
-            {FAQS.map((item, i) => {
-              const open = openFaq === i;
-              return (
-                <div key={item.question} className="fp-faq-item">
-                  <button
-                    type="button"
-                    className="fp-faq-question"
-                    aria-expanded={open}
-                    onClick={() => setOpenFaq(open ? null : i)}
-                  >
-                    {item.question}
-                    <span className="fp-faq-chevron" aria-hidden="true">{open ? '−' : '+'}</span>
-                  </button>
-                  {open && <p className="fp-faq-answer">{item.answer}</p>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
+      </main>
       <PublicFooter />
     </>
   );
