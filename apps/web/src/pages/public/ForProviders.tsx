@@ -8,14 +8,14 @@ import ProviderExtras from '../../components/extras/ProviderExtras';
 import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
-import { PROVIDER_FAQS } from '@soldirectory/topic-content';
+import { PROVIDER_FAQS, PROVIDER_PLANS, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_UNDERSTAND } from '@soldirectory/topic-content';
 import './Home.css';
 import './ForProviders.css';
 
 // Mirrors the default rows seeded in apps/api/src/models/PlanConfig.ts —
 // update both together if pricing or quotas change.
-const STARTER_FEATURES = ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'];
-const GROWTH_FEATURES = ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'];
+const STARTER_FEATURES = PROVIDER_PLANS.starter.features;
+const GROWTH_FEATURES = PROVIDER_PLANS.growth.features;
 
 const FAQS = PROVIDER_FAQS as { question: string; answer: string }[];
 
@@ -25,37 +25,11 @@ const HERO_CHECKS = [
   'No percentage taken from fees you agree',
 ];
 
-const UNDERSTAND: { title: string; body: string }[] = [
-  {
-    title: 'Keep service and capacity information accurate',
-    body: 'Keep your service areas, funding types and contact details current. Before accepting work, confirm support requirements, timing, fees and any registration requirements directly with the person or their representative.',
-  },
-  {
-    title: 'Check the funding arrangement on every enquiry',
-    body: 'We also match aged care families with providers, so check the funding type and support requested each time. Directory totals include both, so they are not a count of NDIS-only demand.',
-  },
-  {
-    title: 'Notifications and contact access',
-    body: 'Claiming a basic listing is free and you are notified when an enquiry matches your service area. Unlocking full contact details is part of the Growth plan. A notification is not the same as a person agreeing to work with you.',
-  },
-  {
-    title: 'Judge a directory by what is included',
-    body: 'Compare billing terms, covered locations, service categories and how enquiries reach you, not the size of the register alone. A larger list does not by itself mean more suitable enquiries.',
-  },
-];
+const UNDERSTAND = PROVIDER_UNDERSTAND as { title: string; body: string }[];
 
-const REACH: { title: string; body: string }[] = [
-  { title: 'Email notifications', body: 'Available enquiry details are sent to your nominated intake email address.' },
-  { title: 'SMS notifications', body: 'Eligible plans can receive a text alert when a relevant enquiry is available to review.' },
-  { title: 'Subscription-based access', body: 'SolDirectory does not deduct a percentage from fees agreed between you and a participant.' },
-  { title: 'Direct communication', body: 'Where your plan permits contact access, you can communicate directly with the person who submitted the enquiry.' },
-];
+const REACH = PROVIDER_REACH as { title: string; body: string }[];
 
-const STEPS: { title: string; body: string }[] = [
-  { title: 'Claim your profile', body: 'Find your business in our directory and claim it, or create a new listing. Claiming is free.' },
-  { title: 'Set your service area and capacity', body: 'Tell us the suburbs you cover, the supports you offer, and where to send matches: email, SMS, or both.' },
-  { title: 'Review relevant enquiries', body: 'When an enquiry aligns with your profile, your team can review the available information and decide whether to respond.' },
-];
+const STEPS = PROVIDER_STEPS as { title: string; body: string }[];
 
 const fmt = (n: number) => n.toLocaleString('en-AU');
 

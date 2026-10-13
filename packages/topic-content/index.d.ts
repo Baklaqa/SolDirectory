@@ -97,3 +97,33 @@ export const PROVIDER_LISTING_CHECKS: readonly { title: string; body: string }[]
 
 export interface GlossaryTerm { term: string; definition: string; to: string; label: string }
 export const GLOSSARY: readonly GlossaryTerm[];
+
+export const DIRECTORY_STEPS: readonly { title: string; body: string; link?: { to: string; label: string } }[];
+export const DIRECTORY_FAQS: readonly PageFaq[];
+export const LOCATION_FAQS: readonly PageFaq[];
+export const STATE_CENTRES: readonly { code: string; capital: string; centres: string[] }[];
+export const PROVIDER_UNDERSTAND: readonly { title: string; body: string }[];
+export const PROVIDER_REACH: readonly { title: string; body: string }[];
+export const PROVIDER_STEPS: readonly { title: string; body: string }[];
+export const PROVIDER_PATHS: readonly { title: string; body: string; link: { to: string; label: string }; tint?: boolean }[];
+export const PROVIDER_SAFEGUARDS: readonly { title: string; body: string; link: { to: string; label: string } }[];
+export const WORKER_PROFILE_DETAILS: readonly (readonly [string, string])[];
+export const WORKER_HOW_IT_WORKS: readonly (readonly [string, string])[];
+export const WORKER_SAFEGUARDS: readonly string[];
+export const PROVIDER_PLANS: { starter: { name: string; price: string; features: readonly string[] }; growth: { name: string; price: string; features: readonly string[] } };
+
+export interface HubListItem { text: string; title?: string; to?: string; label?: string }
+export interface HubSection { heading: string; paragraphs?: string[]; list?: HubListItem[]; links?: { to: string; label: string }[] }
+export interface HubCopy { sections: HubSection[]; faqs?: PageFaq[] }
+/** The reading copy for a hub or landing page, by its path, or null when the page has none. */
+export function hubCopy(path: string): HubCopy | null;
+export const DIRECTORY_KINDS: { member: { title: string; body: string }; register: { title: string; body: string }; note: string };
+
+export interface EditorialStandardsSection {
+  heading: string;
+  paragraphs?: string[];
+  list?: { title: string; text: string }[];
+  sources?: { name: string; use: string; href: string }[];
+  links?: { to: string; label: string }[];
+}
+export const EDITORIAL_STANDARDS: { intro: string; sections: EditorialStandardsSection[]; see: { to: string; label: string }[] };

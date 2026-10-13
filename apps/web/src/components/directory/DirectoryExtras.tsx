@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { EDITORIAL_BLOG_POSTS } from '@soldirectory/topic-content';
+import { DIRECTORY_FAQS, DIRECTORY_KINDS, DIRECTORY_STEPS, EDITORIAL_BLOG_POSTS } from '@soldirectory/topic-content';
 import { STATES } from '../../lib/registerMeta';
 import { setJsonLd } from '../../lib/seo';
 import './DirectoryExtras.css';
@@ -23,26 +23,7 @@ const SUPPORTS: { name: string; label: string; photo: string }[] = [
   { name: 'Housing (SDA & SIL)', label: 'Housing, SDA & SIL', photo: 'housing-sda-sil' },
 ];
 
-const STEPS: { title: string; body: string; link?: { to: string; label: string } }[] = [
-  {
-    title: 'Write down what you need',
-    body: 'List the supports, the days and times, and the goals they should help with. A clear list makes every provider easier to compare.',
-  },
-  {
-    title: 'Shortlist two or three',
-    body: 'Search by support and suburb, open each profile and note who covers your area and the supports you want. Compare at least two before deciding.',
-  },
-  {
-    title: 'Ask the same questions of each',
-    body: 'Cost, who will come, what happens when a worker is away and how complaints are handled. Use a written list so the answers can be compared fairly.',
-    link: { to: '/blog/how-to-choose-an-ndis-provider-questions-to-ask', label: '12 questions to ask a provider' },
-  },
-  {
-    title: 'Put it in writing',
-    body: 'Agree the supports, price, cancellation terms and how either side can end the arrangement in a service agreement before you start.',
-    link: { to: '/blog/ndis-service-agreement-what-to-check-before-you-sign', label: 'What to check in a service agreement' },
-  },
-];
+const STEPS = DIRECTORY_STEPS as { title: string; body: string; link?: { to: string; label: string } }[];
 
 const FEATURED_GUIDES = [
   'how-to-choose-an-ndis-provider-questions-to-ask',
@@ -50,36 +31,7 @@ const FEATURED_GUIDES = [
   'ndis-service-agreement-what-to-check-before-you-sign',
 ];
 
-const FAQS: { q: string; a: string }[] = [
-  {
-    q: 'What is the difference between a SolDirectory member and a register listing?',
-    a: 'Members are providers who have joined SolDirectory, keep their own profile and confirm their availability each week. They can receive enquiries through the site. Register listings are organisations that appear on the public NDIS or My Aged Care registers, shown here as those registers publish them. A register listing does not tell you whether an organisation has capacity or is taking new people.',
-  },
-  {
-    q: 'Does being on a register mean a provider is right for me?',
-    a: 'No. Registration is about regulation and oversight. It does not show whether a provider suits your needs, offers the support in your area, has a worker free on the days you need, or fits your plan. Compare providers on the things that matter to you and ask the questions in our guides.',
-  },
-  {
-    q: 'How do I contact a provider?',
-    a: 'Open a member profile to see the options on it, or use Get matched to send one request that suitable member providers can respond to. For register listings, contact the organisation directly using its own website or the details on the official register.',
-  },
-  {
-    q: 'Can I use a provider that is not registered?',
-    a: 'It depends on how your plan is managed and on the support you need. Some supports can only be delivered by registered providers, and the rules for plan-managed and self-managed participants have been changing, so confirm the current position for your own plan with your plan manager, support coordinator or the NDIA.',
-  },
-  {
-    q: 'How do I check that a provider is registered?',
-    a: 'The NDIS Quality and Safeguards Commission publishes a provider register you can search. Compare the name and the registered support types with what the provider tells you, and ask for their ABN if you are unsure.',
-  },
-  {
-    q: 'How current is the register information on this page?',
-    a: 'Register listings are imported from the public registers at a point in time and can lag behind the live register. Treat them as a starting point, and confirm details with the provider and the official register before you rely on them.',
-  },
-  {
-    q: 'Is it free to search and send a request?',
-    a: 'Searching and submitting a request is free for participants, families and coordinators. You are not obliged to use any provider that responds.',
-  },
-];
+const FAQS = DIRECTORY_FAQS.map((f) => ({ q: f.question, a: f.answer }));
 
 export default function DirectoryExtras({ onChooseService }: { onChooseService: (service: string) => void }) {
   const [open, setOpen] = useState<number | null>(0);
@@ -136,15 +88,15 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
         <h2 id="dx-kinds" className="dx-h2">Two kinds of listing, explained</h2>
         <div className="dx-kinds">
           <article className="dx-kind dx-kind-member">
-            <h3>SolDirectory members</h3>
-            <p>Providers who have joined, keep their own profile and confirm each week that they are taking referrals. You can view the profile and use Get matched to reach members who may be able to help.</p>
+            <h3>{DIRECTORY_KINDS.member.title}</h3>
+            <p>{DIRECTORY_KINDS.member.body}</p>
           </article>
           <article className="dx-kind">
-            <h3>Public register listings</h3>
-            <p>Organisations that appear on the public NDIS or My Aged Care registers, shown as those registers publish them. They are useful for finding out who operates near you, but they are not a statement about availability or quality.</p>
+            <h3>{DIRECTORY_KINDS.register.title}</h3>
+            <p>{DIRECTORY_KINDS.register.body}</p>
           </article>
         </div>
-        <p className="dx-note">Neither kind is an endorsement. Check any provider against your own needs, and confirm registration with the NDIS Quality and Safeguards Commission.</p>
+        <p className="dx-note">{DIRECTORY_KINDS.note}</p>
       </section>
 
       {guides.length > 0 && (

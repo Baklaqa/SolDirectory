@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PROVIDER_LISTING_CHECKS, PROVIDER_PAGE_GUIDES } from '@soldirectory/topic-content';
+import { PROVIDER_LISTING_CHECKS, PROVIDER_PAGE_GUIDES, PROVIDER_PATHS, PROVIDER_SAFEGUARDS } from '@soldirectory/topic-content';
 import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { STATE_INFO } from '../../data/locationInfo';
 import { KIND_BY_TYPE, registerPath, stateByCode } from '../../lib/registerMeta';
@@ -16,57 +16,9 @@ import './PageExtras.css';
 
 const LISTING_CHECKS = PROVIDER_LISTING_CHECKS as { title: string; body: string }[];
 
-const PATHS: { title: string; body: string; link: { to: string; label: string }; tint?: boolean }[] = [
-  {
-    title: 'Registered with the NDIS Commission',
-    body: 'Audited against the Practice Standards and assessed as suitable. Required for some supports, and for serving NDIA-managed participants.',
-    link: { to: '/blog/how-to-become-a-registered-ndis-provider-the-steps-and-what-to-prepare', label: 'The registration steps' },
-    tint: true,
-  },
-  {
-    title: 'Unregistered provider',
-    body: 'Can deliver supports that do not require registration, to participants who self-manage or plan-manage. The Code of Conduct still applies.',
-    link: { to: '/blog/registered-or-unregistered-which-path-suits-your-ndis-support-business', label: 'Which path suits you' },
-  },
-  {
-    title: 'Under another provider’s registration',
-    body: 'Supports delivered through a facilitation or brokerage arrangement, where the registered provider is responsible and claims payment.',
-    link: { to: '/blog/registered-or-unregistered-which-path-suits-your-ndis-support-business', label: 'How these arrangements work' },
-  },
-];
+const PATHS = PROVIDER_PATHS as { title: string; body: string; link: { to: string; label: string }; tint?: boolean }[];
 
-const SAFEGUARDS: { title: string; body: string; link: { to: string; label: string } }[] = [
-  {
-    title: 'Practice Standards',
-    body: 'The quality standards registered providers are audited against, organised into core, supplementary and verification modules.',
-    link: { to: '/blog/ndis-practice-standards-in-plain-english-for-new-providers', label: 'The Standards in plain English' },
-  },
-  {
-    title: 'Quality audits',
-    body: 'Verification audits for lower-risk supports and certification audits, with an on-site stage, for higher-risk ones.',
-    link: { to: '/blog/ndis-quality-audits-verification-or-certification-what-to-expect', label: 'What to expect' },
-  },
-  {
-    title: 'Incidents',
-    body: 'An incident management system, and reporting of reportable incidents to the Commission within the set timeframes.',
-    link: { to: '/blog/reportable-incidents-and-incident-management-what-ndis-providers-need-to-know', label: 'Incident management' },
-  },
-  {
-    title: 'Complaints',
-    body: 'Safe, accessible ways to complain, answers and action, and procedural fairness for everyone involved.',
-    link: { to: '/blog/handling-complaints-well-a-guide-for-ndis-providers', label: 'Handling complaints well' },
-  },
-  {
-    title: 'Worker screening',
-    body: 'Registered providers must have workers in risk-assessed roles screened; unregistered providers can choose to require it.',
-    link: { to: '/blog/ndis-worker-screening-check-who-needs-one-and-how-it-works', label: 'How the check works' },
-  },
-  {
-    title: 'Pricing',
-    body: 'Maximum prices apply to NDIA-managed and plan-managed participants, and fair pricing applies under the Code of Conduct.',
-    link: { to: '/blog/setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers', label: 'Price limits and fair pricing' },
-  },
-];
+const SAFEGUARDS = PROVIDER_SAFEGUARDS as { title: string; body: string; link: { to: string; label: string } }[];
 
 const GUIDE_SLUGS = PROVIDER_PAGE_GUIDES as string[];
 

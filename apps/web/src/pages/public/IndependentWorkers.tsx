@@ -8,21 +8,11 @@ import './Home.css';
 import './IndependentWorkers.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
 import WorkerExtras from '../../components/extras/WorkerExtras';
-import { INDEPENDENT_WORKER_FAQS } from '@soldirectory/topic-content';
+import { INDEPENDENT_WORKER_FAQS, WORKER_HOW_IT_WORKS, WORKER_PROFILE_DETAILS, WORKER_SAFEGUARDS } from '@soldirectory/topic-content';
 
-const PROFILE_DETAILS = [
-  ['Services and experience', 'The supports you deliver, relevant experience and the participant groups you work with.'],
-  ['Location and availability', 'Your suburb, service area, preferred schedule and current availability.'],
-  ['Languages and transport', 'Languages spoken, and whether you can travel or provide transport where appropriate.'],
-  ['Rates and contact preferences', 'An indicative hourly rate, and how eligible organisations can contact you.'],
-];
+const PROFILE_DETAILS = WORKER_PROFILE_DETAILS as unknown as string[][];
 
-const STEPS = [
-  ['Create your account', 'Register as an Independent Worker with your name, email address and mobile number.'],
-  ['Complete your profile', 'Add your services, experience, location, languages, availability and indicative rate.'],
-  ['Keep it current', 'Update availability and professional details whenever your circumstances change.'],
-  ['Assess each opportunity', 'Discuss requirements directly and complete your own suitability, safety and contractual checks.'],
-];
+const STEPS = WORKER_HOW_IT_WORKS as unknown as string[][];
 
 const HERO_CHECKS = [
   'One profile for your services and availability',
@@ -119,9 +109,7 @@ export default function IndependentWorkers() {
               <h2 id="iw-safeguards-heading" className="iw-h2">Checks and arrangements remain important</h2>
             </div>
             <ul className="iw-safeguard-list">
-              <li>Depending on the role and supports delivered, you may need an NDIS Worker Screening Check, Working with Children Check, professional registration, first aid training, insurance or other evidence.</li>
-              <li>Your profile does not replace verification. Organisations should confirm credentials directly, and both parties should document the scope of work, rates, cancellations, privacy, incidents and complaints before support begins.</li>
-              <li>SolDirectory does not endorse individual workers or determine whether a worker is suitable for a particular person or role.</li>
+              {WORKER_SAFEGUARDS.map((text) => <li key={text}>{text}</li>)}
             </ul>
           </div>
         </section>

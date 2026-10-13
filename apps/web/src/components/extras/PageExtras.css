@@ -58,3 +58,9 @@ a.dx-tile { text-decoration: none; color: inherit; }
 .xp .dx-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 960px) { .xp .dx-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .xp .dx-steps { grid-template-columns: minmax(0, 1fr); } }
+
+/* Hub reading: plain lists and a row of next links */
+.hr-list { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 14px; max-width: 78ch; }
+.hr-list li { display: flex; gap: 14px; align-items: flex-start; color: #3a4f69; font-size: 17px; line-height: 1.7; }
+.hr-list a, .hr-links a { color: #0F4FA8; font-weight: 700; }
+.hr-links { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 22px 0 0; font-size: 16.5px; }

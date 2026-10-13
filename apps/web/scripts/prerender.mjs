@@ -52,7 +52,7 @@ async function loadTs(relPath) {
 }
 
 const {
-  GUIDE_DOCS, fundingShellEditorial, EDITORIAL_BLOG_POSTS, GLOSSARY,
+  GUIDE_DOCS, fundingShellEditorial, EDITORIAL_BLOG_POSTS, GLOSSARY, EDITORIAL_STANDARDS,
   INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS,
 } = await import(pathToFileURL(path.resolve(webRoot, '../../packages/topic-content/index.js')).href);
 const { FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT } = await loadTs('src/data/fundingContent.ts');
@@ -197,19 +197,15 @@ pages.push({
     description: 'How SolDirectory writes, sources and checks its NDIS and aged care guides: original writing, official sources cited, dates shown, and how to report a mistake.',
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Editorial standards', path: '/editorial-standards' }],
     jsonLd: [{ '@type': 'AboutPage', name: 'Editorial standards', url: `${site}/editorial-standards`, about: { '@type': 'Organization', name: 'SolDirectory', url: site } }],
-    body: (c) => `${c}<h1>Editorial standards</h1>` +
-      '<p>People use our guides to make decisions about support, money and safety, so they should be able to see where each statement comes from and when it was last checked.</p>' +
-      '<h2>What SolDirectory is, and is not</h2><p>SolDirectory is an independent directory and enquiry service. It is not the NDIA, the NDIS Quality and Safeguards Commission, My Aged Care or any other government body, and nothing here is an official decision about your plan or eligibility.</p>' +
-      '<h2>How an article is written</h2>' + ul([
-        'Original writing: we do not copy text, images or logos from other sites. Official content is restated in our own words and the source is cited.',
-        'One official source at the centre: each article names the official page it is based on and lists any further pages it draws on.',
-        'The pages were opened: sources are read when an article is written or updated, and the date they were last checked is shown on the article.',
-        'Things that change are not stated as figures: prices, thresholds and deadlines change, so we describe how something works and send you to the official page for the current number.',
-        'Plain statements of limits: articles say what to confirm for your own plan, and do not tell you what you are entitled to.',
-      ]) +
-      '<h2>Monitoring official announcements</h2><p>An automated monitor notes when the NDIS and My Aged Care news pages publish something new and prepares a private brief for an editor. It never publishes anything: a person writes each article.</p>' +
-      '<h2>Reporting a mistake</h2><p>If you think something is wrong, unclear or out of date, tell us which page and what you saw, using the contact details in the footer. We will compare it with the official source and correct the page if it needs it.</p>' +
-      `<p>${a('/glossary', 'NDIS and aged care glossary')} &middot; ${a('/guides', 'Guides')} &middot; ${a('/blog', 'Blog')}</p>`,
+    body: (c) => `${c}<h1>Editorial standards</h1><p>${esc(EDITORIAL_STANDARDS.intro)}</p>` +
+      EDITORIAL_STANDARDS.sections.map((sec) =>
+        `<h2>${esc(sec.heading)}</h2>` +
+        (sec.paragraphs ?? []).map((p) => `<p>${esc(p)}</p>`).join('') +
+        (sec.list ? ul(sec.list.map((i) => `<strong>${esc(i.title)}.</strong> ${esc(i.text)}`)) : '') +
+        (sec.sources ? ul(sec.sources.map((src) => `${a(src.href, src.name)}: ${esc(src.use)}`)) : '') +
+        (sec.links ? `<p>${sec.links.map((l) => a(l.to, l.label)).join(' &middot; ')}</p>` : '')
+      ).join('') +
+      `<p>${EDITORIAL_STANDARDS.see.map((l) => a(l.to, l.label)).join(' &middot; ')}</p>`,
   });
 }
 

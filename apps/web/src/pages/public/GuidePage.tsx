@@ -6,6 +6,7 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import './LegalPage.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
+import HubReading from '../../components/extras/HubReading';
 
 /** One template for all four guide pages — pass the doc's slug. */
 export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | string }) {
@@ -172,6 +173,8 @@ export function GuidesHubPage() {
           <p>Open the official source linked from each guide because program names, prices, eligibility and assessment pathways can change. General information can help you prepare questions, but it cannot determine a person’s funding, clinical needs or legal rights.</p>
           <p>When comparing providers, confirm registration requirements, worker qualifications, service areas, current capacity, complete rates, travel, cancellations and complaint processes directly. Keep important answers, quotes and service terms in writing, and use public-register records as a verification starting point rather than proof of availability or fit.</p>
         </section>
+
+        <HubReading path="/guides" eyebrow="Using the guides" />
 
         <section className="guide-hub-cta">
           <div>

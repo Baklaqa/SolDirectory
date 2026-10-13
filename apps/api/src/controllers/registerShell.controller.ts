@@ -16,6 +16,7 @@ import {
   CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
+  hubCopy,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -335,6 +336,32 @@ function relatedShellHtml(originalUrl: string): string {
   return `<section><h2>${esc(heading)}</h2><ul>${articles.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul><p><a href="/blog">All SolDirectory articles</a></p></section>`;
 }
 
+/**
+ * The hub pages' reading copy (packages/topic-content/hubContent.js), as HTML. It is the same copy the website renders,
+ * so the words a crawler gets match the words a visitor reads. Returns '' for a path with no such copy.
+ */
+function hubCopyShell(originalUrl: string): { html: string; faqLd: object | null } {
+  const pathname = new URL(originalUrl, 'http://x').pathname.replace(/^\/seo-shell/, '') || '/';
+  const copy = hubCopy(pathname.toLowerCase());
+  if (!copy) return { html: '', faqLd: null };
+  const item = (i: { text: string; title?: string; to?: string; label?: string }) =>
+    `<li>${i.title ? `<strong>${esc(i.title)}.</strong> ` : ''}${esc(i.text)}${i.to ? ` <a href="${esc(i.to)}">${esc(i.label ?? i.to)}</a>` : ''}</li>`;
+  const sections = copy.sections.map((s) =>
+    `<section><h2>${esc(s.heading)}</h2>` +
+    (s.paragraphs ?? []).map((p) => `<p>${esc(p)}</p>`).join('') +
+    (s.list?.length ? `<ul>${s.list.map(item).join('')}</ul>` : '') +
+    (s.links?.length ? `<p>${s.links.map((l) => `<a href="${esc(l.to)}">${esc(l.label)}</a>`).join(' · ')}</p>` : '') +
+    `</section>`).join('');
+  const faqs = copy.faqs ?? [];
+  const faqHtml = faqs.length
+    ? `<section><h2>Frequently asked questions</h2>${faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}</section>`
+    : '';
+  const faqLd = faqs.length
+    ? { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }
+    : null;
+  return { html: sections + faqHtml, faqLd };
+}
+
 function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
   const head = [
@@ -352,16 +379,23 @@ function render(html: string, req: Request, page: Page, site: string): string {
     ),
   ].join('\n    ');
 
+  // Reading copy for hub pages, with its FAQ markup unless the page already carries some.
+  const hub = page.canonical && !page.noindex && page.status === 200 ? hubCopyShell(req.originalUrl) : { html: '', faqLd: null };
+  const alreadyHasFaq = page.jsonLd.some((j) => JSON.stringify(j.data).includes('FAQPage'));
+  const hubFaqTag = hub.faqLd && !alreadyHasFaq
+    ? `\n    <script type="application/ld+json" id="jsonld-hub-faq">${JSON.stringify(hub.faqLd).replace(/</g, '\\u003c')}</script>`
+    : '';
+
   let out = html
     .replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(page.title)}</title>`)
     .replace(/<meta name="description"[^>]*>/, () => `<meta name="description" content="${esc(page.description)}" />`);
   // Only ever tighten robots: an indexable page keeps the site-wide value
   // the build shipped with, so a staging build stays noindex.
   if (page.noindex) out = out.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, follow" />');
-  out = out.replace('</head>', () => `    ${head}\n  </head>`);
+  out = out.replace('</head>', () => `    ${head}${hubFaqTag}\n  </head>`);
   const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}</style>';
   const related = page.canonical && !page.noindex ? relatedShellHtml(req.originalUrl) : '';
-  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${page.body}${related}</main></div>`);
+  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${page.body}${hub.html}${related}</main></div>`);
 }
 
 // ---------------------------------------------------------------

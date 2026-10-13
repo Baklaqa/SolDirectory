@@ -11,6 +11,7 @@ import '../Home.css';
 import '../Directory.css';
 import './register.css';
 import RelatedArticles from '../../../components/blog/RelatedArticles';
+import HubReading from '../../../components/extras/HubReading';
 
 const PAGE_SIZE = 12;
 const TOP_SUBURBS = 24;
@@ -210,6 +211,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
             />
           </>
         )}
+        <HubReading path={kind.type === 'aged_care' ? '/aged-care-providers' : '/ndis-providers'} eyebrow={kind.type === 'aged_care' ? 'About the aged care register' : 'About the NDIS register'} />
         <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'choosing', 'registration'] : ['choosing', 'registration', 'local']} heading="Reading before you choose a provider" />
       </main>
 

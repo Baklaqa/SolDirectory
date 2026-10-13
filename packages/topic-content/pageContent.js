@@ -174,3 +174,219 @@ export const PROVIDER_LISTING_CHECKS =  [
   { title: 'Capacity and availability', body: 'Keep your availability current. A short “not taking new people in this area at the moment” is better than silence.' },
   { title: 'A route to reach you', body: 'Use an intake address that is checked every day, and say how quickly you aim to reply.' },
 ];
+
+/** Four steps to choose a provider, on /find-a-provider. */
+export const DIRECTORY_STEPS = [
+  {
+    title: 'Write down what you need',
+    body: 'List the supports, the days and times, and the goals they should help with. A clear list makes every provider easier to compare.',
+  },
+  {
+    title: 'Shortlist two or three',
+    body: 'Search by support and suburb, open each profile and note who covers your area and the supports you want. Compare at least two before deciding.',
+  },
+  {
+    title: 'Ask the same questions of each',
+    body: 'Cost, who will come, what happens when a worker is away and how complaints are handled. Use a written list so the answers can be compared fairly.',
+    link: { to: '/blog/how-to-choose-an-ndis-provider-questions-to-ask', label: '12 questions to ask a provider' },
+  },
+  {
+    title: 'Put it in writing',
+    body: 'Agree the supports, price, cancellation terms and how either side can end the arrangement in a service agreement before you start.',
+    link: { to: '/blog/ndis-service-agreement-what-to-check-before-you-sign', label: 'What to check in a service agreement' },
+  },
+];
+
+/** Questions on /find-a-provider. */
+export const DIRECTORY_FAQS = [
+  {
+    question: 'What is the difference between a SolDirectory member and a register listing?',
+    answer: 'Members are providers who have joined SolDirectory, keep their own profile and confirm their availability each week. They can receive enquiries through the site. Register listings are organisations that appear on the public NDIS or My Aged Care registers, shown here as those registers publish them. A register listing does not tell you whether an organisation has capacity or is taking new people.',
+  },
+  {
+    question: 'Does being on a register mean a provider is right for me?',
+    answer: 'No. Registration is about regulation and oversight. It does not show whether a provider suits your needs, offers the support in your area, has a worker free on the days you need, or fits your plan. Compare providers on the things that matter to you and ask the questions in our guides.',
+  },
+  {
+    question: 'How do I contact a provider?',
+    answer: 'Open a member profile to see the options on it, or use Get matched to send one request that suitable member providers can respond to. For register listings, contact the organisation directly using its own website or the details on the official register.',
+  },
+  {
+    question: 'Can I use a provider that is not registered?',
+    answer: 'It depends on how your plan is managed and on the support you need. Some supports can only be delivered by registered providers, and the rules for plan-managed and self-managed participants have been changing, so confirm the current position for your own plan with your plan manager, support coordinator or the NDIA.',
+  },
+  {
+    question: 'How do I check that a provider is registered?',
+    answer: 'The NDIS Quality and Safeguards Commission publishes a provider register you can search. Compare the name and the registered support types with what the provider tells you, and ask for their ABN if you are unsure.',
+  },
+  {
+    question: 'How current is the register information on this page?',
+    answer: 'Register listings are imported from the public registers at a point in time and can lag behind the live register. Treat them as a starting point, and confirm details with the provider and the official register before you rely on them.',
+  },
+  {
+    question: 'Is it free to search and send a request?',
+    answer: 'Searching and submitting a request is free for participants, families and coordinators. You are not obliged to use any provider that responds.',
+  },
+];
+
+/** Each state or territory's capital and larger regional centres. */
+export const STATE_CENTRES = [
+  { code: 'NSW', capital: 'Sydney', centres: ['Newcastle', 'Wollongong', 'Central Coast', 'Parramatta', 'Wagga Wagga', 'Albury', 'Orange', 'Dubbo', 'Tamworth', 'Coffs Harbour', 'Port Macquarie'] },
+  { code: 'VIC', capital: 'Melbourne', centres: ['Geelong', 'Ballarat', 'Bendigo', 'Dandenong', 'Shepparton', 'Wodonga', 'Mildura', 'Warrnambool', 'Traralgon'] },
+  { code: 'QLD', capital: 'Brisbane', centres: ['Gold Coast', 'Sunshine Coast', 'Ipswich', 'Townsville', 'Cairns', 'Toowoomba', 'Rockhampton', 'Mackay', 'Bundaberg'] },
+  { code: 'WA', capital: 'Perth', centres: ['Mandurah', 'Bunbury', 'Geraldton', 'Kalgoorlie', 'Albany', 'Broome', 'Karratha'] },
+  { code: 'SA', capital: 'Adelaide', centres: ['Mount Gambier', 'Whyalla', 'Murray Bridge', 'Port Augusta', 'Port Lincoln'] },
+  { code: 'TAS', capital: 'Hobart', centres: ['Launceston', 'Devonport', 'Burnie'] },
+  { code: 'ACT', capital: 'Canberra', centres: ['Belconnen', 'Tuggeranong', 'Gungahlin', 'Woden'] },
+  { code: 'NT', capital: 'Darwin', centres: ['Palmerston', 'Alice Springs', 'Katherine', 'Tennant Creek'] },
+];
+
+/** Questions on /locations. */
+export const LOCATION_FAQS = [
+  {
+    question: 'How do I find an NDIS provider near me?',
+    answer: 'Start with the suburb where the support will actually happen. Search it here, then widen to the nearest city or state if you need more options. Each result shows what the provider says it offers and where it works; contact two or three and compare how they respond.',
+  },
+  {
+    question: 'What is the difference between a SolDirectory profile and a register listing?',
+    answer: 'A profile is created and maintained by the provider itself, so it can say more about its services, areas and how to make an enquiry. A register listing comes from the public NDIS Commission or My Aged Care registers and shows only what those registers publish. Both are shown so you can see a wider picture, but a register listing does not tell you who has capacity right now.',
+  },
+  {
+    question: 'Can I choose a provider in a different suburb or state?',
+    answer: 'Yes. You are not limited to the suburb you live in. What matters is whether the provider can deliver support where you need it, so ask about their service area, travel costs and minimum shift lengths before you agree to anything.',
+  },
+  {
+    question: 'Do providers charge extra to travel to me?',
+    answer: 'Some do, and rules differ by support type. The NDIS Pricing Arrangements set limits that can include provider travel and may allow higher prices in remote and very remote areas. Always check the current pricing arrangements on the NDIS website and ask the provider to put any travel charges in writing.',
+  },
+  {
+    question: 'What if I live in a regional, rural or remote area?',
+    answer: 'Fewer providers may be based near you, but many travel or deliver some supports, such as planning, support coordination and some therapy, by phone or video. Search your nearest regional centre as well as your own town, and ask providers how often they visit.',
+  },
+  {
+    question: 'Are the register listings checked by SolDirectory?',
+    answer: 'Register listings reflect the public registers as imported, and they can go out of date. Before you commit, confirm a provider’s current status on the official register (links are on each state page) and ask for a service agreement that spells out price, hours and cancellation terms.',
+  },
+  {
+    question: 'Is it free to use SolDirectory?',
+    answer: 'Searching is free, and so is submitting a request for matched providers. We do not charge participants or families to search or to send an enquiry.',
+  },
+];
+
+/** Cards under 'Understand provider enquiries' on /providers. */
+export const PROVIDER_UNDERSTAND = [
+  {
+    title: 'Keep service and capacity information accurate',
+    body: 'Keep your service areas, funding types and contact details current. Before accepting work, confirm support requirements, timing, fees and any registration requirements directly with the person or their representative.',
+  },
+  {
+    title: 'Check the funding arrangement on every enquiry',
+    body: 'We also match aged care families with providers, so check the funding type and support requested each time. Directory totals include both, so they are not a count of NDIS-only demand.',
+  },
+  {
+    title: 'Notifications and contact access',
+    body: 'Claiming a basic listing is free and you are notified when an enquiry matches your service area. Unlocking full contact details is part of the Growth plan. A notification is not the same as a person agreeing to work with you.',
+  },
+  {
+    title: 'Judge a directory by what is included',
+    body: 'Compare billing terms, covered locations, service categories and how enquiries reach you, not the size of the register alone. A larger list does not by itself mean more suitable enquiries.',
+  },
+];
+
+/** How enquiries reach a provider, on /providers. */
+export const PROVIDER_REACH = [
+  { title: 'Email notifications', body: 'Available enquiry details are sent to your nominated intake email address.' },
+  { title: 'SMS notifications', body: 'Eligible plans can receive a text alert when a relevant enquiry is available to review.' },
+  { title: 'Subscription-based access', body: 'SolDirectory does not deduct a percentage from fees agreed between you and a participant.' },
+  { title: 'Direct communication', body: 'Where your plan permits contact access, you can communicate directly with the person who submitted the enquiry.' },
+];
+
+/** How it works for providers, on /providers. */
+export const PROVIDER_STEPS = [
+  { title: 'Claim your profile', body: 'Find your business in our directory and claim it, or create a new listing. Claiming is free.' },
+  { title: 'Set your service area and capacity', body: 'Tell us the suburbs you cover, the supports you offer, and where to send matches: email, SMS, or both.' },
+  { title: 'Review relevant enquiries', body: 'When an enquiry aligns with your profile, your team can review the available information and decide whether to respond.' },
+];
+
+/** The three ways providers work, on /providers. */
+export const PROVIDER_PATHS = [
+  {
+    title: 'Registered with the NDIS Commission',
+    body: 'Audited against the Practice Standards and assessed as suitable. Required for some supports, and for serving NDIA-managed participants.',
+    link: { to: '/blog/how-to-become-a-registered-ndis-provider-the-steps-and-what-to-prepare', label: 'The registration steps' },
+    tint: true,
+  },
+  {
+    title: 'Unregistered provider',
+    body: 'Can deliver supports that do not require registration, to participants who self-manage or plan-manage. The Code of Conduct still applies.',
+    link: { to: '/blog/registered-or-unregistered-which-path-suits-your-ndis-support-business', label: 'Which path suits you' },
+  },
+  {
+    title: 'Under another provider’s registration',
+    body: 'Supports delivered through a facilitation or brokerage arrangement, where the registered provider is responsible and claims payment.',
+    link: { to: '/blog/registered-or-unregistered-which-path-suits-your-ndis-support-business', label: 'How these arrangements work' },
+  },
+];
+
+/** Quality and safeguards areas, on /providers. */
+export const PROVIDER_SAFEGUARDS = [
+  {
+    title: 'Practice Standards',
+    body: 'The quality standards registered providers are audited against, organised into core, supplementary and verification modules.',
+    link: { to: '/blog/ndis-practice-standards-in-plain-english-for-new-providers', label: 'The Standards in plain English' },
+  },
+  {
+    title: 'Quality audits',
+    body: 'Verification audits for lower-risk supports and certification audits, with an on-site stage, for higher-risk ones.',
+    link: { to: '/blog/ndis-quality-audits-verification-or-certification-what-to-expect', label: 'What to expect' },
+  },
+  {
+    title: 'Incidents',
+    body: 'An incident management system, and reporting of reportable incidents to the Commission within the set timeframes.',
+    link: { to: '/blog/reportable-incidents-and-incident-management-what-ndis-providers-need-to-know', label: 'Incident management' },
+  },
+  {
+    title: 'Complaints',
+    body: 'Safe, accessible ways to complain, answers and action, and procedural fairness for everyone involved.',
+    link: { to: '/blog/handling-complaints-well-a-guide-for-ndis-providers', label: 'Handling complaints well' },
+  },
+  {
+    title: 'Worker screening',
+    body: 'Registered providers must have workers in risk-assessed roles screened; unregistered providers can choose to require it.',
+    link: { to: '/blog/ndis-worker-screening-check-who-needs-one-and-how-it-works', label: 'How the check works' },
+  },
+  {
+    title: 'Pricing',
+    body: 'Maximum prices apply to NDIA-managed and plan-managed participants, and fair pricing applies under the Code of Conduct.',
+    link: { to: '/blog/setting-your-rates-ndis-price-limits-and-fair-pricing-for-independent-workers', label: 'Price limits and fair pricing' },
+  },
+];
+
+/** What a worker profile can hold, on /independent-workers. */
+export const WORKER_PROFILE_DETAILS = [
+  ['Services and experience', 'The supports you deliver, relevant experience and the participant groups you work with.'],
+  ['Location and availability', 'Your suburb, service area, preferred schedule and current availability.'],
+  ['Languages and transport', 'Languages spoken, and whether you can travel or provide transport where appropriate.'],
+  ['Rates and contact preferences', 'An indicative hourly rate, and how eligible organisations can contact you.'],
+];
+
+/** How it works for workers, on /independent-workers. */
+export const WORKER_HOW_IT_WORKS = [
+  ['Create your account', 'Register as an Independent Worker with your name, email address and mobile number.'],
+  ['Complete your profile', 'Add your services, experience, location, languages, availability and indicative rate.'],
+  ['Keep it current', 'Update availability and professional details whenever your circumstances change.'],
+  ['Assess each opportunity', 'Discuss requirements directly and complete your own suitability, safety and contractual checks.'],
+];
+
+/** Reminders on /independent-workers about checks and arrangements. */
+export const WORKER_SAFEGUARDS = [
+  'Depending on the role and supports delivered, you may need an NDIS Worker Screening Check, Working with Children Check, professional registration, first aid training, insurance or other evidence.',
+  'Your profile does not replace verification. Organisations should confirm credentials directly, and both parties should document the scope of work, rates, cancellations, privacy, incidents and complaints before support begins.',
+  'SolDirectory does not endorse individual workers or determine whether a worker is suitable for a particular person or role.',
+];
+
+/** Plan inclusions on /providers. Mirrors the default rows seeded in apps/api/src/models/PlanConfig.ts: update both together. */
+export const PROVIDER_PLANS = {
+  starter: { name: 'Starter', price: '$0 per month', features: ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'] },
+  growth: { name: 'Growth', price: '$249 per month + GST', features: ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'] },
+};
