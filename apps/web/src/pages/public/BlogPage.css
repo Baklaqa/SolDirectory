@@ -302,5 +302,10 @@ button.blog-share-btn--native:hover { background: #025bcc; border-color: #025bcc
 .blog-card-image-link { position: relative; }
 .blog-card-badge { position: absolute; top: 16px; left: 16px; padding: 6px 12px; border-radius: 100px; background: var(--color-primary); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: 0 4px 12px rgba(11, 45, 92, 0.25); }
 
-/* The drawn covers keep their icon right of centre; tall or narrow crops are anchored there so it is never cut off. */
-img[src^="/images/blog/"], img[src^="/images/blog-thumbs/"] { object-position: 76% 50%; }
+
+/* Cover photographs are landscape: the featured cover is shown whole above its text instead of as a tall crop beside it. */
+.blog-card-featured { display: flex; flex-direction: column; }
+.blog-card-featured .blog-card-image-link { aspect-ratio: 16 / 9; min-height: 0; flex: none; }
+.blog-card-featured .blog-card-image { min-height: 0; height: 100%; }
+.blog-card-featured .blog-card-copy { padding: 26px 30px 30px; }
+@media (max-width: 640px) { .blog-card-featured .blog-card-copy { padding: 22px; } }

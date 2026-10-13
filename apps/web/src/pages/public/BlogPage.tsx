@@ -7,6 +7,7 @@ import { hubHeaderStyle } from '../../data/bannerImages';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import BlogShare from './BlogShare';
+import { blogThumb, fullImageFallback } from '../../components/blog/blogThumb';
 import { BLOG_FAQS, BLOG_TOPICS, relatedLinksFor } from '../../data/blogSeo';
 import { EDITORIAL_BLOG_POSTS, GUIDE_DOCS, type EditorialBlogPost } from '@soldirectory/topic-content';
 import './BlogPage.css';
@@ -92,10 +93,19 @@ function prepareArticle(html: string): { html: string; toc: { id: string; text: 
 
 function BlogCard({ post, featured = false, badge }: { post: WPBlogPost; featured?: boolean; badge?: string }) {
   const category = post.categories[0]?.name || 'Practical guidance';
+  const fullImage = postImage(post);
+  // Smaller copy for the grid; the featured card and article header use the full-size cover.
+  const cardImage = !featured && fullImage.startsWith('/images/blog/') ? blogThumb(fullImage) : fullImage;
   return (
     <article className={`blog-card${featured ? ' blog-card-featured' : ''}`}>
       <Link className="blog-card-image-link" to={`/blog/${post.slug}`} aria-label={`Read ${post.title}`}>
-        <img className="blog-card-image" src={postImage(post)} alt={post.featuredImage?.alt || ''} loading="lazy" />
+        <img
+          className="blog-card-image"
+          src={cardImage}
+          alt={post.featuredImage?.alt || ''}
+          loading="lazy"
+          onError={cardImage !== fullImage ? fullImageFallback(fullImage) : undefined}
+        />
         {badge && <span className="blog-card-badge">{badge}</span>}
       </Link>
       <div className="blog-card-copy">
@@ -334,7 +344,7 @@ export default function BlogPage() {
           <main className="blog-article-page"><div className="blog-wrap"><section className="blog-not-found"><span className="blog-kicker">SolDirectory journal</span><h1>Article not found</h1><p>This article may have been unpublished or moved.</p><Link className="blog-primary-link" to="/blog">Browse latest updates</Link></section></div></main>
         ) : (
           <>
-            <header className="blog-hero-art" style={{ backgroundImage: `url(${postImage(article)})`, ...(postImage(article).startsWith('/images/blog/') ? { backgroundPosition: '76% 50%' } : {}) }}>
+            <header className="blog-hero-art" style={{ backgroundImage: `url(${postImage(article)})` }}>
               <div className="blog-hero-art-shade">
                 <div className="blog-wrap">
                   <nav className="blog-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/blog">Updates & insights</Link><span>/</span><span>{article.categories[0]?.name || 'Article'}</span></nav>

@@ -136,8 +136,9 @@ const NEWS_POSTS = [
 ];
 
 /**
- * Every article has its own drawn cover (apps/web/scripts/generate-blog-covers.mjs), so no photograph repeats from one
- * article to the next. An article without an entry in blogCovers.js keeps the photo written in its own record.
+ * Every article has its own cover photograph (apps/web/scripts/build-blog-covers.mjs reads blogCovers.js and refuses two
+ * articles sharing a photo), so no picture repeats from one article to the next. An article without an entry in
+ * blogCovers.js keeps the photo written in its own record.
  */
 const withCover = (post) => {
   const cover = BLOG_COVERS[post.slug];
