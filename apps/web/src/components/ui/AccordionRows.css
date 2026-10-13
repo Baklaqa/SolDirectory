@@ -1,0 +1,40 @@
+/* Rows that slide open. The panel height animates by transitioning a grid row from 0fr to 1fr, so no height is measured. */
+.acc { display: grid; gap: 12px; }
+.acc-row { border: 1px solid #DFE7F0; border-radius: 16px; background: #ffffff; overflow: hidden; transition: border-color 220ms ease, box-shadow 280ms ease, background-color 220ms ease; }
+.acc-row:hover { border-color: #B6CCE6; }
+.acc-row.is-open { border-color: #9FBFE8; box-shadow: 0 22px 40px -28px rgba(11, 45, 92, 0.45); }
+.acc-row h3 { margin: 0; }
+.acc-row button { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 18px 22px; border: 0; background: transparent; color: #0B2343; font: inherit; text-align: left; cursor: pointer; }
+.acc-row button:focus-visible { outline: 3px solid #8CB8FF; outline-offset: -3px; border-radius: 14px; }
+.acc-mark { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #EAF2FD; color: #0F4FA8; font-size: 13.5px; font-weight: 800; letter-spacing: 0.04em; transition: background-color 220ms ease, color 220ms ease, transform 280ms ease; }
+.acc-row.is-open .acc-mark { background: linear-gradient(135deg, var(--color-accent, #1769E0) 0%, var(--color-accent-500, #2F80ED) 100%); color: #ffffff; transform: scale(1.04); }
+.acc-title { font-size: 18.5px; font-weight: 700; line-height: 1.35; }
+.acc-chevron { position: relative; width: 30px; height: 30px; border-radius: 50%; background: #EAF2FD; transition: background-color 220ms ease, transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.acc-chevron::before { content: ''; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-right: 2px solid #1769E0; border-bottom: 2px solid #1769E0; transform: translate(-50%, -70%) rotate(45deg); }
+.acc-row.is-open .acc-chevron { transform: rotate(180deg); background: #D7E7FB; }
+
+.acc-panel { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows 360ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 260ms ease, visibility 0s linear 360ms; }
+.acc-row.is-open .acc-panel { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition: grid-template-rows 360ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 320ms ease 60ms, visibility 0s; }
+.acc-panel-inner { overflow: hidden; min-height: 0; }
+.acc-panel-inner p { margin: 0; padding: 0 22px 22px 78px; color: #40546D; font-size: 16.5px; line-height: 1.75; max-width: 70ch; }
+
+/* On a dark band */
+.acc-dark .acc-row { border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.07); }
+.acc-dark .acc-row:hover { border-color: rgba(255, 255, 255, 0.34); }
+.acc-dark .acc-row.is-open { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+.acc-dark .acc-row button { color: #ffffff; }
+.acc-dark .acc-mark { background: rgba(255, 255, 255, 0.16); color: #ffffff; }
+.acc-dark .acc-row.is-open .acc-mark { background: #ffffff; color: #0B2D5C; }
+.acc-dark .acc-chevron { background: rgba(255, 255, 255, 0.16); }
+.acc-dark .acc-chevron::before { border-color: #ffffff; }
+.acc-dark .acc-row.is-open .acc-chevron { background: rgba(255, 255, 255, 0.28); }
+.acc-dark .acc-panel-inner p { color: rgba(255, 255, 255, 0.86); }
+
+@media (max-width: 560px) {
+  .acc-row button { gap: 12px; padding: 16px 16px; }
+  .acc-title { font-size: 17px; }
+  .acc-panel-inner p { padding: 0 16px 18px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acc-row, .acc-mark, .acc-chevron, .acc-panel, .acc-row.is-open .acc-panel { transition: none; }
+}

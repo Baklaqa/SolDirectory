@@ -109,7 +109,7 @@ export const PROVIDER_PATHS: readonly { title: string; body: string; link: { to:
 export const PROVIDER_SAFEGUARDS: readonly { title: string; body: string; link: { to: string; label: string } }[];
 export const WORKER_PROFILE_DETAILS: readonly (readonly [string, string])[];
 export const WORKER_HOW_IT_WORKS: readonly (readonly [string, string])[];
-export const WORKER_SAFEGUARDS: readonly string[];
+export const WORKER_SAFEGUARDS: readonly { title: string; text: string }[];
 export const PROVIDER_PLANS: { starter: { name: string; price: string; features: readonly string[] }; growth: { name: string; price: string; features: readonly string[] } };
 
 export interface HubListItem { text: string; title?: string; to?: string; label?: string }

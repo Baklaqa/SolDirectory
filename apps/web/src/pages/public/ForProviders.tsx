@@ -5,6 +5,7 @@ import PageHero from '../../components/topic/PageHero';
 import PhotoSlot from '../../components/PhotoSlot';
 import Counter from '../../components/Counter';
 import ProviderExtras from '../../components/extras/ProviderExtras';
+import AccordionRows from '../../components/ui/AccordionRows';
 import { getRegisterHub, type RegisterHub } from '../../api/registerApi';
 import { useSiteStats } from '../../hooks/useSiteStats';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
@@ -121,15 +122,7 @@ export default function ForProviders() {
                 Review the process and plan inclusions before subscribing.
               </p>
             </div>
-            <div className="fp-grid-2">
-              {UNDERSTAND.map((card, index) => (
-                <article className="fp-card" key={card.title}>
-                  <span className="fp-card-num">{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{card.title}</h3>
-                  <p>{card.body}</p>
-                </article>
-              ))}
-            </div>
+            <AccordionRows label="Things to understand about provider enquiries" items={UNDERSTAND.map((card) => ({ title: card.title, body: card.body }))} />
           </section>
 
           <section className="fp-reach" aria-labelledby="fp-reach-heading">
@@ -140,14 +133,7 @@ export default function ForProviders() {
               <span className="eyebrow"><span className="eyebrow-rule" />How enquiries reach you</span>
               <h2 id="fp-reach-heading" className="fp-h2">Choose how your team is notified</h2>
               <p className="fp-lede">Choose how your organisation receives notifications when an enquiry is relevant to your profile.</p>
-              <ul className="fp-reach-list">
-                {REACH.map((item) => (
-                  <li key={item.title}>
-                    <span className="fp-tick" aria-hidden="true">✓</span>
-                    <span><strong>{item.title}.</strong> {item.body}</span>
-                  </li>
-                ))}
-              </ul>
+              <AccordionRows marker="check" label="How enquiries reach you" items={REACH.map((item) => ({ title: item.title, body: item.body }))} />
             </div>
           </section>
 

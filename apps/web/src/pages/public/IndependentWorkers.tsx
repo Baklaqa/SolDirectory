@@ -8,6 +8,7 @@ import './Home.css';
 import './IndependentWorkers.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
 import WorkerExtras from '../../components/extras/WorkerExtras';
+import AccordionRows from '../../components/ui/AccordionRows';
 import { INDEPENDENT_WORKER_FAQS, WORKER_HOW_IT_WORKS, WORKER_PROFILE_DETAILS, WORKER_SAFEGUARDS } from '@soldirectory/topic-content';
 
 const PROFILE_DETAILS = WORKER_PROFILE_DETAILS as unknown as string[][];
@@ -73,15 +74,7 @@ export default function IndependentWorkers() {
                 responsible for their own recruitment, screening and engagement decisions.
               </p>
             </div>
-            <div className="iw-detail-grid">
-              {PROFILE_DETAILS.map(([title, body], index) => (
-                <article className="iw-detail" key={title}>
-                  <span className="iw-detail-number">{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </article>
-              ))}
-            </div>
+            <AccordionRows label="What your profile can include" items={PROFILE_DETAILS.map(([title, body]) => ({ title, body }))} />
           </section>
 
           <section className="iw-process" id="how-it-works" aria-labelledby="iw-process-heading">
@@ -108,9 +101,7 @@ export default function IndependentWorkers() {
               <span className="eyebrow eyebrow-light"><span className="eyebrow-rule" />Professional responsibilities</span>
               <h2 id="iw-safeguards-heading" className="iw-h2">Checks and arrangements remain important</h2>
             </div>
-            <ul className="iw-safeguard-list">
-              {WORKER_SAFEGUARDS.map((text) => <li key={text}>{text}</li>)}
-            </ul>
+            <AccordionRows tone="dark" marker="check" label="Checks and arrangements" items={WORKER_SAFEGUARDS.map((s) => ({ title: s.title, body: s.text }))} />
           </div>
         </section>
 

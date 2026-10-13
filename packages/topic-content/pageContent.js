@@ -380,9 +380,9 @@ export const WORKER_HOW_IT_WORKS = [
 
 /** Reminders on /independent-workers about checks and arrangements. */
 export const WORKER_SAFEGUARDS = [
-  'Depending on the role and supports delivered, you may need an NDIS Worker Screening Check, Working with Children Check, professional registration, first aid training, insurance or other evidence.',
-  'Your profile does not replace verification. Organisations should confirm credentials directly, and both parties should document the scope of work, rates, cancellations, privacy, incidents and complaints before support begins.',
-  'SolDirectory does not endorse individual workers or determine whether a worker is suitable for a particular person or role.',
+  { title: 'Checks you may need', text: 'Depending on the role and supports delivered, you may need an NDIS Worker Screening Check, Working with Children Check, professional registration, first aid training, insurance or other evidence.' },
+  { title: 'A profile does not replace verification', text: 'Organisations should confirm credentials directly, and both parties should document the scope of work, rates, cancellations, privacy, incidents and complaints before support begins.' },
+  { title: 'No endorsement', text: 'SolDirectory does not endorse individual workers or determine whether a worker is suitable for a particular person or role.' },
 ];
 
 /** Plan inclusions on /providers. Mirrors the default rows seeded in apps/api/src/models/PlanConfig.ts: update both together. */

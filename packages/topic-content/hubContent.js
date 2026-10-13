@@ -342,7 +342,7 @@ const INDEPENDENT_WORKERS = {
       paragraphs: ['SolDirectory provides the profile and search tools. Any engagement is arranged directly between you and the organisation contacting you.'],
       list: WORKER_HOW_IT_WORKS.map(([title, body]) => ({ text: body, title })),
     },
-    { heading: 'Checks and arrangements remain important', list: WORKER_SAFEGUARDS.map((text) => ({ text })) },
+    { heading: 'Checks and arrangements remain important', list: WORKER_SAFEGUARDS.map((s) => ({ text: s.text, title: s.title })) },
     { heading: 'Six things to settle before your first shift', list: WORKER_SETUP_STEPS.map((s) => ({ text: s.body, title: s.title, to: s.link.to, label: s.link.label })) },
     { heading: 'Guides for independent workers', list: articleLinks(WORKER_PAGE_GUIDES) },
     {
