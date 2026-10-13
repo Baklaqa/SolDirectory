@@ -1,5 +1,5 @@
 import { hubHeaderStyle } from '../../data/bannerImages';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { COORDINATOR_PAGE as P } from '@soldirectory/topic-content';
 import { PublicFooter, PublicHeader } from './PublicLayout';
@@ -8,14 +8,27 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { siteConfig } from '../../config/siteConfig';
 import InlineLinks from '../../components/ui/InlineLinks';
+import AccordionRows from '../../components/ui/AccordionRows';
+import RelatedArticles from '../../components/blog/RelatedArticles';
 import './Home.css';
 import './Directory.css';
 import './register/register.css';
-import './ProfilePages.css';
-import '../wordpress/WordPressCPTPage.css';
 import '../../components/ui/Button.css';
+import '../../components/extras/HubReading.css';
 import './SupportCoordinators.css';
-import RelatedArticles from '../../components/blog/RelatedArticles';
+
+/** One reading row: the heading on the left, its content on the right (the layout the other hub pages use). */
+function Row({ id, heading, eyebrow, children }: { id?: string; heading: string; eyebrow?: string; children: ReactNode }) {
+  return (
+    <section className="hr-row" id={id}>
+      <div className="hr-head">
+        {eyebrow && <span className="eyebrow"><span className="eyebrow-rule" />{eyebrow}</span>}
+        <h2>{heading}</h2>
+      </div>
+      <div className="hr-body">{children}</div>
+    </section>
+  );
+}
 
 // The words come from @soldirectory/topic-content (coordinatorContent.js); the server writes the same copy into the HTML
 // that search engines receive (registerShell.controller.ts), so keep the markup here and the words there.
@@ -50,27 +63,92 @@ export default function SupportCoordinators() {
     <div className="directory-page-header" style={hubHeaderStyle('support-coordination')}><div className="directory-page-header-inner"><span className="eyebrow eyebrow-light"><span className="eyebrow-rule" />Referral practice</span><h1 className="section-heading section-heading-light">{P.heading}</h1><p className="directory-page-subtitle">{P.subtitle}</p></div></div>
     <main className="reg-page category-hub-page">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Support coordinators' }]} />
-      <section className="directory-intro"><span className="directory-section-label">{P.intro.label}</span><h2>{P.intro.heading}</h2><p><InlineLinks text={P.intro.text} /></p><div className="dir-empty-actions"><Link className="btn-secondary" to="/find-a-provider">Find providers</Link><button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry</button></div></section>
 
-      <aside className="coord-glance" aria-label={P.glanceHeading}><h2>{P.glanceHeading}</h2><ul>{P.glance.map((point) => <li key={point}>{point}</li>)}</ul><p className="coord-updated">Last updated <time dateTime={P.updated}>{P.updatedLabel}</time></p></aside>
+      <section className="directory-intro">
+        <span className="directory-section-label">{P.intro.label}</span>
+        <h2>{P.intro.heading}</h2>
+        <p><InlineLinks text={P.intro.text} /></p>
+        <div className="sc-actions">
+          <Link className="sd-btn sd-btn-primary sd-btn-lg" to="/find-a-provider">Find providers</Link>
+          <button type="button" className="sd-btn sd-btn-outline sd-btn-lg" onClick={() => openMatchModal()}>Submit an enquiry</button>
+        </div>
+      </section>
 
-      <section id={P.referral.id} className="wp-cpt-section"><h2>{P.referral.heading}</h2>{P.referral.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}<ol className="wp-cpt-plain-list">{P.referral.steps.map((step) => <li key={step}><InlineLinks text={step} /></li>)}</ol></section>
+      <section className="sc-glance" aria-labelledby="sc-glance-heading">
+        <div className="sc-glance-head">
+          <h2 id="sc-glance-heading">{P.glanceHeading}</h2>
+          <span className="sc-updated">Last updated <time dateTime={P.updated}>{P.updatedLabel}</time></span>
+        </div>
+        <ul className="sc-glance-list">
+          {P.glance.map((point, i) => <li key={point}><span aria-hidden="true">{i + 1}</span><p>{point}</p></li>)}
+        </ul>
+      </section>
 
-      <section id={P.urgent.id} className="wp-cpt-section"><h2>{P.urgent.heading}</h2>{P.urgent.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}</section>
+      <div className="hr">
+        <Row id={P.referral.id} heading={P.referral.heading} eyebrow="Preparing the request">
+          {P.referral.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}
+          <ol className="sc-steps">{P.referral.steps.map((step) => <li key={step}><span><InlineLinks text={step} /></span></li>)}</ol>
+        </Row>
 
-      <section id={P.checks.id} className="wp-cpt-section"><h2>{P.checks.heading}</h2><p>{P.checks.intro}</p><div className="directory-guidance-grid">{P.checks.cards.map((card) => <article key={card.title}><h3>{card.title}</h3><p>{card.text}</p></article>)}</div><p><InlineLinks text={P.checks.note} /></p></section>
+        <Row id={P.urgent.id} heading={P.urgent.heading}>
+          <div className="sc-callout">{P.urgent.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}</div>
+        </Row>
 
-      <section className="wp-cpt-section"><h2>{P.pricing.heading}</h2>{P.pricing.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}</section>
+        <Row id={P.checks.id} heading={P.checks.heading}>
+          <p>{P.checks.intro}</p>
+          <ul className="sc-checks">{P.checks.cards.map((card) => <li key={card.title}><h3>{card.title}</h3><p>{card.text}</p></li>)}</ul>
+          <p><InlineLinks text={P.checks.note} /></p>
+        </Row>
 
-      <section className="wp-cpt-section"><h2>{P.records.heading}</h2>{P.records.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}<ul className="wp-cpt-plain-list">{P.records.list.map((item) => <li key={item}>{item}</li>)}</ul><p><InlineLinks text={P.records.after} /></p></section>
+        <Row heading={P.pricing.heading}>
+          {P.pricing.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}
+        </Row>
 
-      <section className="wp-cpt-section"><h2>{P.after.heading}</h2>{P.after.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}<div className="dir-empty-actions"><Link className="btn-secondary" to="/saved-providers">Open saved providers</Link><Link className="btn-secondary" to="/signup">Create an account</Link></div></section>
+        <Row heading={P.records.heading}>
+          {P.records.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}
+          <ul className="hr-ticks">
+            {P.records.list.map((item) => <li key={item}><span className="hr-tick" aria-hidden="true">✓</span><span>{item}</span></li>)}
+          </ul>
+          <p><InlineLinks text={P.records.after} /></p>
+        </Row>
 
-      <section className="wp-cpt-section"><h2>{P.resources.heading}</h2><p><InlineLinks text={P.resources.text} /></p></section>
+        <Row heading={P.after.heading}>
+          {P.after.paragraphs.map((p) => <p key={p}><InlineLinks text={p} /></p>)}
+          <div className="sc-actions">
+            <Link className="sd-btn sd-btn-outline" to="/saved-providers">Open saved providers</Link>
+            <Link className="sd-btn sd-btn-outline" to="/signup">Create an account</Link>
+          </div>
+        </Row>
 
-      <section className="wp-cpt-section"><h2>{P.faqsHeading}</h2><div className="wp-cpt-faq-list">{P.faqs.map((faq) => <details className="wp-cpt-faq-item" key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
-      <section className="wp-cpt-section"><h2>{P.officialHeading}</h2><ul className="wp-cpt-plain-list">{P.official.map((l) => <li key={l.href}><a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a></li>)}</ul></section>
-      <section id="contact" className="wp-cpt-cta"><h2>{P.contact.heading}</h2><p>{P.contact.text}</p><div className="dir-empty-actions">{siteConfig.contactEmail && <a className="btn-secondary" href={`mailto:${siteConfig.contactEmail}`}>Email SolDirectory</a>}<button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry</button></div></section>
-    <RelatedArticles service="Support coordination" themes={['funding', 'plan']} /></main><PublicFooter />
+        <Row heading={P.resources.heading}>
+          <p><InlineLinks text={P.resources.text} /></p>
+        </Row>
+
+        <Row heading={P.faqsHeading} eyebrow="Questions people ask">
+          <AccordionRows marker="question" label={P.faqsHeading} items={P.faqs.map((f) => ({ title: f.question, body: f.answer }))} />
+        </Row>
+
+        <Row heading={P.officialHeading}>
+          <p>These are the official sources behind the checks above. Each opens in a new tab.</p>
+          <div className="hr-pills sc-external">
+            {P.official.map((l) => <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>)}
+          </div>
+        </Row>
+      </div>
+
+      <section id="contact" className="directory-content-cta">
+        <div>
+          <span className="directory-section-label">Referral practice</span>
+          <h2>{P.contact.heading}</h2>
+          <p>{P.contact.text}</p>
+        </div>
+        <div className="sc-actions">
+          {siteConfig.contactEmail && <a className="sd-btn sd-btn-outline" href={`mailto:${siteConfig.contactEmail}`}>Email SolDirectory</a>}
+          <button type="button" className="sd-btn sd-btn-primary" onClick={() => openMatchModal()}>Submit an enquiry</button>
+        </div>
+      </section>
+
+      <RelatedArticles service="Support coordination" themes={['funding', 'plan']} />
+    </main><PublicFooter />
   </>;
 }

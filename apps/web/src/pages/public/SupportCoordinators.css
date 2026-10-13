@@ -1,7 +1,46 @@
-/* /support-coordinators: the short summary under the introduction and the "last updated" line. */
-.coord-glance { margin: 0 0 8px; padding: 22px 24px 20px; border: 1px solid #CFE0F7; border-left: 4px solid var(--color-accent, #1769E0); border-radius: 12px; background: linear-gradient(160deg, #F2F7FF 0%, #FFFFFF 80%); }
-.coord-glance h2 { margin: 0 0 10px; color: #0B2343; font-size: 15px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-.coord-glance ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
-.coord-glance li { color: #28405E; font-size: 16.5px; line-height: 1.6; }
-.coord-updated { margin: 14px 0 0; color: #5A6B84; font-size: 14px; }
-.coord-updated time { font-weight: 600; color: #3A4D68; }
+/* /support-coordinators. The page sits on the same pieces as the other hub pages: the directory intro, the heading-left
+   reading rows (HubReading.css), sliding question rows (AccordionRows) and the navy call-to-action band. */
+.sc-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.hr-body .sc-actions { margin-top: 22px; }
+.directory-content-cta .sc-actions { flex: none; margin-top: 0; }
+.hr-row[id], .directory-content-cta[id] { scroll-margin-top: 110px; }
+
+/* In short */
+/* The page is a grid with its own row gap, so the shared reading block and this box add no margin of their own. */
+.category-hub-page > .hr { margin-top: 0; }
+.sc-glance { margin: 0; padding: clamp(24px, 3vw, 34px); border: 1px solid #DFE8F2; border-radius: 12px; background: #F3F7FB; }
+.sc-glance-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; margin-bottom: 18px; }
+.sc-glance-head h2 { margin: 0; color: #0B2343; font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.sc-updated { color: #5A6B84; font-size: 14px; }
+.sc-updated time { color: #3A4D68; font-weight: 600; }
+.sc-glance-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.sc-glance-list li { display: grid; gap: 14px; align-content: start; padding: 22px; border: 1px solid #DCE5EF; border-radius: 10px; background: #fff; }
+.sc-glance-list li > span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #EAF2FE; color: #0F4FA8; font-size: 14px; font-weight: 800; }
+.sc-glance-list p { margin: 0; color: #28405E; font-size: 16px; line-height: 1.65; }
+
+/* Numbered steps */
+.sc-steps { list-style: none; counter-reset: sc-step; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; max-width: 74ch; }
+.sc-steps li { counter-increment: sc-step; display: flex; gap: 16px; align-items: flex-start; padding: 16px 18px; border: 1px solid #E1E9F4; border-radius: 12px; background: #fff; color: #3A4F69; font-size: 16.5px; line-height: 1.65; }
+.sc-steps li::before { content: counter(sc-step); flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #EAF2FE; color: #0F4FA8; font-size: 15px; font-weight: 800; }
+
+/* Urgent referrals */
+.sc-callout { max-width: 74ch; padding: 20px 22px; border: 1px solid #F1DDB4; border-left: 4px solid #D9822B; border-radius: 12px; background: #FFF9EE; }
+.sc-callout p { margin: 0 0 14px; color: #4A3F2A; font-size: 16.5px; line-height: 1.7; }
+.sc-callout p:last-child { margin-bottom: 0; }
+
+/* Three checks */
+.sc-checks { list-style: none; margin: 22px 0 18px; padding: 0; display: grid; gap: 12px; max-width: 74ch; }
+.sc-checks li { padding: 18px 20px; border: 1px solid #DCE5EF; border-left: 4px solid #1769E0; border-radius: 10px; background: #fff; }
+.sc-checks h3 { margin: 0 0 8px; color: #102B4D; font-size: 18px; }
+.sc-checks p { margin: 0; color: #52657D; font-size: 15.5px; line-height: 1.65; }
+
+/* Official links */
+.sc-external a::after { content: ' ↗'; font-size: 0.9em; }
+
+@media (max-width: 900px) {
+  .sc-glance-list { grid-template-columns: minmax(0, 1fr); }
+  .sc-actions .sd-btn { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-actions .sd-btn { transition: none; }
+}
