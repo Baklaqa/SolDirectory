@@ -71,6 +71,35 @@ export function weeklyMatchesTemplate(input: {
   return { subject: `Your provider matches for ${where(input.need, input.suburb)}`, html };
 }
 
+export interface SummaryRow { label: string; status: string; tone: 'good' | 'neutral'; sent: Date }
+
+/** The weekly "where your requests stand" email: every open request on one list, with where each one is. */
+export function requestSummaryTemplate(input: { firstName?: string; rows: SummaryRow[]; moreCount?: number; viewUrl: string; unsubscribeUrl: string; searchUrl: string }): Email {
+  const when = (d: Date) => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  const many = input.rows.length + (input.moreCount ?? 0) > 1;
+  const rows = input.rows.map((r, i) => `
+      <tr>
+        <td style="padding:14px 16px;${i < input.rows.length - 1 ? 'border-bottom:1px solid #EAF0F7;' : ''}font-size:14.5px;line-height:1.45;color:#1B2B43;">
+          ${escapeHtml(r.label)}<br /><span style="font-size:12.5px;color:#6A7A90;">Sent ${escapeHtml(when(r.sent))}</span>
+        </td>
+        <td align="right" style="padding:14px 16px;${i < input.rows.length - 1 ? 'border-bottom:1px solid #EAF0F7;' : ''}font-size:13.5px;line-height:1.4;font-weight:700;color:${r.tone === 'good' ? '#1E8A4C' : '#4A5B72'};">${escapeHtml(r.status)}</td>
+      </tr>`).join('');
+  const html = renderEmailLayout({
+    preheader: many ? 'A quick summary of your open requests' : 'Where your request stands this week',
+    heading: many ? 'Where your requests stand' : 'Where your request stands',
+    bodyHtml: `
+      <p>Hi${input.firstName ? ` ${escapeHtml(input.firstName)}` : ''}, a quick summary of your open ${many ? 'requests' : 'request'}:</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #DDE6F2;border-radius:10px;margin:14px 0 6px;">${rows}
+      </table>
+      ${input.moreCount ? `<p style="font-size:13.5px;color:#6A7A90;margin:6px 0 0;">and ${input.moreCount} more, which you can see on your requests page.</p>` : ''}
+      <p style="font-size:13.5px;line-height:1.6;color:#6A7A90;margin-top:18px;">An unlock means a provider opened the contact details you gave. It does not confirm they have called or emailed you, so keep an eye on your phone and inbox. You do not have to wait: you can also <a href="${escapeHtml(input.searchUrl)}">compare providers yourself</a>.</p>`,
+    ctaLabel: many ? 'View your requests' : 'View your request',
+    ctaUrl: input.viewUrl,
+    footerHtml: footer(input.unsubscribeUrl, 'You are receiving this weekly summary because you have open requests on SolDirectory. One click opens them, no sign-in needed.'),
+  });
+  return { subject: many ? 'Where your requests stand' : 'Where your request stands', html };
+}
+
 // --- To a provider ----------------------------------------------------------------------------------------------
 
 export function providerLeadReminderTemplate(input: { providerName: string; count: number; dashboardUrl: string; unsubscribeUrl?: string }): Email {

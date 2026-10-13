@@ -22,6 +22,13 @@ export interface TrackedRequest {
   trackingUrl?: string;
 }
 
+/** A request on the "my requests" page, with the one-line position the weekly email also uses. */
+export interface PersonRequest extends TrackedRequest {
+  open: boolean;
+  statusText: string;
+  statusTone: 'good' | 'neutral';
+}
+
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem('sd_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -45,3 +52,7 @@ export const attachRequest = (id: string, token: string) =>
   });
 
 export const listMyRequests = () => request<{ items: TrackedRequest[] }>('/mine', { headers: authHeaders() });
+
+/** Every request made with the same email address as request `id`, from the one-click link in the weekly summary email. */
+export const getPersonRequests = (id: string, token: string) =>
+  request<{ items: PersonRequest[] }>(`/person/${encodeURIComponent(id)}?t=${encodeURIComponent(token)}`);

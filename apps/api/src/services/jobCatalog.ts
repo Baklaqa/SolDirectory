@@ -27,6 +27,15 @@ export const JOB_CATALOG: JobDefinition[] = [
     everyHours: 24,
   },
   {
+    name: 'request-summaries',
+    label: 'Weekly "where your requests stand" emails',
+    description: 'One email a week to each person with open requests: how many providers have viewed each one and how many unlocked the details, with a one-click link to their requests. Stops after 8, or when they unsubscribe.',
+    schedule: 'Every day, 10:00am (each person is emailed at most weekly)',
+    cron: '0 10 * * *',
+    command: 'npm run job:request-summaries -w apps/api',
+    everyHours: 24,
+  },
+  {
     name: 'lead-escalation',
     label: 'Unviewed enquiry escalation',
     description: 'Offers enquiries nobody has opened to the next-best providers.',

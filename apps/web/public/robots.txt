@@ -5,9 +5,11 @@ Disallow: /admin/
 Disallow: /dashboard
 Disallow: /leads
 Disallow: /login
+Disallow: /my-requests/
 Disallow: /onboarding
 Disallow: /plans
 Disallow: /providers/
 Disallow: /signup
+Disallow: /track/
 
 Sitemap: https://directory.solbusinessconsultant.com.au/sitemap.xml

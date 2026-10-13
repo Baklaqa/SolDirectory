@@ -46,6 +46,7 @@ const AdminOperations = lazy(() => import('../pages/admin/AdminOperations'));
 const AdminEnquiries = lazy(() => import('../pages/admin/AdminEnquiries'));
 const AdminContent = lazy(() => import('../pages/admin/AdminContent'));
 const TrackRequest = lazy(() => import('../pages/public/TrackRequest'));
+const PersonRequests = lazy(() => import('../pages/public/PersonRequests'));
 const AdminClaims = lazy(() => import('../pages/admin/AdminClaims'));
 const AdminRegisterListings = lazy(() => import('../pages/admin/AdminRegisterListings'));
 const AdminWorkerReviews = lazy(() => import('../pages/admin/AdminWorkerReviews'));
@@ -185,6 +186,7 @@ export default function AppRoutes() {
       <Route path="/language/:slug" element={<LanguageTopicPage />} />
       <Route path="/support-coordinators" element={<SupportCoordinators />} />
       <Route path="/track/:id" element={<TrackRequest />} />
+      <Route path="/my-requests/:id" element={<PersonRequests />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogPage />} />
       <Route path="/directory/:slug" element={<ProviderPublicPage />} />

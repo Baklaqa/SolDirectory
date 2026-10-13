@@ -4,7 +4,8 @@ import Lead from '../models/Lead.js';
 import LeadMatch from '../models/LeadMatch.js';
 import Provider from '../models/Provider.js';
 import type { AuthedRequest } from '../middleware/auth.middleware.js';
-import { buildTrackedRequest, verifyTrackToken, trackUrl } from '../services/requestTracking.js';
+import { buildTrackedRequest, verifyTrackToken, verifyPersonToken, trackUrl } from '../services/requestTracking.js';
+import { describeProgress } from '../services/requestSummary.service.js';
 
 async function loadTracked(leadId: string) {
   const lead = await Lead.findOne({ _id: leadId, status: { $ne: 'draft' } }).lean();
@@ -55,5 +56,45 @@ export async function listMyRequests(req: AuthedRequest, res: Response) {
       ...buildTrackedRequest(lead, matches.filter((m: any) => String(m.leadId) === String(lead._id)) as any, names),
       trackingUrl: trackUrl(String(lead._id)),
     })),
+  });
+}
+
+/**
+ * GET /api/requests/person/:id?t=<signed token> — every request made with the same email address as request :id, newest
+ * first. This is the page behind "View your requests" in the weekly summary email. No account is needed; the link is the
+ * key, and it only works for the one person it was sent to. The email address itself is never returned.
+ */
+export async function getPersonRequests(req: Request, res: Response) {
+  const id = req.params.id;
+  const token = String(req.query.t ?? '');
+  if (!mongoose.isValidObjectId(id) || !verifyPersonToken(id, token)) return res.status(404).json({ error: 'We could not find your requests. Please use the link from your email.' });
+  const anchor = await Lead.findOne({ _id: id, status: { $ne: 'draft' } }).select('requesterEmail').lean();
+  const email = anchor?.requesterEmail?.trim();
+  if (!email) return res.status(404).json({ error: 'We could not find your requests.' });
+
+  const since = new Date(Date.now() - 120 * 24 * 60 * 60 * 1000);
+  const leads = await Lead.find({
+    requesterEmail: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    status: { $ne: 'draft' },
+    createdAt: { $gte: since },
+  }).sort({ createdAt: -1 }).limit(20).lean();
+  const ids = leads.map((l) => l._id);
+  const matches = ids.length ? await LeadMatch.find({ leadId: { $in: ids } }).select('leadId providerId status notifiedAt viewedAt respondedAt').lean() : [];
+  const providers = matches.length ? await Provider.find({ _id: { $in: matches.map((m) => m.providerId) } }).select('tradingName legalEntityName').lean() : [];
+  const names = new Map(providers.map((p: any) => [String(p._id), p.tradingName || p.legalEntityName || 'A matched provider']));
+
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    items: leads.map((lead) => {
+      const own = matches.filter((m: any) => String(m.leadId) === String(lead._id));
+      const tracked = buildTrackedRequest(lead, own as any, names);
+      const progress = describeProgress({
+        matched: own.length,
+        viewed: own.filter((m: any) => m.status === 'viewed' || m.status === 'contacted').length,
+        unlocked: own.filter((m: any) => m.status === 'contacted').length,
+        requestedProvider: tracked.requestedProvider,
+      });
+      return { ...tracked, open: lead.status !== 'closed', statusText: progress.text, statusTone: progress.tone, trackingUrl: trackUrl(String(lead._id)) };
+    }),
   });
 }

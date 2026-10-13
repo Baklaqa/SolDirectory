@@ -1,0 +1,15 @@
+/* "Where your requests stand": the page behind the weekly summary email. Builds on the tracking page styles. */
+.pr-wrap { max-width: 860px; }
+.pr-card { margin-top: 18px; }
+.pr-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 20px; margin-bottom: 18px; }
+.pr-top h2 { margin: 0 0 4px; font-size: 20px; line-height: 1.3; color: #0B2343; }
+.pr-meta { color: #5A6B84; font-size: 14px; }
+.pr-status { flex: none; padding: 7px 14px; border-radius: 999px; background: #EEF2F8; color: #3A4D68; font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+.pr-status-good { background: #E2F3EA; color: #19794A; }
+.pr-link { display: inline-block; margin-top: 16px; color: #0F4FA8; font-size: 15px; font-weight: 700; text-decoration: none; }
+.pr-link:hover { text-decoration: underline; }
+.pr-note { margin-top: 18px; }
+.pr-closed { margin-top: 28px; }
+.pr-closed h2 { margin: 0 0 8px; font-size: 16px; color: #5A6B84; font-weight: 700; }
+.pr-closed ul { margin: 0; padding-left: 18px; color: #3A4D68; font-size: 15px; line-height: 1.8; }
+.pr-closed li span { color: #7A8AA0; }

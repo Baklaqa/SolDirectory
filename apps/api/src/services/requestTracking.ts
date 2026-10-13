@@ -8,6 +8,13 @@ import { signToken, verifyToken, siteOrigin } from './emailTokens.js';
 export const trackUrl = (leadId: string) => `${siteOrigin()}/track/${leadId}?t=${signToken('track', leadId)}`;
 export const verifyTrackToken = (leadId: string, token: string) => verifyToken('track', leadId, token);
 
+/**
+ * One link to all of a person's requests. It is anchored on one of their requests (its id is not personal data), and the
+ * signature is for that id under its own kind, so it can never open a single request's page or the reverse.
+ */
+export const personUrl = (leadId: string) => `${siteOrigin()}/my-requests/${leadId}?t=${signToken('person', leadId)}`;
+export const verifyPersonToken = (leadId: string, token: string) => verifyToken('person', leadId, token);
+
 export type ProviderProgress = 'waiting' | 'viewed' | 'responded' | 'declined';
 
 export interface TrackedRequest {

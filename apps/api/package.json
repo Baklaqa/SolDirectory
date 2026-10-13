@@ -27,6 +27,8 @@
     "job:capacity-check": "tsx src/scripts/weeklyCapacityCheck.ts",
     "job:search-alerts": "tsx src/scripts/sendSearchAlerts.ts",
     "job:lead-followups": "tsx src/scripts/sendLeadFollowUps.ts",
+    "job:request-summaries": "tsx src/scripts/sendRequestSummaries.ts",
+    "test:request-summaries": "tsx src/scripts/testRequestSummaries.ts",
     "job:ndis-news-monitor": "tsx src/scripts/monitorNdisNews.ts",
     "audit:register": "tsx src/scripts/auditRegisterData.ts",
 "mark:verified-contacts": "tsx src/scripts/markVerifiedContacts.ts",

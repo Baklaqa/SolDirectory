@@ -19,18 +19,30 @@ export async function unsubscribe(req: Request, res: Response) {
   const id = String(req.query.id ?? '');
   const token = String(req.query.t ?? '');
 
-  if ((kind !== 'lead' && kind !== 'listing') || !/^[a-f0-9]{24}$/i.test(id) || !verifyToken(kind, id, token)) {
+  if ((kind !== 'lead' && kind !== 'listing' && kind !== 'person') || !/^[a-f0-9]{24}$/i.test(id) || !verifyToken(kind, id, token)) {
     return res.status(400).send(page('This link is not valid', 'The unsubscribe link looks incomplete or has been changed. Please use the link from the most recent email, or contact us and we will remove you.'));
   }
 
-  if (kind === 'lead') await Lead.updateOne({ _id: id }, { $set: { emailOptOut: true } });
-  else await RegisterListing.updateOne({ _id: id }, { $set: { emailOptOut: true } });
+  if (kind === 'lead') {
+    await Lead.updateOne({ _id: id }, { $set: { emailOptOut: true } });
+  } else if (kind === 'person') {
+    // The weekly summary covers all of a person's requests, so stopping it stops follow-ups on every one of them.
+    const anchor = await Lead.findById(id).select('requesterEmail').lean();
+    const email = anchor?.requesterEmail?.trim();
+    if (email) {
+      await Lead.updateMany({ requesterEmail: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }, { $set: { emailOptOut: true } });
+    } else {
+      await Lead.updateOne({ _id: id }, { $set: { emailOptOut: true } });
+    }
+  } else {
+    await RegisterListing.updateOne({ _id: id }, { $set: { emailOptOut: true } });
+  }
 
   if (req.method === 'POST') return res.status(200).json({ unsubscribed: true });
   res.send(page(
     'You have been unsubscribed',
-    kind === 'lead'
-      ? 'We will not send you any more follow-up emails about your request.'
+    kind === 'lead' || kind === 'person'
+      ? 'We will not send you any more follow-up emails about your requests.'
       : 'We will not send this business any more enquiry notices.',
   ));
 }

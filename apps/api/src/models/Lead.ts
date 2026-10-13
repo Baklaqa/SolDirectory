@@ -67,6 +67,9 @@ export interface LeadDoc extends Document {
   /** How many weekly "your matches" reminders have been sent, and when the last one went. */
   digestCount?: number;
   lastDigestAt?: Date;
+  /** The weekly "where your requests stand" summary (requestSummary.service.ts): how many went out, and when the last one did. */
+  summaryCount?: number;
+  lastSummaryAt?: Date;
   createdAt: Date;
 }
 
@@ -108,6 +111,8 @@ const leadSchema = new Schema<LeadDoc>(
     respondedNoticeAt: Date,
     digestCount: { type: Number, default: 0 },
     lastDigestAt: Date,
+    summaryCount: { type: Number, default: 0 },
+    lastSummaryAt: Date,
   },
   { timestamps: true }
 );
