@@ -151,6 +151,18 @@ const NDIS_PROVIDERS = {
       ],
     },
     {
+      heading: 'How to use public register information',
+      paragraphs: [
+        'Check that the organisation name and identifier match the provider you intend to contact. Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support. Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.',
+      ],
+    },
+    {
+      heading: 'Checks to make before choosing support',
+      paragraphs: [
+        'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date. Verify current status with the official source where registration is required. Keep quotes, service agreements and important answers in writing so options can be compared consistently. A public record does not prove current capacity, funding acceptance or personal fit.',
+      ],
+    },
+    {
       heading: 'What a registered listing tells you',
       paragraphs: [
         'A registered provider has applied to the Commission, been audited against the relevant NDIS Practice Standards, been assessed as suitable (along with its key personnel) and been issued a certificate of registration. Registration is generally for three years. A listing shows the groups of supports a provider is registered for.',
@@ -162,7 +174,7 @@ const NDIS_PROVIDERS = {
       list: [
         { title: 'Choose your state and suburb', text: 'Choose your state, then your suburb, and narrow by the type of support you need.' },
         { title: 'Open the listing', text: 'Note the registered support groups and where the provider works.' },
-        { title: 'Confirm on the official register', text: 'Check the provider’s current status on the Commission’s official register before you rely on it.' },
+        { title: 'Confirm on the official register', text: 'Check the provider’s current status on the Commission’s official register before you rely on it.', to: 'https://www.ndiscommission.gov.au/provider-registration/find-registered-provider', label: 'NDIS Commission’s “Find a registered provider”' },
         { title: 'Contact two or three providers', text: 'Ask each the same questions so the answers can be compared fairly.', to: blog('how-to-choose-an-ndis-provider-questions-to-ask'), label: '12 questions to ask a provider' },
         { title: 'Put it in writing', text: 'Agree the supports, price and cancellation terms before support starts.', to: blog('ndis-service-agreement-what-to-check-before-you-sign'), label: 'What to check in a service agreement' },
       ],
@@ -176,11 +188,15 @@ const NDIS_PROVIDERS = {
     },
   ],
   faqs: [
+    { question: 'What is the NDIS provider register?', answer: 'It is a list published by the NDIS Quality and Safeguards Commission of providers approved to deliver NDIS supports. This directory shows those listings by state, suburb and type of support, as the register publishes them.' },
+    { question: 'How do I find NDIS providers in my suburb?', answer: 'Choose your state, then your suburb, and narrow by the type of support you need. Open a listing to see the registered support groups and where the provider works, then contact two or three providers and ask each the same questions.' },
     { question: 'Does being on the register mean a provider has capacity?', answer: 'No. Registration is about regulation and oversight. It does not show whether a provider has a worker free, offers the support in your area or is taking new participants.' },
     { question: 'How do I check that a provider is registered?', answer: 'Search the NDIS Provider Register published by the NDIS Quality and Safeguards Commission. Compare the name and the registered support types with what the provider tells you, and ask for their ABN if you are unsure.' },
     { question: 'How current is the information on these pages?', answer: 'Listings are imported from the public register at a point in time and can lag behind the live register. Treat them as a starting point and confirm details with the provider and the official register.' },
     { question: 'Why can I not find a provider I know?', answer: 'The provider may be unregistered, may be registered under a different legal name, or may have registered since the last import. Try the provider’s legal name and your suburb, and check the official register.' },
     { question: 'Can I use a provider that is not on the register?', answer: 'It depends on how your plan is managed and on the support you need. Some supports can only be delivered by registered providers. Confirm the position for your own plan with your plan manager, support coordinator or the NDIA.' },
+    { question: 'How long does NDIS provider registration last?', answer: 'Registration is generally for three years. A listing shows the groups of supports a provider is registered for, so confirm the current status on the official register before you rely on it.' },
+    { question: 'Which supports can only be delivered by a registered provider?', answer: 'They include specialist disability accommodation, supported independent living, plan management and supports for participants whose funding is managed by the NDIA. Only participants who self-manage or plan-manage can choose unregistered providers, and only for supports that do not require registration.' },
   ],
 };
 
@@ -191,6 +207,19 @@ const AGED_CARE_PROVIDERS = {
       paragraphs: [
         'This directory lists providers from the public My Aged Care register, by state, suburb and type of care, as the register publishes them. It is a way to see who operates near you before you contact anyone.',
         'My Aged Care also has its own Find a provider tool, which lists providers of government-funded aged care by place and type of care and, for aged care homes, shows Star Ratings and information about prices.',
+      ],
+      links: [{ to: 'https://www.myagedcare.gov.au/find-a-provider', label: 'My Aged Care “Find a provider”' }],
+    },
+    {
+      heading: 'How to use public register information',
+      paragraphs: [
+        'Check that the organisation name and identifier match the provider you intend to contact. Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support. Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.',
+      ],
+    },
+    {
+      heading: 'Checks to make before choosing support',
+      paragraphs: [
+        'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date. Verify current status with the official source where registration is required. Keep quotes, service agreements and important answers in writing so options can be compared consistently. A public record does not prove current capacity, funding acceptance or personal fit.',
       ],
     },
     {

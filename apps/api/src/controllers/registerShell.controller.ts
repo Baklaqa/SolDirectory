@@ -51,11 +51,15 @@ const KINDS = {
   'ndis-providers': {
     type: 'ndis' as RegisterType, label: 'NDIS',
     register: 'NDIS Commission register of registered providers',
+    officialUrl: 'https://www.ndiscommission.gov.au/provider-registration/find-registered-provider',
+    officialName: 'NDIS Commission’s “Find a registered provider”',
     listedAs: 'listed as an NDIS registered provider',
   },
   'aged-care-providers': {
     type: 'aged_care' as RegisterType, label: 'Aged care',
     register: 'My Aged Care provider register',
+    officialUrl: 'https://www.myagedcare.gov.au/find-a-provider',
+    officialName: 'My Aged Care “Find a provider”',
     listedAs: 'listed as an approved aged care provider',
   },
 };
@@ -105,6 +109,11 @@ async function prerenderedPage(slug: string): Promise<string | null> {
     return null;
   }
 }
+
+/** "12 October 2026", in Australian time, so the page and its crawler HTML always print the same date. */
+const registerDateLabel = (iso: string) => new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' });
+/** The same day as YYYY-MM-DD (Australian time), for datetime attributes and dateModified. */
+const registerDateIso = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
 
 // --- hub numbers, cached: they're aggregated over every listing ---
 const hubCache = new Map<RegisterType, { at: number; value: Awaited<ReturnType<typeof computeHub>> }>();
@@ -163,14 +172,27 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
     description: trimTo(`Browse ${fmt(hub.total)} ${kind.label} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`, 158),
     canonical: base,
     noindex: hub.total === 0,
-    jsonLd: [breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: `${kind.label} providers`, path: base }])],
+    jsonLd: [
+      breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: `${kind.label} providers`, path: base }]),
+      {
+        id: 'register-page',
+        data: {
+          '@type': 'WebPage', name: `${kind.label} providers in Australia`, url: `${site}${base}`, inLanguage: 'en-AU',
+          ...(hub.asOf ? { dateModified: registerDateIso(hub.asOf) } : {}),
+          isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+          publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
+        },
+      },
+    ],
     body:
       `<h1>${esc(kind.label)} providers in Australia</h1>` +
+      `<p>Browse providers listed on the ${esc(kind.register)}, by state and suburb. See the supports each one lists and where it operates, then get matched with providers who have confirmed they can start.</p>` +
       `<p>${fmt(hub.total)} ${esc(kind.label)} providers are listed on the ${esc(kind.register)}. Browse by state or suburb.</p>` +
-      `<h2>How to use public register information</h2><p>Check that the organisation name and identifier match the provider you intend to contact. Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support. Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.</p>` +
-      `<h2>Checks to make before choosing support</h2><p>Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date. Verify current status with the official source where registration is required. Keep quotes, service agreements and important answers in writing so options can be compared consistently. A public record does not prove current capacity, funding acceptance or personal fit.</p>` +
-      `<h2>Browse by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
-      `<h2>Popular suburbs</h2><ul>${hub.suburbs.slice(0, 40).map((s) => li(`${base}/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>`,
+      `<h2>Browse ${esc(kind.label)} providers by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
+      `<h2>Suburbs with the most listings</h2><ul>${hub.suburbs.slice(0, 40).map((s) => li(`${base}/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>` +
+      `<h2>What “listed on the register” means</h2><p>Each provider here appears on the ${esc(kind.register)}. That tells you what the provider was listed for and where — it is not a recommendation, a quality rating or a statement about availability. SolDirectory separately asks providers to confirm each week whether they can take on new people; that is what “Get matched” uses.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>` +
+      (hub.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hub.asOf))}">${esc(registerDateLabel(hub.asOf))}</time>.</p>` : ''),
   };
 }
 

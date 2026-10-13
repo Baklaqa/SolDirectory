@@ -57,6 +57,8 @@ export function searchRegister(params: {
 
 export interface RegisterHub {
   total: number;
+  /** When the register data was last imported (ISO), or null. */
+  asOf?: string | null;
   states: Record<string, number>;
   categories: { category: string; count: number }[];
   suburbs: { state: string; slug: string; suburb: string; count: number }[];

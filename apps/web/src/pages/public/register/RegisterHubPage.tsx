@@ -14,9 +14,12 @@ import RelatedArticles from '../../../components/blog/RelatedArticles';
 import HubReading from '../../../components/extras/HubReading';
 
 const PAGE_SIZE = 12;
-const TOP_SUBURBS = 24;
+const TOP_SUBURBS = 40; // the crawler HTML lists the same forty
 
 /** /ndis-providers and /aged-care-providers — the entry point: states, busiest suburbs, name search. */
+/** A day as YYYY-MM-DD in Australian time, so the date in the markup matches the date shown. */
+const sydneyIso = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
+
 export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
   const [params, setParams] = useSearchParams();
   const initialQuery = params.get('q') ?? '';
@@ -93,7 +96,16 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
         { '@type': 'ListItem', position: 2, name: `${kind.label} providers`, item: absoluteUrl(registerPath(kind)) },
       ],
     });
-    return () => setJsonLd('register-breadcrumbs', null);
+    setJsonLd('register-page', {
+      '@type': 'WebPage',
+      name: `${kind.label} providers in Australia`,
+      url: absoluteUrl(registerPath(kind)),
+      inLanguage: 'en-AU',
+      ...(hub?.asOf ? { dateModified: sydneyIso(hub.asOf) } : {}),
+      isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: absoluteUrl('/') },
+      publisher: { '@type': 'Organization', name: 'SolDirectory', url: absoluteUrl('/') },
+    });
+    return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-page', null); };
   }, [hub, failed, kind, title]);
 
   const topSuburbs = (hub?.suburbs ?? []).slice(0, TOP_SUBURBS);
@@ -200,6 +212,14 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
               whether they can take on new people; that is what “Get matched” uses.
             </p>
             <VerifyNote kind={kind} />
+            {hub.asOf && (
+              <p className="reg-asof">
+                Register data last imported on{' '}
+                <time dateTime={sydneyIso(hub.asOf)}>
+                  {new Date(hub.asOf).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' })}
+                </time>.
+              </p>
+            )}
 
             <GetMatchedCta
               title="Want providers who can start soon?"
@@ -212,7 +232,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
           </>
         )}
         <HubReading path={kind.type === 'aged_care' ? '/aged-care-providers' : '/ndis-providers'} eyebrow={kind.type === 'aged_care' ? 'About the aged care register' : 'About the NDIS register'} />
-        <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'choosing', 'registration'] : ['choosing', 'registration', 'local']} heading="Reading before you choose a provider" />
+        <RelatedArticles themes={kind.type === 'aged_care' ? ['aged-care', 'choosing', 'registration'] : ['choosing', 'registration', 'local']} />
       </main>
 
       <PublicFooter />

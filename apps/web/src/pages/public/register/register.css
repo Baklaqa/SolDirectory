@@ -237,3 +237,4 @@
   .reg-request { grid-template-columns: 1fr; }
   .reg-request-alt { border-left: 0; border-top: 1px solid #DFE8F2; }
 }
+.reg-asof { margin: 8px 0 0; color: #5A6B84; font-size: 14px; }

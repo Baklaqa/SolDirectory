@@ -352,7 +352,7 @@ const HUB_TTL_MS = 30 * 60 * 1000;
 const hubCache = new Map<RegisterType, { at: number; value: unknown }>();
 
 export async function computeHub(type: RegisterType) {
-  const [states, categories, suburbs, total] = await Promise.all([
+  const [states, categories, suburbs, total, latest] = await Promise.all([
     RegisterListing.aggregate([{ $match: { type } }, { $unwind: '$states' }, { $group: { _id: '$states', n: { $sum: 1 } } }]),
     RegisterListing.aggregate([{ $match: { type } }, { $unwind: '$supportCategories' }, { $group: { _id: '$supportCategories', n: { $sum: 1 } } }, { $sort: { n: -1 } }]),
     RegisterListing.aggregate([
@@ -360,13 +360,18 @@ export async function computeHub(type: RegisterType) {
       { $unwind: '$areas' },
       { $group: { _id: { state: '$areas.state', slug: '$areas.suburbSlug', suburb: '$areas.suburb' }, n: { $sum: 1 } } },
       { $match: { n: { $gte: MIN_SUBURB_LISTINGS } } },
-      { $sort: { n: -1 } },
+      // Ties are broken by name, so "the top forty" is the same list every time it is computed.
+      { $sort: { n: -1, '_id.state': 1, '_id.suburb': 1 } },
     ]),
     RegisterListing.countDocuments({ type }),
+    RegisterListing.aggregate([{ $match: { type } }, { $group: { _id: null, at: { $max: '$importedAt' } } }]),
   ]);
 
+  const importedAt = (latest as { at?: Date }[])[0]?.at;
   return {
     total,
+    /** When the register data was last imported (ISO), or null when nothing is loaded. */
+    asOf: importedAt ? new Date(importedAt).toISOString() : null,
     states: Object.fromEntries((states as { _id: string; n: number }[]).map((s) => [s._id, s.n])),
     categories: (categories as { _id: string; n: number }[]).map((c) => ({ category: c._id, count: c.n })),
     suburbs: (suburbs as { _id: { state: string; slug: string; suburb: string }; n: number }[]).map((s) => ({

@@ -5,6 +5,15 @@ import { setJsonLd } from '../../lib/seo';
 import AccordionRows from '../ui/AccordionRows';
 import './HubReading.css';
 
+const isExternal = (to: string) => /^https?:\/\//i.test(to);
+
+/** An internal link, or an official page on another site (opens in a new tab, marked with an arrow). */
+function HubLink({ to, label }: { to: string; label: string }) {
+  return isExternal(to)
+    ? <a href={to} target="_blank" rel="noopener noreferrer">{label} ↗</a>
+    : <Link to={to}>{label} →</Link>;
+}
+
 /**
  * The reading section at the foot of a hub page: what the page is, how to use it, and the questions people ask. The
  * words come from packages/topic-content/hubContent.js, the same copy the server writes into the page's HTML for search
@@ -45,7 +54,7 @@ export default function HubReading({ path, eyebrow = 'About this page' }: { path
                   label={section.heading}
                   items={section.list.map((item) => ({
                     title: item.title ?? item.label ?? item.text,
-                    body: <>{item.text}{item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}</>,
+                    body: <>{item.text}{item.to && <> <HubLink to={item.to} label={item.label ?? 'Read more'} /></>}</>,
                   }))}
                 />
               )}
@@ -54,7 +63,7 @@ export default function HubReading({ path, eyebrow = 'About this page' }: { path
                   {section.list.map((item) => (
                     <li key={item.text}>
                       <span className="hr-tick" aria-hidden="true">✓</span>
-                      <span>{item.text}{item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}</span>
+                      <span>{item.text}{item.to && <> <HubLink to={item.to} label={item.label ?? 'Read more'} /></>}</span>
                     </li>
                   ))}
                 </ul>
@@ -62,7 +71,9 @@ export default function HubReading({ path, eyebrow = 'About this page' }: { path
 
               {section.links && section.links.length > 0 && (
                 <div className="hr-pills">
-                  {section.links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
+                  {section.links.map((l) => (isExternal(l.to)
+                    ? <a key={l.to} href={l.to} target="_blank" rel="noopener noreferrer">{l.label} ↗</a>
+                    : <Link key={l.to} to={l.to}>{l.label}</Link>))}
                 </div>
               )}
             </div>

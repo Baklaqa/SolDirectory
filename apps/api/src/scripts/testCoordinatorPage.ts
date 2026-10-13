@@ -5,7 +5,7 @@
  * formed, the visible date is the date in the data), the /providers description and questions, and the response-header
  * middleware. No database or network.
  */
-import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS, PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED } from '@soldirectory/topic-content';
+import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS, hubCopy, PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED } from '@soldirectory/topic-content';
 import { securityHeaders } from '../middleware/securityHeaders.js';
 
 let failed = 0;
@@ -62,6 +62,15 @@ check('provider FAQ questions are unique', new Set(providerQuestions).size === p
 check('provider FAQs include the listing how-to and the profile contents', providerQuestions.some((q) => /list my NDIS provider business/i.test(q)) && providerQuestions.some((q) => /provider profile include/i.test(q)));
 check('the /providers description fits a search result (150-160 characters)', PROVIDER_PAGE_DESCRIPTION.length >= 150 && PROVIDER_PAGE_DESCRIPTION.length <= 160, String(PROVIDER_PAGE_DESCRIPTION.length));
 check('the /providers date is a real, past date', !Number.isNaN(Date.parse(PROVIDER_PAGE_UPDATED)) && Date.parse(`${PROVIDER_PAGE_UPDATED}T00:00:00Z`) <= now + 24 * 3600 * 1000);
+
+// ---- register hubs ----
+for (const [path, host] of [['/ndis-providers', 'ndiscommission.gov.au'], ['/aged-care-providers', 'myagedcare.gov.au']] as const) {
+  const copy = hubCopy(path);
+  const urls = (copy?.sections ?? []).flatMap((s) => [...(s.list ?? []).map((i) => i.to ?? ''), ...(s.links ?? []).map((l) => l.to)]);
+  check(`${path} links to the official source (${host})`, urls.some((u) => new URL(u, 'https://x').hostname.endsWith(host)));
+  const qs = (copy?.faqs ?? []).map((f) => f.question);
+  check(`${path} questions are unique and there are at least five`, new Set(qs).size === qs.length && qs.length >= 5, String(qs.length));
+}
 
 // ---- the headers ----
 function run(headers: Record<string, string>, protocol = 'http') {
