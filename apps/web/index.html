@@ -20,6 +20,7 @@
       @keyframes initial-preloader-progress{from{transform:translateX(-110%)}to{transform:translateX(345%)}}
       @media (prefers-reduced-motion:reduce){#initial-preloader span::after{width:100%;animation:none}}
     </style>
+    <noscript><style>#initial-preloader{display:none}</style></noscript>
   </head>
 
   <body>
@@ -30,6 +31,10 @@
       </div>
     </div>
     <div id="root"></div>
+    <script>
+      // If the app has not taken the loader down after 12s (a failed script, a very slow connection), take it down so the page underneath can be read.
+      setTimeout(function () { var el = document.getElementById("initial-preloader"); if (el) el.remove(); }, 12000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
