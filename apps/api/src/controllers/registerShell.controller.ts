@@ -148,6 +148,8 @@ interface Page {
   ogImage?: string; // absolute URL
   ogImageAlt?: string; // what the share image shows; the site's default image has its own
   ogType?: 'website' | 'article';
+  /** For articles: ISO dates and section, written as article:* tags in link previews. */
+  articleTimes?: { published?: string; modified?: string; section?: string };
 }
 
 /** Shared page copy writes links as [label](/path); this turns them into plain anchors (the web app renders the same markup). */
@@ -426,6 +428,13 @@ function render(html: string, req: Request, page: Page, site: string): string {
     `<meta name="twitter:description" content="${esc(page.description)}" />`,
     `<meta name="twitter:image" content="${esc(shareImage)}" />`,
     ...(imageAlt ? [`<meta name="twitter:image:alt" content="${esc(imageAlt)}" />`] : []),
+    ...(page.ogType === 'article' && page.articleTimes
+      ? [
+        ...(page.articleTimes.published ? [`<meta property="article:published_time" content="${esc(page.articleTimes.published)}" />`] : []),
+        ...(page.articleTimes.modified ? [`<meta property="article:modified_time" content="${esc(page.articleTimes.modified)}" />`] : []),
+        ...(page.articleTimes.section ? [`<meta property="article:section" content="${esc(page.articleTimes.section)}" />`] : []),
+      ]
+      : []),
     ...page.jsonLd.map((j) =>
       // "<" is escaped so a business name can never close the script tag.
       `<script type="application/ld+json" id="jsonld-${j.id}">${JSON.stringify({ '@context': 'https://schema.org', ...j.data }).replace(/</g, '\\u003c')}</script>`
@@ -1323,10 +1332,12 @@ function wordpressBlogArticlePage(site: string, post: any): Page {
     noindex: post.meta?.seo_noindex === true || post.meta?.seo_noindex === '1' || post.yoast_head_json?.robots?.index === 'noindex',
     ogImage: post.meta?.seo_og_image || image,
     ogType: 'article',
+    articleTimes: { published: published || undefined, modified: modified || undefined, section: categories[0] },
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Updates and insights', path: '/blog' }, { name: title, path }]),
       { id: 'blog-post', data: {
         '@type': 'BlogPosting', headline: title, description, datePublished: published, dateModified: modified,
+        inLanguage: 'en-AU', isAccessibleForFree: true,
         author: { '@type': 'Organization', name: 'SolDirectory' },
         publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
         mainEntityOfPage: `${site}${path}`, url: `${site}${path}`,
@@ -1345,6 +1356,8 @@ function wordpressBlogArticlePage(site: string, post: any): Page {
 }
 
 function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
+  // A source can be checked earlier in the day than the article goes out; the modified time is never before the published time.
+  const modifiedAt = Date.parse(editorial.checkedAt) >= Date.parse(editorial.publishedAt) ? editorial.checkedAt : editorial.publishedAt;
   const expired = !!editorial.expiresAt && new Date(editorial.expiresAt).getTime() <= Date.now();
   const path = `/blog/${editorial.slug}`;
   return {
@@ -1354,12 +1367,16 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
     canonical: path,
     noindex: expired,
     ogImage: `${site}${editorial.coverImage}`,
+    ogImageAlt: editorial.coverAlt,
     ogType: 'article',
+    articleTimes: { published: editorial.publishedAt, modified: modifiedAt, section: editorial.category },
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Updates and insights', path: '/blog' }, { name: editorial.title, path }]),
       { id: 'blog-post', data: {
         '@type': 'BlogPosting', headline: editorial.title, description: editorial.summary,
-        datePublished: editorial.publishedAt, dateModified: editorial.checkedAt,
+        datePublished: editorial.publishedAt, dateModified: modifiedAt,
+        inLanguage: 'en-AU', isAccessibleForFree: true,
+        wordCount: editorial.sections.reduce((n, sec) => n + sec.paragraphs.join(' ').split(/\s+/).filter(Boolean).length, 0),
         author: { '@type': 'Organization', name: 'SolDirectory' },
         publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
         mainEntityOfPage: `${site}${path}`, url: `${site}${path}`,
