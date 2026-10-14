@@ -1278,7 +1278,7 @@ function editorialBlogContent(post: EditorialBlogPost): string {
   const nearby = relatedToArticle(post.slug, { limit: 4 });
   const keepLearning = nearby.length
     ? `<section><h2>Keep learning</h2><ul>${nearby.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul>` +
-      `<p>More in <a href="/blog">updates and insights</a>, our <a href="/guides">guides</a>, or <a href="/find-a-provider">the provider directory</a>.</p></section>`
+      `<p>More in our <a href="/blog">NDIS updates and insights</a>, our <a href="/guides">step-by-step guides</a>, or the <a href="/find-a-provider">NDIS and aged care provider directory</a>.</p></section>`
     : '';
   return keyPoints + sections + faq + keepLearning +
     `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener noreferrer">${esc(source.label)}</a></li>`).join('')}</ul>` +
