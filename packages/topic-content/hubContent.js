@@ -152,14 +152,19 @@ const NDIS_PROVIDERS = {
     },
     {
       heading: 'How to use public register information',
-      paragraphs: [
-        'Check that the organisation name and identifier match the provider you intend to contact. Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support. Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.',
+      list: [
+        { text: 'Check that the organisation name and identifier match the provider you intend to contact.' },
+        { text: 'Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support.' },
+        { text: 'Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.' },
       ],
     },
     {
       heading: 'Checks to make before choosing support',
-      paragraphs: [
-        'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date. Verify current status with the official source where registration is required. Keep quotes, service agreements and important answers in writing so options can be compared consistently. A public record does not prove current capacity, funding acceptance or personal fit.',
+      list: [
+        { text: 'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date.' },
+        { text: 'Verify current status with the official source where registration is required.' },
+        { text: 'Keep quotes, service agreements and important answers in writing so options can be compared consistently.' },
+        { text: 'A public record does not prove current capacity, funding acceptance or personal fit.' },
       ],
     },
     {
@@ -212,14 +217,19 @@ const AGED_CARE_PROVIDERS = {
     },
     {
       heading: 'How to use public register information',
-      paragraphs: [
-        'Check that the organisation name and identifier match the provider you intend to contact. Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support. Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.',
+      list: [
+        { text: 'Check that the organisation name and identifier match the provider you intend to contact.' },
+        { text: 'Review the source status and recorded locations, but confirm the exact legal entity that will deliver and invoice for support.' },
+        { text: 'Similar trading names can belong to different organisations, and national registration does not mean every service is offered in every suburb.' },
       ],
     },
     {
       heading: 'Checks to make before choosing support',
-      paragraphs: [
-        'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date. Verify current status with the official source where registration is required. Keep quotes, service agreements and important answers in writing so options can be compared consistently. A public record does not prove current capacity, funding acceptance or personal fit.',
+      list: [
+        { text: 'Ask about the specific service, worker qualifications, safeguards, complete rates, travel, cancellations and earliest realistic start date.' },
+        { text: 'Verify current status with the official source where registration is required.' },
+        { text: 'Keep quotes, service agreements and important answers in writing so options can be compared consistently.' },
+        { text: 'A public record does not prove current capacity, funding acceptance or personal fit.' },
       ],
     },
     {

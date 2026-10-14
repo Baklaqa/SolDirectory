@@ -40,9 +40,9 @@ export default function ServiceRegisterBlock({ serviceName, category: given }: P
 
   return (
     <section id="wp-cpt-register" className="wp-cpt-section">
-      <h2>{category} providers on the {kind.label} register</h2>
+      <h2>{category} providers on the {kind.plain} register</h2>
       <p>
-        {fmt(data.total)} {kind.label} {data.total === 1 ? 'provider lists' : 'providers list'} {category.toLowerCase()} supports on the {kind.register}.
+        {fmt(data.total)} {kind.plain} {data.total === 1 ? 'provider lists' : 'providers list'} {category.toLowerCase()} supports on the {kind.register}.
         {broader && <> “{serviceName}” falls under this wider category, so not every one of them offers it.</>}{' '}
         A register listing shows what the register says, not who has capacity, so check availability with the provider — or use
         “Get matched” to reach providers who have confirmed they can start.

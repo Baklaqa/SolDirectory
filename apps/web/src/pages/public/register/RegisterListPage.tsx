@@ -148,7 +148,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     applySeoTags({
       title,
       description: trimTo(
-        `${formatCount(total)} ${kind.label} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`,
+        `${formatCount(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`,
         158
       ),
       canonicalUrl: absoluteUrl(page > 1 && !filtered ? `${basePath}?page=${page}` : basePath),
@@ -171,7 +171,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     return (
       <>
         <PublicHeader />
-        <main className="reg-page"><div className="dir-empty"><h1>State not found</h1><p><Link to={registerPath(kind)}>Browse {kind.label} providers by state</Link></p></div></main>
+        <main className="reg-page"><div className="dir-empty"><h1>State not found</h1><p><Link to={registerPath(kind)}>Browse {kind.plain} providers by state</Link></p></div></main>
         <PublicFooter />
       </>
     );

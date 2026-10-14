@@ -61,14 +61,14 @@ import {
 
 const KINDS = {
   'ndis-providers': {
-    type: 'ndis' as RegisterType, label: 'NDIS',
+    type: 'ndis' as RegisterType, label: 'NDIS', plain: 'NDIS',
     register: 'NDIS Commission register of registered providers',
     officialUrl: 'https://www.ndiscommission.gov.au/provider-registration/find-registered-provider',
     officialName: 'NDIS Commission’s “Find a registered provider”',
     listedAs: 'listed as an NDIS registered provider',
   },
   'aged-care-providers': {
-    type: 'aged_care' as RegisterType, label: 'Aged care',
+    type: 'aged_care' as RegisterType, label: 'Aged care', plain: 'aged care',
     register: 'My Aged Care provider register',
     officialUrl: 'https://www.myagedcare.gov.au/find-a-provider',
     officialName: 'My Aged Care “Find a provider”',
@@ -181,7 +181,7 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
     title: kind.type === 'ndis'
       ? 'NDIS provider register Australia | SolDirectory'
       : 'Aged care provider register Australia | SolDirectory',
-    description: trimTo(`Browse ${fmt(hub.total)} ${kind.label} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`, 158),
+    description: trimTo(`Browse ${fmt(hub.total)} ${kind.plain} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`, 158),
     canonical: base,
     noindex: hub.total === 0,
     jsonLd: [
@@ -199,8 +199,8 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
     body:
       `<h1>${esc(kind.label)} providers in Australia</h1>` +
       `<p>Browse providers listed on the ${esc(kind.register)}, by state and suburb. See the supports each one lists and where it operates, then get matched with providers who have confirmed they can start.</p>` +
-      `<p>${fmt(hub.total)} ${esc(kind.label)} providers are listed on the ${esc(kind.register)}. Browse by state or suburb.</p>` +
-      `<h2>Browse ${esc(kind.label)} providers by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
+      `<p>${fmt(hub.total)} ${esc(kind.plain)} providers are listed on the ${esc(kind.register)}. Browse by state or suburb.</p>` +
+      `<h2>Browse ${esc(kind.plain)} providers by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
       `<h2>Suburbs with the most listings</h2><ul>${hub.suburbs.slice(0, 40).map((s) => li(`${base}/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>` +
       `<h2>What “listed on the register” means</h2><p>Each provider here appears on the ${esc(kind.register)}. That tells you what the provider was listed for and where — it is not a recommendation, a quality rating or a statement about availability. SolDirectory separately asks providers to confirm each week whether they can take on new people; that is what “Get matched” uses.</p>` +
       `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>` +
@@ -263,14 +263,14 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     status: 200,
     // "Australian Capital Territory" would push the title past what search results show, so the title says the ACT.
     title: `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
-    description: trimTo(`${fmt(total)} ${kind.label} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
+    description: trimTo(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,
     jsonLd: [breadcrumbLd(site, crumbs)],
     body:
       `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
       `<h1>${esc(kind.label)} providers in ${esc(areaName)}</h1>` +
-      `<p>${fmt(total)} ${esc(kind.label)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.</p>` +
+      `<p>${fmt(total)} ${esc(kind.plain)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.</p>` +
       `<h2>Using this local register list</h2><p>Location information can reflect a registered address, an office or an area associated with a public record. It does not necessarily show where a provider currently sends workers or has vacancies. Open each record to check the organisation and identifier, then confirm that the provider delivers the required support in ${esc(areaName)}.</p>` +
       `<h2>Questions for shortlisted providers</h2><p>Ask about the exact service, worker qualifications, registration requirements, earliest start date and continuity when a regular worker is unavailable. Request all rates and terms in writing, including travel, reports, cancellations and administration. Also ask how the provider handles consent, privacy, incidents, complaints and ending or changing services.</p>` +
       `<h2>Verify before making an arrangement</h2><p>Match the provider's legal name and identifier to the official source, especially where trading names are similar. Public registration is one check, not a guarantee of service quality, funding approval or personal fit. Compare more than one option where practical and keep the source record, quote and service agreement.</p>` +
@@ -1105,8 +1105,8 @@ async function servicePage(site: string, slug: string): Promise<Page> {
       if (o.total > 0) {
         const stateRows = Object.entries(o.states).sort((a, b) => b[1] - a[1]);
         registerHtml =
-          `<h2>${esc(category)} providers on the ${esc(kind.label)} register</h2>` +
-          `<p>${fmt(o.total)} ${esc(kind.label)} ${o.total === 1 ? 'provider lists' : 'providers list'} ${esc(category.toLowerCase())} supports on the ${esc(kind.register)}. A register listing shows what the register says, not who has capacity.</p>` +
+          `<h2>${esc(category)} providers on the ${esc(kind.plain)} register</h2>` +
+          `<p>${fmt(o.total)} ${esc(kind.plain)} ${o.total === 1 ? 'provider lists' : 'providers list'} ${esc(category.toLowerCase())} supports on the ${esc(kind.register)}. A register listing shows what the register says, not who has capacity.</p>` +
           (listings.length ? `<h3>Providers listing ${esc(category.toLowerCase())}</h3><ul>${listings.map((x) => li(`${base}/${x.slug}`, x.name, `- ${x.states.join(', ')}${x.areas.length ? `; includes ${x.areas.slice(0, 3).map((a) => `${a.suburb}, ${a.state}`).join('; ')}` : ''}`)).join('')}</ul><p><a href="${base}?category=${encodeURIComponent(category)}">See all ${fmt(o.total)} ${esc(category.toLowerCase())} providers</a></p>` : '') +
           `<h3>Listings by state and territory</h3><ul>${stateRows.map(([code, n]) => li(`${base}/${STATE_SLUGS[code] ?? code.toLowerCase()}?category=${encodeURIComponent(category)}`, STATE_NAMES[code] ?? code, `(${fmt(n)})`)).join('')}</ul>` +
           (o.topSuburbs.length ? `<h3>Suburbs with the most listings</h3><ul>${o.topSuburbs.slice(0, 12).map((x) => li(`${base}/${STATE_SLUGS[x.state] ?? x.state.toLowerCase()}/${x.slug}`, `${x.suburb}, ${x.state}`, `(${fmt(x.count)})`)).join('')}</ul>` : '') +

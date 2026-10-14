@@ -188,7 +188,7 @@ export default function ProviderDirectory() {
           {items.length === 0 && (
             <div className="pd-empty-state">
               <p>No member providers match these filters.</p>
-              <p style={{ fontSize: 13, color: 'var(--color-text-muted, #5A6B84)' }}>The {kind.label} register providers below are searched with the same filters.</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-muted, #5A6B84)' }}>The {kind.plain} register providers below are searched with the same filters.</p>
             </div>
           )}
         </div>

@@ -83,7 +83,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
     applySeoTags({
       title,
       description: trimTo(
-        `Browse ${total ? `${total} ` : ''}${kind.label} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`,
+        `Browse ${total ? `${total} ` : ''}${kind.plain} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`,
         158
       ),
       canonicalUrl: absoluteUrl(registerPath(kind)),
@@ -148,7 +148,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
                 ? query
                   ? `${formatCount(results.total)} ${results.total === 1 ? 'provider' : 'providers'} match "${query}"`
                   : results.total > PAGE_SIZE
-                    ? `Showing ${formatCount((page - 1) * PAGE_SIZE + 1)}–${formatCount(Math.min(page * PAGE_SIZE, results.total))} of ${formatCount(results.total)} ${kind.label} providers`
+                    ? `Showing ${formatCount((page - 1) * PAGE_SIZE + 1)}–${formatCount(Math.min(page * PAGE_SIZE, results.total))} of ${formatCount(results.total)} ${kind.plain} providers`
                     : `${formatCount(results.total)} ${results.total === 1 ? 'provider' : 'providers'} listed`
                 : ''}
           </p>
@@ -177,7 +177,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
 
         {hub && hub.total > 0 && (
           <>
-            <h2 className="reg-h2">Browse {kind.label} providers by state</h2>
+            <h2 className="reg-h2">Browse {kind.plain} providers by state</h2>
             <ul className="reg-linkgrid">
               {STATES.filter((s) => hub.states[s.code]).map((s) => (
                 <li key={s.code}>
@@ -227,7 +227,7 @@ export default function RegisterHubPage({ kind }: { kind: RegisterKind }) {
             />
             <ListBusinessCta
               title="Is your business on this register?"
-              body={`Claim your listing to keep it up to date and receive enquiries, or set up a full SolDirectory profile with your current availability, ${kind.label} supports and service areas.`}
+              body={`Claim your listing to keep it up to date and receive enquiries, or set up a full SolDirectory profile with your current availability, ${kind.plain} supports and service areas.`}
             />
           </>
         )}

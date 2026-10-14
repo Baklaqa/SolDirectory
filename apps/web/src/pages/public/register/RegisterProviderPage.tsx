@@ -89,7 +89,7 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
           <div className="dir-empty" role={status === 'error' ? 'alert' : undefined}>
             <h1>{status === 'missing' ? 'We couldn’t find that provider' : 'We couldn’t load this listing'}</h1>
             <p>{status === 'missing' ? 'The link may be out of date.' : 'Please try again shortly.'}</p>
-            <Link className="btn-tint" to={registerPath(kind)}>Browse {kind.label} providers</Link>
+            <Link className="btn-tint" to={registerPath(kind)}>Browse {kind.plain} providers</Link>
           </div>
         </main>
         <PublicFooter />
@@ -109,7 +109,7 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
           <div className="reg-detail-head">
             <Avatar src={listing.logoUrl} name={listing.name} size="lg" shape="square" />
             <h1>{listing.name}</h1>
-            <span className="reg-badge">Listed on the {kind.label} register</span>
+            <span className="reg-badge">Listed on the {kind.plain} register</span>
           </div>
           <div className="reg-hero-actions">
             <button type="button" className="btn-gradient btn-lg" onClick={() => openMatchModal({ provider: { type: kind.type, slug: listing.slug, name: listing.name } })}>

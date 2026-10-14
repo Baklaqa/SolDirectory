@@ -567,8 +567,8 @@ export default function Directory() {
 
           {!regError && !regLoading && regResults.length === 0 && (
             <div className="dir-empty">
-              <h2>No {KIND_BY_TYPE[registerType].label} register listings match this search</h2>
-              <p>Try removing a filter, or browse the full <Link to={registerPathFor(registerType)}>{KIND_BY_TYPE[registerType].label} register</Link>.</p>
+              <h2>No {KIND_BY_TYPE[registerType].plain} register listings match this search</h2>
+              <p>Try removing a filter, or browse the full <Link to={registerPathFor(registerType)}>{KIND_BY_TYPE[registerType].plain} register</Link>.</p>
             </div>
           )}
 

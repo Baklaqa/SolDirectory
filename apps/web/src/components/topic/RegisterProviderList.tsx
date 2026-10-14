@@ -50,11 +50,11 @@ export default function RegisterProviderList({ type, category, language, states,
 
   const pick = (code: string) => { setItems([]); setPage(1); setState(code); };
   const stateName = STATES.find((s) => s.code === state)?.name;
-  const label = category ? category.toLowerCase() : `${kind.label} register`;
+  const label = category ? category.toLowerCase() : `${kind.plain} register`;
 
   return (
     <div className="wp-cpt-plist">
-      <h3 className="wp-cpt-h3">{heading ?? (language ? `Providers that mention ${language}` : category ? `Providers listing ${category.toLowerCase()}` : `Providers on the ${kind.label} register`)}</h3>
+      <h3 className="wp-cpt-h3">{heading ?? (language ? `Providers that mention ${language}` : category ? `Providers listing ${category.toLowerCase()}` : `Providers on the ${kind.plain} register`)}</h3>
       <div className="wp-cpt-chips" role="group" aria-label="Filter by state or territory">
         <button type="button" className={`wp-cpt-chip${state === '' ? ' is-on' : ''}`} aria-pressed={state === ''} onClick={() => pick('')}>All ({fmt(total)})</button>
         {stateRows.map((s) => (

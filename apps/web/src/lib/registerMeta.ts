@@ -9,8 +9,10 @@ export interface RegisterKind {
   type: RegisterType;
   /** URL prefix, no leading slash. */
   path: 'ndis-providers' | 'aged-care-providers';
-  /** "NDIS" / "aged care" — reads naturally in "{label} providers in …". */
+  /** "NDIS" / "Aged care": the form that starts a heading or a sentence ("Aged care providers in …"). */
   label: string;
+  /** "NDIS" / "aged care": the form that reads inside a sentence ("Browse aged care providers"). */
+  plain: string;
   /** Sentence-case name of the register the listings come from. */
   register: string;
   /** The official place to confirm a provider's current status. */
@@ -25,6 +27,7 @@ export const REGISTER_KINDS: Record<RegisterKind['path'], RegisterKind> = {
     type: 'ndis',
     path: 'ndis-providers',
     label: 'NDIS',
+    plain: 'NDIS',
     register: 'NDIS Commission register of registered providers',
     officialUrl: 'https://www.ndiscommission.gov.au/provider-registration/find-registered-provider',
     officialName: 'NDIS Commission’s “Find a registered provider”',
@@ -34,6 +37,7 @@ export const REGISTER_KINDS: Record<RegisterKind['path'], RegisterKind> = {
     type: 'aged_care',
     path: 'aged-care-providers',
     label: 'Aged care',
+    plain: 'aged care',
     register: 'My Aged Care provider register',
     officialUrl: 'https://www.myagedcare.gov.au/find-a-provider',
     officialName: 'My Aged Care “Find a provider”',

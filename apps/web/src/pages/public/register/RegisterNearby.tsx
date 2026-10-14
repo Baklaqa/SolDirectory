@@ -38,7 +38,7 @@ export default function RegisterNearby({ serviceName, suburbSlug, suburbName, st
     <section id="register" aria-labelledby="register-heading">
       <h2 className="svc-h2" id="register-heading">{kind.label} register listings for {serviceName.toLowerCase()} in {suburbName}</h2>
       <p className="svc-p">
-        {formatCount(data.total)} {kind.label} {data.total === 1 ? 'listing includes' : 'listings include'} {category?.toLowerCase() ?? serviceName.toLowerCase()} among the supports recorded on the {kind.register} for {suburbName}. These are public-register listings, shown separately from SolDirectory member profiles. Confirm current services and availability directly with each organisation.
+        {formatCount(data.total)} {kind.plain} {data.total === 1 ? 'listing includes' : 'listings include'} {category?.toLowerCase() ?? serviceName.toLowerCase()} among the supports recorded on the {kind.register} for {suburbName}. These are public-register listings, shown separately from SolDirectory member profiles. Confirm current services and availability directly with each organisation.
       </p>
       <ProviderMap
         providers={data.items.map((item) => ({
@@ -51,7 +51,7 @@ export default function RegisterNearby({ serviceName, suburbSlug, suburbName, st
         }))}
       />
       <ul className="dir-grid">{data.items.map((i) => <RegisterCard key={`${i.type}-${i.slug}`} item={i} />)}</ul>
-      <p className="svc-p"><Link to={seeAll}>See all {formatCount(data.total)} {kind.label} providers listed in {suburbName} →</Link></p>
+      <p className="svc-p"><Link to={seeAll}>See all {formatCount(data.total)} {kind.plain} providers listed in {suburbName} →</Link></p>
     </section>
   );
 }
