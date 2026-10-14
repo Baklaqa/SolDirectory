@@ -9,7 +9,7 @@ import { PublicFooter, PublicHeader } from './PublicLayout';
 import BlogShare from './BlogShare';
 import { blogThumb, fullImageFallback } from '../../components/blog/blogThumb';
 import { BLOG_FAQS, BLOG_TOPICS, relatedLinksFor } from '../../data/blogSeo';
-import { EDITORIAL_BLOG_POSTS, GUIDE_DOCS, type EditorialBlogPost } from '@soldirectory/topic-content';
+import { EDITORIAL_BLOG_POSTS, GUIDE_DOCS, faqHtml, linkParagraph, linkScopeFor, newLinkState, type EditorialBlogPost } from '@soldirectory/topic-content';
 import './Directory.css';
 import './BlogPage.css';
 
@@ -34,9 +34,12 @@ function editorialToPost(article: EditorialBlogPost): WPBlogPost {
   const keyPoints = article.keyPoints?.length
     ? `<aside class="blog-keypoints" aria-label="In short"><h2>In short</h2><ul>${article.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join('')}</ul></aside>`
     : '';
+  // Phrases that name another article's subject link to it, once each (the same links the crawler HTML carries).
+  const linkState = newLinkState();
+  const skip = article.category === 'For providers' ? ['registered-or-unregistered-ndis-provider-what-it-means'] : [];
   const contentHtml = keyPoints + article.sections.map((section) =>
-    `<section><h2>${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</section>`
-  ).join('');
+    `<section><h2>${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${linkParagraph(paragraph, article.slug, linkState, linkScopeFor(article.category), skip)}</p>`).join('')}</section>`
+  ).join('') + faqHtml(article.faq);
   return {
     id: -Math.abs(article.slug.split('').reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) | 0, 0)),
     slug: article.slug,
@@ -52,6 +55,7 @@ function editorialToPost(article: EditorialBlogPost): WPBlogPost {
     categories: [category],
     editorialSource: { ...article.source, checkedAt: article.checkedAt },
     expiresAt: article.expiresAt,
+    faq: article.faq,
   };
 }
 
@@ -253,7 +257,13 @@ export default function BlogPage() {
           { '@type': 'ListItem', position: 3, name: article.title, item: canonical },
         ],
       });
-      return () => { setJsonLd('blog-post', null); setJsonLd('blog-breadcrumbs', null); };
+      if (article.faq?.length) {
+        setJsonLd('blog-faq', {
+          '@type': 'FAQPage',
+          mainEntity: article.faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+        });
+      }
+      return () => { setJsonLd('blog-post', null); setJsonLd('blog-breadcrumbs', null); setJsonLd('blog-faq', null); };
     }
 
     applySeoTags({

@@ -17,6 +17,9 @@ import {
   relatedArticles,
   relatedToArticle,
   hubCopy,
+  linkParagraph,
+  linkScopeFor,
+  newLinkState,
   COORDINATOR_PAGE,
   DIRECTORY_GUIDANCE,
   DIRECTORY_PAGE_DESCRIPTION,
@@ -1262,16 +1265,22 @@ function editorialBlogContent(post: EditorialBlogPost): string {
   const keyPoints = post.keyPoints?.length
     ? `<aside><h2>In short</h2><ul>${post.keyPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul></aside>`
     : '';
+  // The same links the page carries: a phrase that names another article's subject links to it, once each.
+  const linkState = newLinkState();
+  const skip = post.category === 'For providers' ? ['registered-or-unregistered-ndis-provider-what-it-means'] : [];
   const sections = post.sections.map((section) =>
-    `<section><h2>${esc(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</section>`
+    `<section><h2>${esc(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p>${linkParagraph(paragraph, post.slug, linkState, linkScopeFor(post.category), skip)}</p>`).join('')}</section>`
   ).join('');
+  const faq = post.faq?.length
+    ? `<section><h2>Frequently asked questions</h2>${post.faq.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}</section>`
+    : '';
   const sources = [post.source, ...post.additionalSources];
   const nearby = relatedToArticle(post.slug, { limit: 4 });
   const keepLearning = nearby.length
     ? `<section><h2>Keep learning</h2><ul>${nearby.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul>` +
       `<p>More in <a href="/blog">updates and insights</a>, our <a href="/guides">guides</a>, or <a href="/find-a-provider">the provider directory</a>.</p></section>`
     : '';
-  return keyPoints + sections + keepLearning +
+  return keyPoints + sections + faq + keepLearning +
     `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener">${esc(source.label)}</a></li>`).join('')}</ul>` +
     `<p>Source checked ${esc(contentDate(post.checkedAt))}. Rules and guidance can change; verify current details with the responsible agency. <a href="/editorial-standards">How we write and check our guides</a>.</p></section>`;
 }
@@ -1383,6 +1392,9 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
         publishingPrinciples: `${site}/editorial-standards`,
         image: [`${site}${editorial.coverImage}`], articleSection: editorial.category,
       } },
+      ...(editorial.faq?.length
+        ? [{ id: 'blog-faq', data: { '@type': 'FAQPage', mainEntity: editorial.faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }]
+        : []),
     ],
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/blog">Updates and insights</a> / ${esc(editorial.title)}</nav>` +

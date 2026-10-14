@@ -66,6 +66,8 @@ export interface EditorialBlogPost {
   keyPoints?: string[];
   /** Shorter title for search results and link previews (the page heading stays `title`). */
   seoTitle?: string;
+  /** Questions and answers shown under the article and marked up as FAQ structured data. */
+  faq?: { question: string; answer: string }[];
   source: EditorialBlogSource;
   additionalSources: { label: string; url: string }[];
   sections: EditorialBlogSection[];
@@ -150,6 +152,17 @@ export interface EditorialStandardsSection {
   sources?: { name: string; use: string; href: string }[];
   links?: { to: string; label: string }[];
 }
+export const ARTICLE_FAQS: Record<string, { question: string; answer: string }[]>;
+export const LINK_TERMS: readonly { re: RegExp; slug: string; scopes: readonly string[] }[];
+export const MAX_LINKS_PER_ARTICLE: number;
+export interface LinkState { used: Set<string>; count: number }
+export function newLinkState(): LinkState;
+/** One paragraph as escaped HTML with at most one phrase linked to another article. */
+export function linkParagraph(text: string, selfSlug: string, state: LinkState, scope?: 'ndis' | 'aged', skipSlugs?: string[]): string;
+/** 'aged' for aged care articles (they only link to aged care guides), 'ndis' otherwise. */
+export function linkScopeFor(category: string): 'ndis' | 'aged';
+/** The article's questions as an HTML section (details/summary), or '' when it has none. */
+export function faqHtml(faq?: { question: string; answer: string }[]): string;
 export const EDITORIAL_STANDARDS: { intro: string; sections: EditorialStandardsSection[]; see: { to: string; label: string }[] };
 
 /** The words on /support-coordinators. Inline links are written [label](/path). */

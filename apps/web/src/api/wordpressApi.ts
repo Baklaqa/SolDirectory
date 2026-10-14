@@ -255,6 +255,8 @@ export interface WPBlogPost extends WPContentBase {
   categories: WPTerm[];
   editorialSource?: { label: string; url: string; date: string; checkedAt: string };
   expiresAt?: string;
+  /** Questions and answers shown under an article we hold ourselves. */
+  faq?: { question: string; answer: string }[];
 }
 
 export interface WPBlogPage {

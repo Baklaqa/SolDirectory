@@ -4,6 +4,7 @@ import { PROVIDER_POSTS } from './blogProviders.js';
 import { BLOG_COVERS } from './blogCovers.js';
 import { BLOG_KEY_POINTS } from './blogKeyPoints.js';
 import { BLOG_SEO_TITLES } from './blogSeoTitles.js';
+import { ARTICLE_FAQS } from './blogFaqs.js';
 
 /** Time-sensitive explainers written from specific official announcements. Evergreen guides live in blogGuides.js. */
 const NEWS_POSTS = [
@@ -150,7 +151,9 @@ const withCover = (post) => {
   // The “In short” points: written with the article where present, otherwise from blogKeyPoints.js.
   const keyPoints = withImage.keyPoints ?? BLOG_KEY_POINTS[post.slug];
   const seoTitle = withImage.seoTitle ?? BLOG_SEO_TITLES[post.slug];
-  return { ...withImage, ...(keyPoints ? { keyPoints } : {}), ...(seoTitle ? { seoTitle } : {}) };
+  // Questions and answers, restated from the article itself (blogFaqs.js).
+  const faq = withImage.faq ?? ARTICLE_FAQS[post.slug];
+  return { ...withImage, ...(keyPoints ? { keyPoints } : {}), ...(seoTitle ? { seoTitle } : {}), ...(faq ? { faq } : {}) };
 };
 
 export const EDITORIAL_BLOG_POSTS = [...NEWS_POSTS, ...GUIDE_POSTS, ...WORKER_POSTS, ...PROVIDER_POSTS].map(withCover);
