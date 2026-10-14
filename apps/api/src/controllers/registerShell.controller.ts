@@ -405,6 +405,8 @@ function providerTitle(name: string, label: string, where: string): string {
 const DEFAULT_SHARE_IMAGE = '/images/share-default.jpg';
 const DEFAULT_SHARE_IMAGE_ALT = 'Two people holding hands, a moment of care and support';
 const DEFAULT_SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
+// Blog covers are cut to this size by apps/web/scripts/build-blog-covers.mjs.
+const BLOG_COVER_SIZE = { width: 1200, height: 675 };
 
 /**
  * "Helpful reading" for crawlers: the same blog articles the website shows under each kind of page (see
@@ -479,6 +481,8 @@ function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
   const usingDefaultImage = !page.ogImage;
   const imageAlt = page.ogImageAlt ?? (usingDefaultImage ? DEFAULT_SHARE_IMAGE_ALT : undefined);
+  // Only an image whose real size is known gets width and height; a wrong size is worse than none.
+  const shareSize = usingDefaultImage ? DEFAULT_SHARE_IMAGE_SIZE : /\/images\/blog\/[a-z0-9-]+\.jpg$/.test(shareImage) ? BLOG_COVER_SIZE : null;
   const head = [
     page.canonical ? `<link rel="canonical" href="${esc(site + page.canonical)}" />` : '',
     page.canonical ? `<meta property="og:url" content="${esc(site + page.canonical)}" />` : '',
@@ -488,7 +492,7 @@ function render(html: string, req: Request, page: Page, site: string): string {
     `<meta property="og:description" content="${esc(page.description)}" />`,
     `<meta property="og:locale" content="en_AU" />`,
     `<meta property="og:image" content="${esc(shareImage)}" />`,
-    ...(usingDefaultImage ? [`<meta property="og:image:width" content="${DEFAULT_SHARE_IMAGE_SIZE.width}" />`, `<meta property="og:image:height" content="${DEFAULT_SHARE_IMAGE_SIZE.height}" />`] : []),
+    ...(shareSize ? [`<meta property="og:image:width" content="${shareSize.width}" />`, `<meta property="og:image:height" content="${shareSize.height}" />`] : []),
     ...(imageAlt ? [`<meta property="og:image:alt" content="${esc(imageAlt)}" />`] : []),
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${esc(page.title)}" />`,
