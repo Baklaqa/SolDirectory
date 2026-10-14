@@ -13,7 +13,7 @@ import { workersForService, workersInArea } from './workersPublic.controller.js'
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -496,6 +496,24 @@ function breadcrumbLists(body: string): string {
   });
 }
 
+/**
+ * Every link to another site carries rel="noopener noreferrer", as on the visible pages. Done once here, so a page body
+ * that writes a plain external <a> (or only "noopener") is covered; other tokens already present (e.g. nofollow on a
+ * provider's own website) are kept.
+ */
+function externalLinkRel(body: string, site: string): string {
+  return body.replace(/<a ([^>]*?)href="(https?:\/\/[^"]+)"([^>]*)>/g, (whole, pre: string, href: string, post: string) => {
+    if (href.startsWith(site)) return whole;
+    const attrs = `${pre}${post}`;
+    const existing = /rel="([^"]*)"/.exec(attrs);
+    const tokens = new Set((existing ? existing[1] : '').split(/\s+/).filter(Boolean));
+    tokens.add('noopener');
+    tokens.add('noreferrer');
+    const others = attrs.replace(/\s*rel="[^"]*"/, '').trim();
+    return `<a href="${href}" rel="${[...tokens].join(' ')}"${others ? ` ${others}` : ''}>`;
+  });
+}
+
 function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
   const usingDefaultImage = !page.ogImage;
@@ -547,7 +565,7 @@ function render(html: string, req: Request, page: Page, site: string): string {
   out = out.replace('</head>', () => `    ${head}${hubFaqTag}\n  </head>`);
   const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}main[data-seo-shell] nav[aria-label=Breadcrumb] ol{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap}main[data-seo-shell] nav[aria-label=Breadcrumb] li+li::before{content:"/";margin:0 8px}</style>';
   const related = page.canonical && !page.noindex ? relatedShellHtml(req.originalUrl) : '';
-  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${breadcrumbLists(page.body)}${hub.html}${related}</main></div>`);
+  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${externalLinkRel(breadcrumbLists(page.body), site)}${hub.html}${related}</main></div>`);
 }
 
 // ---------------------------------------------------------------
@@ -782,7 +800,7 @@ function fundingTopicPage(site: string, slug: string): Page {
   return {
     status: 200,
     title: `${topic.name} | Funding | SolDirectory`,
-    description: trimTo(`Understand ${topic.name}, what to confirm with the responsible funding body, records to prepare and questions to ask providers before support begins.`, 158),
+    description: trimTo(FUNDING_SEO_DESCRIPTIONS[topic.slug] ?? `Understand ${topic.name}, what to confirm with the responsible funding body, records to prepare and questions to ask providers before support begins.`, 158),
     canonical: `${base}/`,
     noindex: false,
     jsonLd: [
@@ -858,7 +876,7 @@ function guidePage(site: string, slug: string): Page {
       `<p>This guide provides general information, not personal advice. Program names, prices, eligibility and service rules can change. Confirm the details that apply today with the official source and relevant funding body before making a decision.</p>` +
       body +
       `<h2>Continue your search</h2><ul>${guide.internalLinks.map((item) => li(item.href, item.label)).join('')}</ul>` +
-      `<h2>Official source</h2><p><a href="${esc(guide.officialLink.href)}" rel="noopener nofollow">${esc(guide.officialLink.label)}</a></p>` +
+      `<h2>Official source</h2><p><a href="${esc(guide.officialLink.href)}" rel="noopener noreferrer">${esc(guide.officialLink.label)}</a></p>` +
       `<h2>Other guides</h2><ul>${Object.values(GUIDE_DOCS).filter((item) => item.slug !== guide.slug).map((item) => li(`/guides/${item.slug}`, item.title)).join('')}</ul>`,
   };
 }
@@ -1254,7 +1272,7 @@ async function servicePage(site: string, slug: string): Promise<Page> {
     (cards.length ? `<h2>${esc(s('regulations_heading') || 'Regulation and safeguards')}</h2>${s('regulations_intro') ? `<p>${esc(s('regulations_intro'))}</p>` : ''}<ul>${cards.map((c: any) => `<li><strong>${esc(plain(c.title))}</strong> ${esc(plain(c.description ?? ''))}${c.phone ? ` Phone: ${esc(String(c.phone))}.` : ''}</li>`).join('')}</ul>` : '') +
     (related.length ? `<h2>Related services</h2><ul>${related.map((r: any) => li(`/services/${r.slug}`, plain(r.title))).join('')}</ul>` : '') +
     (faqs.length ? `<h2>Frequently asked questions</h2>${faqs.map((f: any) => `<h3>${esc(plain(f.question))}</h3><p>${esc(plain(f.answer))}</p>`).join('')}` : '') +
-    (sources.length ? `<h2>Sources and further reading</h2><ul>${sources.map((x: any) => `<li><a href="${esc(String(x.url))}" rel="noopener nofollow">${esc(plain(x.title))}</a></li>`).join('')}</ul>` : '') +
+    (sources.length ? `<h2>Sources and further reading</h2><ul>${sources.map((x: any) => `<li><a href="${esc(String(x.url))}" rel="noopener noreferrer">${esc(plain(x.title))}</a></li>`).join('')}</ul>` : '') +
     `<p><a href="/find-a-provider">Browse the provider directory</a></p>`;
 
   return {

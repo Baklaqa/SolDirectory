@@ -82,7 +82,7 @@ export default function EditorialStandards() {
                   <ul className="ref-sources">
                     {section.sources.map((s) => (
                       <li key={s.name}>
-                        <a href={s.href} rel="noopener">{s.name}<span aria-hidden="true"> ↗</span></a>
+                        <a href={s.href} rel="noopener noreferrer">{s.name}<span aria-hidden="true"> ↗</span></a>
                         <p>{s.use}</p>
                       </li>
                     ))}

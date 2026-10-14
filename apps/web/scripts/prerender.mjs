@@ -63,7 +63,20 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const trim = (s, n) => (s.length <= n ? s : `${s.slice(0, n - 1).replace(/\s+\S*$/, '')}…`);
 const a = (href, text) => `<a href="${esc(href)}">${esc(text)}</a>`;
 const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
-const crumbs = (items) => `<nav aria-label="Breadcrumb">${items.map((c) => (c.to ? a(c.to, c.label) : esc(c.label))).join(' / ')}</nav>`;
+// The breadcrumb is a list, with the current page marked, as on the visible pages.
+const crumbs = (items) => `<nav aria-label="Breadcrumb"><ol>${items.map((c, i) => (c.to ? `<li>${a(c.to, c.label)}</li>` : `<li${i === items.length - 1 ? ' aria-current="page"' : ''}>${esc(c.label)}</li>`)).join('')}</ol></nav>`;
+
+// Links to another site carry rel="noopener noreferrer", as on the visible pages; other rel tokens are kept.
+const externalLinkRel = (html, siteUrl) => html.replace(/<a ([^>]*?)href="(https?:\/\/[^"]+)"([^>]*)>/g, (whole, pre, href, post) => {
+  if (href.startsWith(siteUrl)) return whole;
+  const attrs = `${pre}${post}`;
+  const existing = /rel="([^"]*)"/.exec(attrs);
+  const tokens = new Set((existing ? existing[1] : '').split(/\s+/).filter(Boolean));
+  tokens.add('noopener');
+  tokens.add('noreferrer');
+  const others = attrs.replace(/\s*rel="[^"]*"/, '').trim();
+  return `<a href="${href}" rel="${[...tokens].join(' ')}"${others ? ` ${others}` : ''}>`;
+});
 const SHARE_IMAGE = `${site}/images/share-default.jpg`;
 
 const STATES = [['nsw', 'New South Wales'], ['vic', 'Victoria'], ['qld', 'Queensland'], ['wa', 'Western Australia'], ['sa', 'South Australia'], ['tas', 'Tasmania'], ['act', 'Australian Capital Territory'], ['nt', 'Northern Territory']];
@@ -271,7 +284,7 @@ for (const f of FUNDING_CONTENT) {
 }
 
 // ---- Write ----
-const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}</style>';
+const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}main[data-seo-shell] nav[aria-label=Breadcrumb] ol{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap}main[data-seo-shell] nav[aria-label=Breadcrumb] li+li::before{content:"/";margin:0 8px}</style>';
 let written = 0;
 for (const page of pages) {
   const canonical = `${site}${page.canonical ?? page.path}`;
@@ -297,7 +310,7 @@ for (const page of pages) {
     .replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(page.title)}</title>`)
     .replace(/<meta name="description"[^>]*>/, () => `<meta name="description" content="${esc(page.description)}" />`)
     .replace('</head>', () => `    ${head}\n  </head>`)
-    .replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${body}</main></div>`);
+    .replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${externalLinkRel(body, site)}</main></div>`);
 
   const out = page.file ? path.join(dist, page.file) : path.join(dist, page.path, 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });

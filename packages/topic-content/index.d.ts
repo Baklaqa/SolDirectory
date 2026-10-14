@@ -155,6 +155,8 @@ export interface EditorialStandardsSection {
   links?: { to: string; label: string }[];
 }
 export const ARTICLE_FAQS: Record<string, { question: string; answer: string }[]>;
+/** Meta description for each /funding/:slug page, 158 characters or fewer. */
+export const FUNDING_SEO_DESCRIPTIONS: Record<string, string>;
 export const LINK_TERMS: readonly { re: RegExp; slug: string; scopes: readonly string[] }[];
 export const MAX_LINKS_PER_ARTICLE: number;
 export interface LinkState { used: Set<string>; count: number }

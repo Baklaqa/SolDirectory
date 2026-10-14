@@ -13,7 +13,7 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { fundingBySlug, FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT, type FundingContent } from '../../data/fundingContent';
 import { fundingEditorialFor } from '../../data/fundingEditorial';
-import { fundingShellEditorial } from '@soldirectory/topic-content';
+import { FUNDING_SEO_DESCRIPTIONS, fundingShellEditorial } from '@soldirectory/topic-content';
 import './Home.css';
 import './Directory.css';
 import './register/register.css';
@@ -66,7 +66,8 @@ export default function FundingTopicPage() {
     }
     applySeoTags({
       title: `${meta.name} | Funding | SolDirectory`,
-      description: meta.summary.slice(0, 155).replace(/\s+\S*$/, '') + '…',
+      // The same description the crawler HTML carries (packages/topic-content/fundingSeoDescriptions.js).
+      description: FUNDING_SEO_DESCRIPTIONS[meta.slug] ?? `${meta.summary.slice(0, 155).replace(/\s+\S*$/, '')}…`,
       canonicalUrl: `${window.location.origin}/funding/${meta.slug}/`,
     });
     setJsonLd('funding-breadcrumbs', {
