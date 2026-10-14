@@ -6,7 +6,9 @@
  *
  * Keyed by article slug. When an article's wording or its source changes, change its questions here in the same edit.
  */
-export const ARTICLE_FAQS = {
+import { MORE_ARTICLE_FAQS } from './blogFaqsMore.js';
+
+const CORE_ARTICLE_FAQS = {
   'abn-tax-and-insurance-for-independent-support-workers-what-to-sort-out': [
     {
       question: 'Do I need an ABN to work as an independent support worker?',
@@ -243,3 +245,6 @@ export const ARTICLE_FAQS = {
     },
   ],
 };
+
+/** Every article's questions: the key guides above, and the rest of the evergreen articles (blogFaqsMore.js). */
+export const ARTICLE_FAQS = { ...CORE_ARTICLE_FAQS, ...MORE_ARTICLE_FAQS };

@@ -88,7 +88,7 @@ for (const [slug, faq] of Object.entries(ARTICLE_FAQS)) {
 check('every article with questions exists and is current', faqSlugProblems.length === 0, faqSlugProblems.join('; '));
 check('questions are unique, 3 to 6 per article, with real answers', faqShapeProblems.length === 0, faqShapeProblems.join('; ').slice(0, 300));
 check('no figure or date in an answer is missing from its article', faqNumberProblems.length === 0, faqNumberProblems.join('; ').slice(0, 300));
-check('at least ten articles have questions', Object.keys(ARTICLE_FAQS).length >= 10, String(Object.keys(ARTICLE_FAQS).length));
+check('the evergreen articles have questions (50 or more)', Object.keys(ARTICLE_FAQS).length >= 50, String(Object.keys(ARTICLE_FAQS).length));
 
 const linkTargetProblems = LINK_TERMS.filter((term) => {
   const post = livePosts.get(term.slug);

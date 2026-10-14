@@ -1281,7 +1281,7 @@ function editorialBlogContent(post: EditorialBlogPost): string {
       `<p>More in <a href="/blog">updates and insights</a>, our <a href="/guides">guides</a>, or <a href="/find-a-provider">the provider directory</a>.</p></section>`
     : '';
   return keyPoints + sections + faq + keepLearning +
-    `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener">${esc(source.label)}</a></li>`).join('')}</ul>` +
+    `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener noreferrer">${esc(source.label)}</a></li>`).join('')}</ul>` +
     `<p>Source checked ${esc(contentDate(post.checkedAt))}. Rules and guidance can change; verify current details with the responsible agency. <a href="/editorial-standards">How we write and check our guides</a>.</p></section>`;
 }
 
