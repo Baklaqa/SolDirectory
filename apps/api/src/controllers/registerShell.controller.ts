@@ -1341,7 +1341,10 @@ function editorialBlogContent(post: EditorialBlogPost): string {
   const nearby = relatedToArticle(post.slug, { limit: 4 });
   const keepLearning = nearby.length
     ? `<section><h2>Keep learning</h2><ul>${nearby.map((a) => `<li><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a>: ${esc(a.summary)}</li>`).join('')}</ul>` +
-      `<p>More in our <a href="/blog">NDIS updates and insights</a>, our <a href="/guides">step-by-step guides</a>, or the <a href="/find-a-provider">NDIS and aged care provider directory</a>.</p></section>`
+      // Same destinations as the visible page's "Keep learning" list (RELATED_BY_CATEGORY in web blogSeo.ts).
+      (post.category === 'Aged care'
+        ? `<p>More in our <a href="/guides/aged-care-support">aged care support guide</a>, our <a href="/guides">step-by-step guides</a>, or the <a href="/aged-care-providers">aged care providers listed on the My Aged Care register</a>.</p></section>`
+        : `<p>More in our <a href="/blog">NDIS updates and insights</a>, our <a href="/guides">step-by-step guides</a>, or the <a href="/find-a-provider">NDIS and aged care provider directory</a>.</p></section>`)
     : '';
   return keyPoints + sections + faq + keepLearning +
     `<section><h2>Official sources</h2><ul>${sources.map((source) => `<li><a href="${esc(source.url)}" rel="noopener noreferrer">${esc(source.label)}</a></li>`).join('')}</ul>` +
