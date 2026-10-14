@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { DIRECTORY_FAQS, DIRECTORY_KINDS, DIRECTORY_STEPS, EDITORIAL_BLOG_POSTS } from '@soldirectory/topic-content';
+import { DIRECTORY_FAQS, DIRECTORY_GUIDANCE, DIRECTORY_KINDS, DIRECTORY_STEPS, DIRECTORY_SUPPORTS, EDITORIAL_BLOG_POSTS } from '@soldirectory/topic-content';
+import InlineLinks from '../ui/InlineLinks';
+import AccordionRows from '../ui/AccordionRows';
+import { slugify } from '../../data/slugHelpers';
 import { STATES } from '../../lib/registerMeta';
 import { setJsonLd } from '../../lib/seo';
 import './DirectoryExtras.css';
@@ -12,16 +15,7 @@ import { blogThumb, fullImageFallback } from '../blog/blogThumb';
  * describes how this site works or points to an official source.
  */
 
-const SUPPORTS: { name: string; label: string; photo: string }[] = [
-  { name: 'Personal care', label: 'Personal care', photo: 'personal-care' },
-  { name: 'Domestic assistance', label: 'Domestic assistance', photo: 'domestic-assistance' },
-  { name: 'Transport', label: 'Transport', photo: 'transport' },
-  { name: 'Therapy services', label: 'Therapy services', photo: 'therapy-services' },
-  { name: 'Nursing', label: 'Nursing', photo: 'nursing' },
-  { name: 'Support coordination', label: 'Support coordination', photo: 'support-coordination' },
-  { name: 'Plan management', label: 'Plan management', photo: 'plan-management' },
-  { name: 'Housing (SDA & SIL)', label: 'Housing, SDA & SIL', photo: 'housing-sda-sil' },
-];
+const SUPPORTS = DIRECTORY_SUPPORTS as unknown as { name: string; label: string; photo: string }[];
 
 const STEPS = DIRECTORY_STEPS as { title: string; body: string; link?: { to: string; label: string } }[];
 
@@ -34,8 +28,6 @@ const FEATURED_GUIDES = [
 const FAQS = DIRECTORY_FAQS.map((f) => ({ q: f.question, a: f.answer }));
 
 export default function DirectoryExtras({ onChooseService }: { onChooseService: (service: string) => void }) {
-  const [open, setOpen] = useState<number | null>(0);
-
   useEffect(() => {
     setJsonLd('find-a-provider-faq', {
       '@type': 'FAQPage',
@@ -57,12 +49,12 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
         <ul className="dx-tiles">
           {SUPPORTS.map((s) => (
             <li key={s.name}>
-              <button type="button" className="dx-tile" onClick={() => onChooseService(s.name)}>
+              <a className="dx-tile" href={`/services/${slugify(s.name)}`} onClick={(e) => { e.preventDefault(); onChooseService(s.name); }}>
                 <span className="dx-tile-photo">
                   <img src={`/images/supports/${s.photo}.jpg`} alt="" width={720} height={450} loading="lazy" decoding="async" />
                 </span>
                 <span className="dx-tile-label">{s.label} <span aria-hidden="true">→</span></span>
-              </button>
+              </a>
             </li>
           ))}
         </ul>
@@ -99,6 +91,28 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
         <p className="dx-note">{DIRECTORY_KINDS.note}</p>
       </section>
 
+      <section className="dx-section" aria-labelledby="dx-reading">
+        <span className="eyebrow"><span className="eyebrow-rule" />Using the directory</span>
+        <h2 id="dx-reading" className="dx-h2">How to read the results</h2>
+        <p className="dx-lede">{DIRECTORY_GUIDANCE.intro}</p>
+        <div className="dx-read">
+          {DIRECTORY_GUIDANCE.blocks.map((b) => (
+            <article key={b.heading} className="dx-read-block">
+              <h3>{b.heading}</h3>
+              <p>{b.text}</p>
+            </article>
+          ))}
+        </div>
+        <div className="dx-read-questions">
+          <h3>{DIRECTORY_GUIDANCE.questionsHeading}</h3>
+          <ul>
+            {DIRECTORY_GUIDANCE.questions.map((q) => <li key={q}>{q}</li>)}
+          </ul>
+        </div>
+        <h3 className="dx-read-wider">{DIRECTORY_GUIDANCE.widerHeading}</h3>
+        <p className="dx-note"><InlineLinks text={DIRECTORY_GUIDANCE.wider} /></p>
+      </section>
+
       {guides.length > 0 && (
         <section className="dx-section" aria-labelledby="dx-guides">
           <div className="dx-head-row">
@@ -128,20 +142,8 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
 
       <section className="dx-section" aria-labelledby="dx-faq">
         <span className="eyebrow"><span className="eyebrow-rule" />Questions people ask</span>
-        <h2 id="dx-faq" className="dx-h2">Finding a provider: FAQs</h2>
-        <div className="dx-faq">
-          {FAQS.map((f, i) => (
-            <div key={f.q} className="dx-faq-item">
-              <h3>
-                <button type="button" aria-expanded={open === i} aria-controls={`dx-faq-${i}`} onClick={() => setOpen(open === i ? null : i)}>
-                  <span>{f.q}</span>
-                  <span className="dx-faq-icon" aria-hidden="true">{open === i ? '−' : '+'}</span>
-                </button>
-              </h3>
-              {open === i && <p id={`dx-faq-${i}`}>{f.a}</p>}
-            </div>
-          ))}
-        </div>
+        <h2 id="dx-faq" className="dx-h2">Frequently asked questions</h2>
+        <AccordionRows marker="question" label="Frequently asked questions" items={FAQS.map((f) => ({ title: f.q, body: f.a }))} />
       </section>
 
       <section className="dx-section" aria-labelledby="dx-states">

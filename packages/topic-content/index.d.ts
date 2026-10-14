@@ -91,6 +91,22 @@ export interface PageFaq { question: string; answer: string }
 export const INDEPENDENT_WORKER_FAQS: readonly PageFaq[];
 export const PROVIDER_FAQS: readonly PageFaq[];
 /** ISO date the /providers guidance last changed. */
+export const DIRECTORY_PAGE_TITLE: string;
+export const DIRECTORY_PAGE_HEADING: string;
+export const DIRECTORY_PAGE_DESCRIPTION: string;
+/** ISO date the /find-a-provider guidance last changed. */
+export const DIRECTORY_PAGE_UPDATED: string;
+export const DIRECTORY_PAGE_SUBTITLE: string;
+export const DIRECTORY_SUPPORTS: readonly { name: string; label: string; photo: string }[];
+export const DIRECTORY_GUIDANCE: {
+  intro: string;
+  blocks: { heading: string; text: string }[];
+  questionsHeading: string;
+  questions: string[];
+  widerHeading: string;
+  /** Inline links are written [label](/path). */
+  wider: string;
+};
 export const WORKER_PAGE_TITLE: string;
 export const WORKER_PAGE_DESCRIPTION: string;
 /** ISO date the /independent-workers guidance last changed. */

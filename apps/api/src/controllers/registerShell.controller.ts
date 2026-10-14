@@ -18,6 +18,13 @@ import {
   relatedToArticle,
   hubCopy,
   COORDINATOR_PAGE,
+  DIRECTORY_GUIDANCE,
+  DIRECTORY_PAGE_DESCRIPTION,
+  DIRECTORY_PAGE_HEADING,
+  DIRECTORY_PAGE_SUBTITLE,
+  DIRECTORY_PAGE_TITLE,
+  DIRECTORY_PAGE_UPDATED,
+  DIRECTORY_SUPPORTS,
   PROVIDER_PAGE_DESCRIPTION,
   PROVIDER_PAGE_UPDATED,
   STATE_CENTRES,
@@ -363,7 +370,7 @@ function relatedShellHtml(originalUrl: string): string {
     themes = ['funding', 'plan'];
   } else if (top === 'guides') {
     themes = parts[1] === 'aged-care-support' ? ['aged-care', 'funding', 'choosing'] : ['choosing', 'funding'];
-  } else if (['locations', 'find-a-provider', 'services'].includes(top)) {
+  } else if (['locations', 'services'].includes(top)) {
     themes = ['local', 'choosing'];
   }
   if (!themes) return '';
@@ -883,16 +890,31 @@ function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | '
         `<p>For more preparation help, read the <a href="/guides/choosing-a-provider">provider selection guide</a>, learn about <a href="/guides/plan-management-basics">NDIS plan management</a>, or review the <a href="/support-coordinators">support coordinator referral guide</a>.</p>`,
     },
     find: {
-      title: 'Find NDIS and aged care providers | SolDirectory',
-      description: 'Search provider profiles and public-register listings by support, suburb or business name, then compare availability, credentials and service terms.',
+      title: DIRECTORY_PAGE_TITLE,
+      description: DIRECTORY_PAGE_DESCRIPTION,
       canonical: '/find-a-provider',
-      jsonLd: [breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Find a provider', path: '/find-a-provider' }])],
-      body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Find a provider</nav><h1>Find a provider</h1>` +
-        `<p>Search SolDirectory member profiles and public NDIS or aged care register records by support, suburb or provider name. These sources are shown separately because they answer different questions: a member profile can describe current services and intake status, while a public-register record shows information imported from the responsible register.</p>` +
-        `<h2>Start with the support and location</h2><p>Choose the support needed and the suburb where it will happen. A nearby office does not necessarily mean a provider serves that address, and a provider based elsewhere may operate a mobile team in the area. Confirm the exact service location, travel arrangements, schedule and proposed start date directly.</p>` +
-        `<h2>Read each result carefully</h2><p>Provider profiles are written by providers. Check the supports offered, service areas, accepted funding, relevant experience, languages and intake status, then verify anything important before relying on it. Public-register listings can broaden the search but do not indicate vacancies, waiting times or whether the organisation accepts a particular referral.</p>` +
-        `<h2>Questions to ask before engaging a provider</h2><ul><li>Who will actually deliver the support, and what qualifications, screening and experience apply?</li><li>When can support begin, and what happens when a regular worker is unavailable?</li><li>What are the complete rates, travel, cancellation, report and administration charges?</li><li>How are preferences, consent, privacy, incidents, complaints and changes in need handled?</li><li>Which funding arrangements are accepted, and is provider registration required for this support?</li></ul>` +
-        `<h2>Use the wider directory</h2><p>Browse all <a href="/services">service guides</a>, search by <a href="/locations">location</a>, review <a href="/condition">condition-related guidance</a>, compare <a href="/funding">funding topics</a>, or read <a href="/guides/choosing-a-provider">how to choose a provider</a>. SolDirectory does not recommend providers or guarantee availability; the final choice and service agreement remain with the person arranging support.</p>`,
+      jsonLd: [
+        breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Find a provider', path: '/find-a-provider' }]),
+        {
+          id: 'find-a-provider-page',
+          data: {
+            '@type': 'WebPage', name: DIRECTORY_PAGE_HEADING, description: DIRECTORY_PAGE_DESCRIPTION, url: `${site}/find-a-provider`,
+            inLanguage: 'en-AU', dateModified: DIRECTORY_PAGE_UPDATED,
+            isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+            publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
+          },
+        },
+      ],
+      // Mirrors apps/web/src/pages/public/Directory.tsx and DirectoryExtras. The steps, the two kinds of listing, the
+      // reading list, the state links and the questions arrive from the shared reading copy (hubCopy) appended to this body.
+      body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Find a provider</nav><h1>${esc(DIRECTORY_PAGE_HEADING)}</h1>` +
+        `<p>${esc(DIRECTORY_PAGE_SUBTITLE)}</p>` +
+        `<h2>Not sure where to start? Pick a support</h2><p>Choose a support to filter the results above. You can add a suburb afterwards.</p>` +
+        `<ul>${DIRECTORY_SUPPORTS.map((s) => li(`/services/${slugifyService(s.name)}`, s.label)).join('')}</ul>` +
+        `<h2>How to read the results</h2><p>${esc(DIRECTORY_GUIDANCE.intro)}</p>` +
+        DIRECTORY_GUIDANCE.blocks.map((b) => `<h3>${esc(b.heading)}</h3><p>${esc(b.text)}</p>`).join('') +
+        `<h3>${esc(DIRECTORY_GUIDANCE.questionsHeading)}</h3><ul>${DIRECTORY_GUIDANCE.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>` +
+        `<h3>${esc(DIRECTORY_GUIDANCE.widerHeading)}</h3><p>${inline(DIRECTORY_GUIDANCE.wider)}</p>`,
     },
     services: {
       title: 'NDIS and aged care support services | SolDirectory',

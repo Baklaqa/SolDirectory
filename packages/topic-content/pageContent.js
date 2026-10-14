@@ -55,6 +55,50 @@ export const INDEPENDENT_WORKER_FAQS = [
   },
 ];
 
+/** /find-a-provider: the title, heading, description and reading guidance, for the page and its crawler HTML. */
+export const DIRECTORY_PAGE_TITLE = 'Find NDIS and aged care providers | SolDirectory';
+export const DIRECTORY_PAGE_HEADING = 'Find NDIS and aged care providers';
+export const DIRECTORY_PAGE_DESCRIPTION = 'Search provider profiles and public-register listings by support, suburb or business name, then compare availability, credentials and service terms for free.';
+export const DIRECTORY_PAGE_UPDATED = '2026-10-14';
+export const DIRECTORY_PAGE_SUBTITLE = 'Search for the support you need and where you need it.';
+
+/** The supports offered as shortcuts on /find-a-provider. */
+export const DIRECTORY_SUPPORTS = [
+  { name: 'Personal care', label: 'Personal care', photo: 'personal-care' },
+  { name: 'Domestic assistance', label: 'Domestic assistance', photo: 'domestic-assistance' },
+  { name: 'Transport', label: 'Transport', photo: 'transport' },
+  { name: 'Therapy services', label: 'Therapy services', photo: 'therapy-services' },
+  { name: 'Nursing', label: 'Nursing', photo: 'nursing' },
+  { name: 'Support coordination', label: 'Support coordination', photo: 'support-coordination' },
+  { name: 'Plan management', label: 'Plan management', photo: 'plan-management' },
+  { name: 'Housing (SDA & SIL)', label: 'Housing, SDA & SIL', photo: 'housing-sda-sil' },
+];
+
+/** How to read the results. Inline links are written [label](/path). */
+export const DIRECTORY_GUIDANCE = {
+  intro: 'Search SolDirectory member profiles and public NDIS or aged care register records by support, suburb or provider name. These sources are shown separately because they answer different questions: a member profile can describe current services and intake status, while a public-register record shows information imported from the responsible register.',
+  blocks: [
+    {
+      heading: 'Start with the support and location',
+      text: 'Choose the support needed and the suburb where it will happen. A nearby office does not necessarily mean a provider serves that address, and a provider based elsewhere may operate a mobile team in the area. Confirm the exact service location, travel arrangements, schedule and proposed start date directly.',
+    },
+    {
+      heading: 'Read each result carefully',
+      text: 'Provider profiles are written by providers. Check the supports offered, service areas, accepted funding, relevant experience, languages and intake status, then verify anything important before relying on it. Public-register listings can broaden the search but do not indicate vacancies, waiting times or whether the organisation accepts a particular referral.',
+    },
+  ],
+  questionsHeading: 'Questions to ask before engaging a provider',
+  questions: [
+    'Who will actually deliver the support, and what qualifications, screening and experience apply?',
+    'When can support begin, and what happens when a regular worker is unavailable?',
+    'What are the complete rates, travel, cancellation, report and administration charges?',
+    'How are preferences, consent, privacy, incidents, complaints and changes in need handled?',
+    'Which funding arrangements are accepted, and is provider registration required for this support?',
+  ],
+  widerHeading: 'Use the wider directory',
+  wider: 'Browse all [service guides](/services), search by [location](/locations), review [condition-related guidance](/condition), compare [funding topics](/funding), or read [how to choose a provider](/guides/choosing-a-provider). SolDirectory does not recommend providers or guarantee availability; the final choice and service agreement remain with the person arranging support.',
+};
+
 /** /independent-workers: one title, description and set of hero points for the page and its crawler HTML. */
 export const WORKER_PAGE_TITLE = 'Independent support workers | SolDirectory';
 export const WORKER_PAGE_DESCRIPTION = 'Create an independent worker profile with services, experience, location and availability so eligible organisations can assess suitable opportunities.';

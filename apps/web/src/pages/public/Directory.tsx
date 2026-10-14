@@ -11,7 +11,8 @@ import { searchRegister, getRegisterHub, type RegisterListItem } from '../../api
 import { categoryForService, KIND_BY_TYPE, type RegisterType } from '../../lib/registerMeta';
 import { slugify } from '../../lib/slugify';
 import { api } from '../../api/client';
-import { applySeoTags } from '../../lib/seo';
+import { applySeoTags, setJsonLd } from '../../lib/seo';
+import { DIRECTORY_PAGE_DESCRIPTION, DIRECTORY_PAGE_HEADING, DIRECTORY_PAGE_SUBTITLE, DIRECTORY_PAGE_TITLE, DIRECTORY_PAGE_UPDATED } from '@soldirectory/topic-content';
 import RegisterCard from './register/RegisterCard';
 import DirectoryExtras from '../../components/directory/DirectoryExtras';
 import { formatCount } from './register/RegisterParts';
@@ -105,11 +106,22 @@ export default function Directory() {
 
   useEffect(() => {
     applySeoTags({
-      title: 'Find NDIS and aged care providers | SolDirectory',
-      description: 'Search provider profiles and public-register listings by support, suburb or business name, then compare availability, credentials and service terms.',
+      title: DIRECTORY_PAGE_TITLE,
+      description: DIRECTORY_PAGE_DESCRIPTION,
       canonicalUrl: `${window.location.origin}/find-a-provider`,
     });
+    setJsonLd('find-a-provider-page', {
+      '@type': 'WebPage',
+      name: DIRECTORY_PAGE_HEADING,
+      description: DIRECTORY_PAGE_DESCRIPTION,
+      url: `${window.location.origin}/find-a-provider`,
+      inLanguage: 'en-AU',
+      dateModified: DIRECTORY_PAGE_UPDATED,
+      isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin },
+      publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${window.location.origin}/` },
+    });
     listActiveServices().then((r) => setServices(r.items.map((s) => s.name))).catch(() => {});
+    return () => setJsonLd('find-a-provider-page', null);
   }, []);
 
   // Debounce the free-text provider-name search.
@@ -350,13 +362,14 @@ export default function Directory() {
             <span className="eyebrow-rule" />
             Provider directory
           </span>
-          <h1 className="section-heading section-heading-light">Find a provider</h1>
+          <h1 className="section-heading section-heading-light">{DIRECTORY_PAGE_HEADING}</h1>
           <p className="directory-page-subtitle">
-            Search for the support you need and where you need it.
+            {DIRECTORY_PAGE_SUBTITLE}
           </p>
         </div>
       </div>
 
+      <main>
       <section className="directory-section dir">
         <div className="dir-search" role="search" aria-label="Search providers">
           <div className="dir-search-grid">
@@ -471,6 +484,7 @@ export default function Directory() {
 
         {showProviderResults && (
           <>
+            <h2 className="visually-hidden">Provider results</h2>
             <div className="dir-results-head" aria-live="polite" ref={resultsTopRef}>
               {loading || pageLoading
                 ? 'Searching…'
@@ -587,6 +601,7 @@ export default function Directory() {
           <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry →</button>
         </div>
       </section>
+      </main>
 
       <PublicFooter />
     </>
