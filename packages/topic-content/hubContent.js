@@ -383,14 +383,13 @@ const INDEPENDENT_WORKERS = {
     },
     {
       heading: 'How contact works',
-      paragraphs: [
-        'Contact details are not displayed publicly. Authorised organisations can search the worker directory and request contact after considering the profile. Workers decide whether an opportunity fits their availability and professional scope. Participants and representatives looking for provider services should use the public provider directory or submit an enquiry.',
-        'Workers can create an account to maintain their profile. Provider organisations looking to list services should instead review the provider listing information. Publishing a profile is not an endorsement and does not guarantee an engagement.',
-      ],
-      links: [
-        { to: '/independent-workers/find', label: 'Browse worker profiles' },
-        { to: '/providers', label: 'Provider listing information' },
-        { to: '/find-a-provider', label: 'Search the provider directory' },
+      paragraphs: ['Contact details are not displayed publicly.'],
+      list: [
+        { title: 'Organisations request contact', text: 'Authorised organisations can search the worker directory and request contact after considering the profile.', to: '/independent-workers/find', label: 'Browse worker profiles' },
+        { title: 'You decide', text: 'Workers decide whether an opportunity fits their availability and professional scope.' },
+        { title: 'Looking for a worker?', text: 'Participants and representatives looking for provider services should use the public provider directory or submit an enquiry.', to: '/find-a-provider', label: 'Search the provider directory' },
+        { title: 'Listing a provider business?', text: 'Provider organisations looking to list services should instead review the provider listing information.', to: '/providers', label: 'Provider listing information' },
+        { title: 'Your profile', text: 'Workers can create an account to maintain their profile. Publishing a profile is not an endorsement and does not guarantee an engagement.' },
       ],
     },
     { heading: 'Checks and arrangements remain important', list: WORKER_SAFEGUARDS.map((s) => ({ text: s.text, title: s.title })) },

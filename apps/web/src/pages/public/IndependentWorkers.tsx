@@ -119,19 +119,21 @@ export default function IndependentWorkers() {
 
         <WorkerExtras />
 
-        {CONTACT && (
+        {CONTACT && CONTACT.list && (
           <div className="iw-wrap">
-            <section className="iw-contact" aria-labelledby="iw-contact-heading">
-              <div className="iw-process-head">
+            <section className="iw-profile iw-contact" aria-labelledby="iw-contact-heading">
+              <div className="iw-profile-intro">
                 <span className="eyebrow"><span className="eyebrow-rule" />Privacy and contact</span>
                 <h2 id="iw-contact-heading" className="iw-h2">{CONTACT.heading}</h2>
                 {CONTACT.paragraphs?.map((p) => <p key={p}>{p}</p>)}
               </div>
-              {CONTACT.links && (
-                <div className="iw-pills">
-                  {CONTACT.links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
-                </div>
-              )}
+              <AccordionRows
+                label={CONTACT.heading}
+                items={CONTACT.list.map((item) => ({
+                  title: item.title ?? item.text,
+                  body: <>{item.text}{item.to && <> <Link to={item.to}>{item.label ?? 'Read more'} →</Link></>}</>,
+                }))}
+              />
             </section>
           </div>
         )}
