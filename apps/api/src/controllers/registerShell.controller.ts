@@ -477,6 +477,25 @@ function hubCopyShell(originalUrl: string): { html: string; faqLd: object | null
   return { html: sections + faqHtml, faqLd };
 }
 
+/**
+ * Page bodies write the breadcrumb as `<a>Home</a> / <a>Section</a> / Current page`. This turns each one into the list
+ * the visible pages use (<ol><li>…), with the current page marked aria-current, in one place rather than at every call site.
+ */
+function breadcrumbLists(body: string): string {
+  return body.replace(/<nav aria-label="Breadcrumb">([\s\S]*?)<\/nav>/g, (whole, inner: string) => {
+    const items: string[] = [];
+    let rest = inner;
+    for (;;) {
+      const link = /^<a [^>]*>[\s\S]*?<\/a> \/ /.exec(rest);
+      if (!link) break;
+      items.push(link[0].slice(0, -3));
+      rest = rest.slice(link[0].length);
+    }
+    if (!items.length || !rest) return whole;
+    return `<nav aria-label="Breadcrumb"><ol>${items.map((i) => `<li>${i}</li>`).join('')}<li aria-current="page">${rest}</li></ol></nav>`;
+  });
+}
+
 function render(html: string, req: Request, page: Page, site: string): string {
   const shareImage = page.ogImage || `${site}${DEFAULT_SHARE_IMAGE}`;
   const usingDefaultImage = !page.ogImage;
@@ -526,9 +545,9 @@ function render(html: string, req: Request, page: Page, site: string): string {
   // the build shipped with, so a staging build stays noindex.
   if (page.noindex) out = out.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, follow" />');
   out = out.replace('</head>', () => `    ${head}${hubFaqTag}\n  </head>`);
-  const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}</style>';
+  const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}main[data-seo-shell] nav[aria-label=Breadcrumb] ol{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap}main[data-seo-shell] nav[aria-label=Breadcrumb] li+li::before{content:"/";margin:0 8px}</style>';
   const related = page.canonical && !page.noindex ? relatedShellHtml(req.originalUrl) : '';
-  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${page.body}${hub.html}${related}</main></div>`);
+  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${breadcrumbLists(page.body)}${hub.html}${related}</main></div>`);
 }
 
 // ---------------------------------------------------------------
