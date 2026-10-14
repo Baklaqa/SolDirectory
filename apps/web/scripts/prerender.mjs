@@ -200,9 +200,21 @@ pages.push({
       url: `${site}/glossary`,
       hasDefinedTerm: terms.map((t) => ({ '@type': 'DefinedTerm', name: t.term, description: t.definition, url: `${site}/glossary#${termId(t)}`, inDefinedTermSet: `${site}/glossary` })),
     }],
-    body: (c) => `${c}<h1>NDIS and aged care glossary</h1>` +
-      '<p>The terms you will hear from the NDIA, providers, plan managers and My Aged Care, explained in plain language. Each one links to the guide that covers it properly. Definitions are general information, not advice about a particular plan.</p>' +
-      '<dl>' + terms.map((t) => `<dt id="${termId(t)}">${esc(t.term)}</dt><dd>${esc(t.definition)} ${a(t.to, t.label)}</dd>`).join('') + '</dl>',
+    // Grouped by letter with a jump list, as the visible page is (GlossaryPage.tsx), so the static HTML has the same headings.
+    body: (c) => {
+      const groups = new Map();
+      for (const t of terms) {
+        const letter = t.term[0].toUpperCase();
+        groups.set(letter, [...(groups.get(letter) ?? []), t]);
+      }
+      return `${c}<h1>NDIS and aged care glossary</h1>` +
+        '<p>The terms you will hear from the NDIA, providers, plan managers and My Aged Care, explained in plain language. Each one links to the guide that covers it properly. Definitions are general information, not advice about a particular plan.</p>' +
+        `<nav aria-label="Jump to a letter">${[...groups.keys()].map((letter) => `<a href="#letter-${letter}">${letter}</a>`).join(' ')}</nav>` +
+        [...groups].map(([letter, items]) =>
+          `<section id="letter-${letter}"><h2>${letter}</h2><dl>` +
+          items.map((t) => `<dt id="${termId(t)}">${esc(t.term)}</dt><dd>${esc(t.definition)} ${a(t.to, t.label)}</dd>`).join('') +
+          '</dl></section>').join('');
+    },
   });
   pages.push({
     path: '/editorial-standards',
