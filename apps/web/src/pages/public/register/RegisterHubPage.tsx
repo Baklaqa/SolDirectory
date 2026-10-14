@@ -13,7 +13,7 @@ import './register.css';
 import RelatedArticles from '../../../components/blog/RelatedArticles';
 import HubReading from '../../../components/extras/HubReading';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 24; // a multiple of 2, 3 and 4 columns, so the last row is always full; the API allows up to 30
 const TOP_SUBURBS = 40; // the crawler HTML lists the same forty
 
 /** /ndis-providers and /aged-care-providers — the entry point: states, busiest suburbs, name search. */
