@@ -5,7 +5,7 @@ import RegisterListing from '../models/RegisterListing.js';
 import { CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS } from '@soldirectory/topic-content';
 import { computeHub, computeServiceSuburbs } from './register.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, areaRows } from './providersPublic.controller.js';
-import { REAL_SERVICES, REGISTER_TYPES, STATE_CODES, type RegisterType } from '../services/registerNormalise.js';
+import { REAL_SERVICES, REGISTER_TYPES, STATE_CODES, type RegisterType, MIN_INDEXABLE_SERVICE_LOCATION } from '../services/registerNormalise.js';
 
 // Real sitemap — every URL here is either a genuinely static public
 // route, a real provider slug from the database, a public-register page
@@ -176,7 +176,8 @@ async function buildServiceAreaUrls(): Promise<UrlEntry[]> {
   for (const service of REAL_SERVICES) {
     const serviceSlug = slugifyService(service);
     const suburbs = await computeServiceSuburbs(service);
-    for (const s of suburbs) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
+    // Only the indexed tier: pages with a few listings stay reachable but are noindex (MIN_INDEXABLE_SERVICE_LOCATION).
+    for (const s of suburbs) if (s.count >= MIN_INDEXABLE_SERVICE_LOCATION) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
   }
   serviceAreaCache = { urls, at: Date.now() };
   return urls;

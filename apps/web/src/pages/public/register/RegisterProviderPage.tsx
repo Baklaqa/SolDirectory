@@ -172,6 +172,21 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
           </>
         )}
 
+        {first && listing.serviceLinks && listing.serviceLinks.length > 0 && (
+          <>
+            <h2 className="reg-h2">Supports in {first.suburb}</h2>
+            <p className="reg-lede">Where this provider lists these supports for {where}, there is a page for the support in that suburb.</p>
+            <ul className="reg-areas">
+              {listing.serviceLinks.map((l) => (
+                <li key={l.slug}>
+                  <Link to={`/services/${l.slug}/${l.state.toLowerCase()}/${l.suburbSlug}`}>{l.service} in {l.suburb}</Link>{' '}
+                  ({formatCount(l.count)} listings)
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
         <h2 className="reg-h2">Before you engage a provider</h2>
         <ul className="reg-checklist">
           <li>Confirm the provider’s current status on <a href={kind.officialUrl} target="_blank" rel="noopener noreferrer">{kind.officialName}</a>.</li>

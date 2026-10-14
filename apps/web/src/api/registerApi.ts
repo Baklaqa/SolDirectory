@@ -81,8 +81,20 @@ export interface ServiceSuburbs {
   suburbs: { state: string; slug: string; suburb: string; count: number }[];
 }
 /** Every suburb with genuine register demand for a support category, combined across both registers — the real data behind /services/:service/:state/:suburb (see ServiceLocationPage.tsx). */
-export const getServiceSuburbs = (category: string, limit?: number): Promise<ServiceSuburbs> =>
-  request(`/service-suburbs?category=${encodeURIComponent(category)}${limit ? `&limit=${limit}` : ''}`);
+export const getServiceSuburbs = (category: string, limit?: number, state?: string): Promise<ServiceSuburbs> =>
+  request(`/service-suburbs?category=${encodeURIComponent(category)}${limit ? `&limit=${limit}` : ''}${state ? `&state=${encodeURIComponent(state)}` : ''}`);
+
+export interface AreaSupports {
+  state: string;
+  suburb: string;
+  /** Listings in the suburb needed for a service x suburb page to exist, and for it to be indexed. */
+  minPage: number;
+  minIndexed: number;
+  categories: { category: string; count: number }[];
+}
+/** For each support, how many register listings (NDIS and My Aged Care combined) in one suburb list it. */
+export const getAreaSupports = (state: string, suburbSlug: string): Promise<AreaSupports> =>
+  request(`/area-supports?state=${encodeURIComponent(state)}&suburb=${encodeURIComponent(suburbSlug)}`);
 
 export interface CategoryOverview {
   total: number;
@@ -120,6 +132,8 @@ export interface RegisterListing {
   related: RegisterListItem[];
   /** Australian Business Number — a public identifier, shown whenever known. */
   abn: string | null;
+  /** Service x suburb pages that exist (and are indexed) for this listing's first area, for the supports it lists. */
+  serviceLinks?: { service: string; slug: string; state: string; suburbSlug: string; suburb: string; count: number }[];
 }
 export const getRegisterListing = (type: RegisterType, slug: string): Promise<RegisterListing> =>
   request(`/${type}/${encodeURIComponent(slug)}`);

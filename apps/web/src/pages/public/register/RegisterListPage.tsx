@@ -164,8 +164,23 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
       '@type': 'BreadcrumbList',
       itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: absoluteUrl(c.path) })),
     });
-    return () => setJsonLd('register-breadcrumbs', null);
-  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName]);
+    // The list itself, as the crawler HTML has it (registerShell.controller.ts): a collection page with its listings.
+    setJsonLd('register-area', {
+      '@type': 'CollectionPage',
+      name: `${kind.label} providers in ${areaName}`,
+      url: absoluteUrl(basePath),
+      inLanguage: 'en-AU',
+      isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: absoluteUrl('/') },
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: total,
+        itemListElement: (data?.items ?? []).map((item, i) => ({
+          '@type': 'ListItem', position: (page - 1) * PAGE_SIZE + i + 1, name: item.name, url: absoluteUrl(registerPath(kind, item.slug)),
+        })),
+      },
+    });
+    return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-area', null); };
+  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data]);
 
   if (!state) {
     return (

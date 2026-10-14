@@ -67,6 +67,19 @@ export const stateByCode = (code: string) => STATES.find((s) => s.code === code.
 /** A suburb/state page with fewer real listings than this is kept out of search results. */
 export const MIN_INDEXABLE = 3;
 
+/**
+ * A service x suburb page (/services/:service/:state/:suburb) is indexed only with at least this many register
+ * listings for the support in the suburb. Below it, the page is reachable and linked but noindex. Mirrors the API's
+ * MIN_INDEXABLE_SERVICE_LOCATION (registerNormalise.ts); change both together.
+ */
+export const MIN_INDEXABLE_SERVICE_LOCATION = 5;
+
+/** The supports that have a service x suburb page at all. Mirrors the API's REAL_SERVICES (registerNormalise.ts). */
+export const REAL_SERVICES: readonly string[] = [
+  'Support coordination', 'Personal care', 'Domestic assistance', 'Therapy services',
+  'Transport', 'Housing (SDA & SIL)', 'Nursing', 'Plan management',
+];
+
 export const registerPath = (kind: RegisterKind, ...parts: (string | undefined)[]) =>
   `/${[kind.path, ...parts.filter(Boolean)].join('/')}`;
 

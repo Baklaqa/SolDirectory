@@ -6,19 +6,18 @@ import { PublicHeader, PublicFooter } from './PublicLayout';
 import { runAction } from '../../lib/runAction';
 import { useAuth } from '../../context/AuthContext';
 import { canViewProviderProfiles } from '../../lib/profileAccess';
-import { useSiteStats } from '../../hooks/useSiteStats';
-import { providerCountLabel, stateGroupCount } from '../../lib/statsCounts';
 import PageHero from '../../components/topic/PageHero';
 import {
-  COMPARE, REGULATORS, POLICIES, FAQ,
+  COMPARE, POLICIES,
 } from '../../data/servicePageFixtures';
 import { unslugify, stateForSuburb, STATE_ABBR } from '../../data/slugHelpers';
 import { SERVICES } from '../../data/providers';
 import { slugify } from '../../data/slugHelpers';
-import { stateBySlug, SUPPORT_CATEGORIES } from '../../lib/registerMeta';
+import { MIN_INDEXABLE_SERVICE_LOCATION, REAL_SERVICES, stateBySlug, SUPPORT_CATEGORIES } from '../../lib/registerMeta';
 import Counter from '../../components/Counter';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { getServiceAreaPage, type ServiceAreaPage } from '../../api/wordpressApi';
+import { getAreaSupports, getServiceSuburbs } from '../../api/registerApi';
 import { listPublicProviders, type PublicProviderRow } from '../../api/providerResources';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import RegisterNearby from './register/RegisterNearby';
@@ -74,28 +73,17 @@ const SERVICE_GROUPS = [
   },
 ] as const;
 
-// Capitals only used for links; the provider COUNT shown on each card
-// comes from real data (stats.providersByState), never from this list.
-const STATE_COVERAGE = [
-  { abbr: 'NSW', citySlug: 'sydney' },
-  { abbr: 'VIC', citySlug: 'melbourne' },
-  { abbr: 'QLD', citySlug: 'brisbane' },
-  { abbr: 'WA', citySlug: 'perth' },
-  { abbr: 'SA', citySlug: 'adelaide' },
-  { abbr: 'TAS', citySlug: 'hobart' },
-  { abbr: 'ACT', citySlug: 'canberra' },
-  { abbr: 'NT', citySlug: 'darwin' },
-];
-
 export default function ServiceLocationPage() {
   const navigate = useNavigate();
-  const stats = useSiteStats();
   const { user } = useAuth();
   const canOpenProfiles = canViewProviderProfiles(user?.role);
   const { openMatchModal } = useMatchModal();
   const { serviceSlug = 'nursing', state: stateSlug, suburb: suburbSlug = 'bankstown' } = useParams<{ serviceSlug: string; state?: string; suburb: string }>();
 
-  const serviceName = unslugify(serviceSlug);
+  // The catalogue name ('housing-sda-and-sil' -> 'Housing (SDA & SIL)'), else the slug made readable.
+  const serviceName = REAL_SERVICES.find((s) => slugify(s) === serviceSlug)
+    ?? SERVICES.find((s) => s !== 'All services' && slugify(s) === serviceSlug)
+    ?? unslugify(serviceSlug);
   const serviceLower = serviceName.toLowerCase();
   const serviceEditorial = serviceEditorialFor(serviceName);
   const suburbName = unslugify(suburbSlug);
@@ -122,6 +110,31 @@ export default function ServiceLocationPage() {
   const [providers, setProviders] = useState<PublicProviderRow[]>([]);
   const [providersLoading, setProvidersLoading] = useState(true);
   const [providersTotal, setProvidersTotal] = useState(0);
+  // Register listings for this support in this suburb, both registers combined (null until known). Below
+  // MIN_INDEXABLE_SERVICE_LOCATION the page stays reachable but is kept out of search results, the same rule the
+  // server-rendered HTML applies (registerShell.controller.ts).
+  const [registerTotal, setRegisterTotal] = useState<number | null>(null);
+  // Every support listed in this suburb, and other suburbs with this support, from the register (real counts).
+  const [areaSupports, setAreaSupports] = useState<{ category: string; count: number }[]>([]);
+  const [otherSuburbs, setOtherSuburbs] = useState<{ slug: string; suburb: string; count: number }[]>([]);
+
+  useEffect(() => { setRegisterTotal(null); }, [serviceSlug, stateSlug, suburbSlug]);
+
+  useEffect(() => {
+    setAreaSupports([]);
+    setOtherSuburbs([]);
+    if (!realState) return;
+    let alive = true;
+    getAreaSupports(realState.code, suburbSlug)
+      .then((r) => { if (alive) setAreaSupports(r.categories); })
+      .catch(() => {});
+    if ((REAL_SERVICES as readonly string[]).includes(serviceName)) {
+      getServiceSuburbs(serviceName, undefined, realState.code)
+        .then((r) => { if (alive) setOtherSuburbs(r.suburbs.filter((s) => s.slug !== suburbSlug).slice(0, 40)); })
+        .catch(() => {});
+    }
+    return () => { alive = false; };
+  }, [realState, suburbSlug, serviceName]);
 
   useEffect(() => {
     setWpLoading(true);
@@ -138,12 +151,8 @@ export default function ServiceLocationPage() {
 
   const act = (value: string | undefined) => runAction(value, { openMatchModal, navigate });
 
-  // Regulator cards, response times and related services: editor-authored
-  // values (extended ACF group) win; the built-in generic content is the
-  // per-section fallback, same rule as every other section on this page.
-  const regulatorItems = wp?.regulations?.cards?.length
-    ? wp.regulations.cards.map((c) => ({ name: c.title, phone: c.phone, site: c.website, description: c.description }))
-    : REGULATORS.map((r) => ({ name: r.name, phone: r.phone, site: r.site, description: '' }));
+  // Regulator cards, response times and related services are editor-authored (extended ACF group) and shown only when written.
+  const regulatorItems = (wp?.regulations?.cards ?? []).map((c) => ({ name: c.title, phone: c.phone, site: c.website, description: c.description }));
   const responseTimeItems = (wp?.responseTimes ?? []).map((r) => ({ abbr: r.state, minutes: r.minutes }));
   const relatedLinks = (wp?.relatedServices ?? []).map((r) => ({ name: r.title, to: `/services/${r.slug}` }));
   const serviceDirectoryGroups = SERVICE_GROUPS.map((group) => ({
@@ -157,6 +166,10 @@ export default function ServiceLocationPage() {
           : `/find-a-provider?service=${encodeURIComponent(name)}`,
       })),
   }));
+  const supportRows = areaSupports
+    .filter((r) => r.category !== serviceName && r.count >= MIN_INDEXABLE_SERVICE_LOCATION && REAL_SERVICES.includes(r.category))
+    .slice(0, 12);
+  const suburbRows = otherSuburbs.filter((s) => s.count >= MIN_INDEXABLE_SERVICE_LOCATION).slice(0, 12);
   const localFacts: [string, string][] = wp?.local
     ? ([
         ['Population', wp.local.population],
@@ -175,16 +188,18 @@ export default function ServiceLocationPage() {
   const glanceItems = wp?.glance ?? [];
   const serviceCountsItems = wp?.serviceCounts ?? [];
   const requestedItems = wp?.requested ?? [];
-  const faqItems = wp?.faq?.length ? wp.faq : FAQ;
+  // Questions only where an editor wrote them for this page; a generic list repeated on every suburb adds nothing.
+  const faqItems = wp?.faq ?? [];
 
   // The ToC only lists sections that actually render — "Costs" and
   // "What to expect" used to be listed unconditionally although no such
   // sections existed (dead anchors). They're now real sections that
   // appear only when an editor has filled in their ACF group.
+  const hasRegister = registerTotal !== null && registerTotal > 0;
   const toc = wp?.toc?.length ? [
     ...wp.toc,
     ...(serviceEditorial && !wp.toc.some((item) => item.href === '#service-guide')
-      ? [{ label: `${serviceName} guide`, href: '#service-guide' }]
+      ? [{ label: `${serviceName} at a glance`, href: '#service-guide' }]
       : []),
     ...(!wp.toc.some((item) => item.href === '#register')
       ? [{ label: 'Providers on the register', href: '#register' }]
@@ -197,17 +212,15 @@ export default function ServiceLocationPage() {
       : []),
   ] : [
     { label: 'Top providers', href: '#providers' },
-    { label: 'Providers on the register', href: '#register' },
+    ...(hasRegister ? [{ label: 'Providers on the register', href: '#register' }] : []),
     { label: 'Independent workers', href: '#workers' },
     { label: `About ${serviceLower}`, href: '#about-service' },
-    ...(serviceEditorial ? [{ label: `${serviceName} guide`, href: '#service-guide' }] : []),
-    { label: 'Plan your support', href: '#plan-support' },
+    ...(serviceEditorial ? [{ label: `${serviceName} at a glance`, href: '#service-guide' }] : []),
     ...(wp?.editorialContentHtml ? [{ label: 'Local guide', href: '#editorial-content' }] : []),
     { label: 'What to compare', href: '#compare' },
+    ...(supportRows.length > 0 ? [{ label: `Other supports in ${suburbName}`, href: '#other-supports' }] : []),
+    ...(suburbRows.length > 0 ? [{ label: `${serviceName} in nearby suburbs`, href: '#other-suburbs' }] : []),
     ...(demandItems.length > 0 ? [{ label: "Who's asking", href: '#asking' }] : []),
-    { label: 'How providers are listed', href: '#method' },
-    { label: 'Where to find providers', href: '#where-to-find' },
-    { label: 'Checking credentials', href: '#credentials' },
     ...(suburbFactsItems.length > 0 || localFacts.length > 0 ? [{ label: `About ${suburbName}`, href: '#suburb' }] : []),
     ...(languageItems.length > 0 ? [{ label: 'Language support', href: '#language' }] : []),
     ...(glanceItems.length > 0 ? [{ label: `${serviceName} at a glance`, href: '#glance' }] : []),
@@ -215,10 +228,9 @@ export default function ServiceLocationPage() {
     ...(wp?.expect ? [{ label: wp.expect.heading || 'What to expect', href: '#expect' }] : []),
     ...(serviceCountsItems.length > 0 ? [{ label: 'Services in this suburb', href: '#services' }] : []),
     ...(requestedItems.length > 0 ? [{ label: 'Most requested support', href: '#requested' }] : []),
-    { label: 'Regulations & compliance', href: '#rules' },
-    { label: 'How matching works', href: '#how-matching-works' },
+    ...(regulatorItems.length > 0 ? [{ label: 'Regulations & compliance', href: '#rules' }] : []),
     { label: 'Find providers near you', href: '#find-near-you' },
-    { label: 'FAQ', href: '#faq' },
+    ...(faqItems.length > 0 ? [{ label: 'FAQ', href: '#faq' }] : []),
   ];
 
   // SEO: an editor's own "SEO" fields (wp.seo) win when they've filled
@@ -227,7 +239,8 @@ export default function ServiceLocationPage() {
   // — never a generic or invented line. Runs once wp has resolved
   // (null on "nothing authored", which still yields a real fallback).
   useEffect(() => {
-    if (wpLoading) return;
+    // Wait for the register total: whether the page is indexed depends on it.
+    if (wpLoading || registerTotal === null) return;
     const fullTitle = `${serviceName} providers in ${suburbName}, ${stateAbbr}`;
     const compactTitle = `${serviceName} in ${suburbName}, ${stateAbbr}`;
     applySeoTags({
@@ -237,7 +250,7 @@ export default function ServiceLocationPage() {
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
         : `/services/${serviceSlug}/${suburbSlug}`}`,
-      noindex: !stateSlug || wp?.seo.noindex,
+      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION,
     });
     setJsonLd('service-location', {
       '@type': 'Service',
@@ -248,20 +261,20 @@ export default function ServiceLocationPage() {
       description: introParagraph,
       url: window.location.href,
     });
-    setJsonLd('service-location-faq', {
+    setJsonLd('service-location-faq', faqItems.length > 0 ? {
       '@type': 'FAQPage',
       mainEntity: faqItems.map((faq) => ({
         '@type': 'Question',
         name: faq.q,
         acceptedAnswer: { '@type': 'Answer', text: faq.a },
       })),
-    });
+    } : null);
     return () => {
       setJsonLd('service-location', null);
       setJsonLd('service-location-faq', null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wpLoading, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems]);
+  }, [wpLoading, registerTotal, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems]);
 
   const heroProviderLabel = providersLoading
     ? `Checking providers serving ${suburbName}`
@@ -372,7 +385,11 @@ export default function ServiceLocationPage() {
               </>
             ) : null}
 
-            <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} />
+            <p className="svc-p">
+              Eligible Pro and Growth members are shown before Starter members, alphabetically within each group. Placement is not endorsement; compare suitability, safeguards, availability, fees and service terms directly.
+            </p>
+
+            <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} onTotal={setRegisterTotal} />
 
             <LocationWorkers stateCode={stateAbbr} stateName={stateName} suburbName={suburbName} serviceName={serviceName} />
 
@@ -408,76 +425,17 @@ export default function ServiceLocationPage() {
 
           {serviceEditorial && (
             <section id="service-guide" className="svc-service-guide">
-              <span className="svc-section-kicker">Understand the support</span>
-              <h2 className="svc-h2-sm">A practical guide to {serviceLower}</h2>
+              <h2 className="svc-h2-sm">{serviceName} at a glance</h2>
               <p className="svc-service-answer">{serviceEditorial.shortAnswer}</p>
-              <div className="svc-service-overview">
-                {serviceEditorial.overview.map((paragraph) => <p className="svc-p" key={paragraph}>{paragraph}</p>)}
-              </div>
-
-              <div className="svc-service-guide-grid">
-                <article>
-                  <h3>What {serviceLower} may include</h3>
-                  <ul>{serviceEditorial.includes.map((item) => <li key={item}>{item}</li>)}</ul>
-                </article>
-                <article>
-                  <h3>Planning the support</h3>
-                  <ul>{serviceEditorial.planning.map((item) => <li key={item}>{item}</li>)}</ul>
-                </article>
-              </div>
-
               <div className="svc-service-guide-block">
-                <h3>Questions to ask providers</h3>
-                <ol>{serviceEditorial.providerQuestions.map((item) => <li key={item}>{item}</li>)}</ol>
+                <h3>What {serviceLower} may include</h3>
+                <ul>{serviceEditorial.includes.map((item) => <li key={item}>{item}</li>)}</ul>
               </div>
-
-              <div className="svc-service-guide-grid">
-                <article>
-                  <h3>Funding considerations</h3>
-                  {serviceEditorial.funding.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                </article>
-                <article>
-                  <h3>Safeguards and records</h3>
-                  <ul>{serviceEditorial.safeguards.map((item) => <li key={item}>{item}</li>)}</ul>
-                </article>
-              </div>
-
-              <div className="svc-service-sources">
-                <h3>Official information</h3>
-                <ul>
-                  {serviceEditorial.sources.map((source) => (
-                    <li key={source.href}><a href={source.href} target="_blank" rel="noopener nofollow noreferrer">{source.label}</a></li>
-                  ))}
-                </ul>
-                <p>Program rules, prices and eligibility can change. Confirm current requirements with the responsible government body and the provider before relying on this general information.</p>
-              </div>
+              <p className="svc-p">
+                <Link to={`/services/${serviceSlug}`}>Read the full guide to {serviceLower}</Link>: planning, funding, questions to ask and official information.
+              </p>
             </section>
           )}
-
-          <section id="plan-support">
-            <span className="svc-section-kicker">Before you contact providers</span>
-            <h2 className="svc-h2-sm">Plan the support around your day-to-day needs</h2>
-            <p className="svc-p svc-p-tight">
-              A useful request explains more than the service name. Share the tasks you need help with, when support is needed, your funding arrangement and anything that affects how support should be delivered. Providers can then give you a clearer answer about fit and availability.
-            </p>
-            <div className="svc-guidance-grid">
-              <article className="svc-guidance-card">
-                <span className="svc-guidance-number">01</span>
-                <h3>Describe the support</h3>
-                <p>List the practical tasks, preferred days and times, frequency, and the outcome you want the support to help you achieve.</p>
-              </article>
-              <article className="svc-guidance-card">
-                <span className="svc-guidance-number">02</span>
-                <h3>Confirm the provider fits</h3>
-                <p>Ask about current capacity in {suburbName}, relevant worker experience, funding types, continuity and how changes are handled.</p>
-              </article>
-              <article className="svc-guidance-card">
-                <span className="svc-guidance-number">03</span>
-                <h3>Put the details in writing</h3>
-                <p>Request a written quote or service agreement covering rates, schedules, cancellations, responsibilities and complaint pathways.</p>
-              </article>
-            </div>
-          </section>
 
           {wp?.editorialContentHtml && (
             <section id="editorial-content" className="svc-editorial-content">
@@ -500,6 +458,35 @@ export default function ServiceLocationPage() {
               ))}
             </div>
           </section>
+
+          {supportRows.length > 0 && (
+            <section id="other-supports">
+              <h2 className="svc-h2-sm">Other supports listed in {suburbName}</h2>
+              <p className="svc-p svc-p-tight">Each number is how many register listings in {suburbName} list that support.</p>
+              <div className="svc-state-grid">
+                {supportRows.map((r) => (
+                  <Link key={r.category} to={`/services/${slugify(r.category)}/${stateSlug}/${suburbSlug}`} className="svc-state-card">
+                    <span className="svc-state-abbr">{r.category} in {suburbName}</span>
+                    <span className="svc-state-count">({r.count.toLocaleString('en-AU')})</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {suburbRows.length > 0 && (
+            <section id="other-suburbs">
+              <h2 className="svc-h2-sm">{serviceName} in other {stateName} suburbs</h2>
+              <div className="svc-state-grid">
+                {suburbRows.map((s) => (
+                  <Link key={s.slug} to={`/services/${serviceSlug}/${stateSlug}/${s.slug}`} className="svc-state-card">
+                    <span className="svc-state-abbr">{serviceName} in {s.suburb}</span>
+                    <span className="svc-state-count">({s.count.toLocaleString('en-AU')})</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {demandItems.length > 0 && (
           <section id="asking">
@@ -524,43 +511,6 @@ export default function ServiceLocationPage() {
             </div>
           </section>
           )}
-
-          <section id="method">
-            <h2 className="svc-h2-sm">How providers are listed</h2>
-            <div className="svc-method-list">
-              <p className="svc-p"><strong>How ordering works.</strong> Service and location filters determine which member providers qualify. Eligible Pro and Growth members are shown before Starter members, with providers listed alphabetically inside each plan group.</p>
-              <p className="svc-p"><strong>Placement is not endorsement.</strong> Plan priority does not mean SolDirectory has assessed or recommends a provider. Compare suitability, safeguards, availability, fees and service terms directly.</p>
-              <p className="svc-p"><strong>Availability.</strong> Providers confirm each week that they are taking referrals. A provider who has not confirmed recently is removed from results until they do.</p>
-              <p className="svc-p"><strong>Provider-supplied details.</strong> Registration, insurance and other details are supplied by providers. Always confirm them directly with a provider before you engage them.</p>
-            </div>
-          </section>
-
-          <section id="where-to-find">
-            <h2 className="svc-h2-sm">Where to find {serviceLower} providers</h2>
-            <p className="svc-p svc-p-tight">Browse {serviceLower} by state — pick one to see providers in that state's capital.</p>
-            <div className="svc-state-grid">
-              {STATE_COVERAGE.map((s) => (
-                <Link key={s.abbr} to={`/find-a-provider?service=${encodeURIComponent(serviceName)}&suburb=${encodeURIComponent(unslugify(s.citySlug))}`} className="svc-state-card">
-                  <span className="svc-state-abbr">{s.abbr}</span>
-                  {providerCountLabel(stateGroupCount(stats, [s.abbr])) && (
-                    <span className="svc-state-count">{providerCountLabel(stateGroupCount(stats, [s.abbr]))}</span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <section id="credentials">
-            <h2 className="svc-h2-sm">How to check a provider's credentials</h2>
-            <p className="svc-p svc-p-tight">Confirm these five things directly with any provider before booking — a directory listing alone doesn't prove current status.</p>
-            <ol className="svc-credentials-list">
-              <li><span className="svc-credentials-num">1</span><div><p className="svc-credentials-title">NDIS registration</p><p className="svc-credentials-body">Ask for their registration number and check it against the NDIS Commission's public register.</p></div></li>
-              <li><span className="svc-credentials-num">2</span><div><p className="svc-credentials-title">Insurance</p><p className="svc-credentials-body">Ask to see current public liability and professional indemnity certificates.</p></div></li>
-              <li><span className="svc-credentials-num">3</span><div><p className="svc-credentials-title">Qualifications</p><p className="svc-credentials-body">Ask which specific staff member is assigned and what their relevant qualification is.</p></div></li>
-              <li><span className="svc-credentials-num">4</span><div><p className="svc-credentials-title">Experience</p><p className="svc-credentials-body">Ask how long they've delivered this exact service.</p></div></li>
-              <li><span className="svc-credentials-num">5</span><div><p className="svc-credentials-title">Compliance</p><p className="svc-credentials-body">Ask about their worker screening status and how they handle incidents or complaints.</p></div></li>
-            </ol>
-          </section>
 
           {(suburbFactsItems.length > 0 || localFacts.length > 0) && (
           <section id="suburb">
@@ -703,6 +653,7 @@ export default function ServiceLocationPage() {
           </section>
           )}
 
+          {regulatorItems.length > 0 && (
           <section id="rules">
             <h2 className="svc-h2-sm">{wp?.regulations?.heading || `${stateName} regulations and compliance`}</h2>
             {wp?.regulations?.intro && <p className="svc-p svc-p-tight">{wp.regulations.intro}</p>}
@@ -720,18 +671,7 @@ export default function ServiceLocationPage() {
               {POLICIES.map((p) => <span key={p} className="svc-policy-pill">{p}</span>)}
             </div>
           </section>
-
-          <section id="how-matching-works" className="svc-match-explainer">
-            <span className="svc-section-kicker">A simpler way to enquire</span>
-            <h2 className="svc-h2-sm">How free provider matching works</h2>
-            <p className="svc-p svc-p-tight">Send one request for {serviceLower} in {suburbName}. SolDirectory shares it with relevant providers so you can compare responses without repeating the same details.</p>
-            <ol className="svc-match-steps">
-              <li><span>1</span><div><h3>Tell us what you need</h3><p>Add your location, support needs, timing and funding type.</p></div></li>
-              <li><span>2</span><div><h3>Suitable providers review it</h3><p>Providers decide whether the request matches their service area and current capacity.</p></div></li>
-              <li><span>3</span><div><h3>Compare responses directly</h3><p>Ask questions, confirm credentials and choose whether any provider is right for you.</p></div></li>
-            </ol>
-            <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Start a free request →</button>
-          </section>
+          )}
 
           <section id="find-near-you" className="svc-finder">
             <h2 className="svc-h2-sm">{wp?.finder?.heading || `Find ${serviceLower} providers near you`}</h2>
@@ -751,6 +691,7 @@ export default function ServiceLocationPage() {
             </form>
           </section>
 
+          {faqItems.length > 0 && (
           <section id="faq">
             <h2 className="svc-h2-sm" style={{ marginBottom: 22 }}>Frequently asked questions</h2>
             <div className="svc-faq-list">
@@ -765,6 +706,7 @@ export default function ServiceLocationPage() {
               ))}
             </div>
           </section>
+          )}
 
           {responseTimeItems.length > 0 && (
           <section id="response-by-state">

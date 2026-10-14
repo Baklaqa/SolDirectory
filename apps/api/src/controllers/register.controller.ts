@@ -8,7 +8,7 @@ import { VISIBLE_PROVIDER, publicLogoUrl } from './providersPublic.controller.js
 import { EmailService } from '../services/email.service.js';
 import { LANGUAGE_TOPICS } from '@soldirectory/topic-content';
 import {
-  MIN_SUBURB_LISTINGS, REGISTER_SUPPORT_CATEGORIES, REGISTER_TYPES, STATE_CODES, safeRegisterName,
+  MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, REGISTER_SUPPORT_CATEGORIES, REGISTER_TYPES, STATE_CODES, safeRegisterName,
   type RegisterType, type StateCode,
 } from '../services/registerNormalise.js';
 
@@ -331,7 +331,10 @@ export async function computeServiceSuburbs(category: string) {
 export async function getServiceSuburbs(req: Request, res: Response) {
   const category = str(req.query.category);
   if (!(REGISTER_SUPPORT_CATEGORIES as readonly string[]).includes(category)) return res.status(400).json({ error: 'Unknown category.' });
-  const suburbs = await computeServiceSuburbs(category);
+  const all = await computeServiceSuburbs(category);
+  // Optional ?state= keeps the answer to one state, for pages that only list suburbs in their own state.
+  const state = parseState(req.query.state);
+  const suburbs = state ? all.filter((s) => s.state === state) : all;
   // Optional cap for callers that only need the top few (e.g. a homepage
   // teaser) — omitting ?limit at all returns the full, uncapped list
   // (already sorted by count), which is what the sitemap, route
@@ -340,6 +343,61 @@ export async function getServiceSuburbs(req: Request, res: Response) {
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(5000, Math.floor(rawLimit)) : null;
   res.set('Cache-Control', 'public, max-age=600');
   res.json({ category, suburbs: limit ? suburbs.slice(0, limit) : suburbs });
+}
+
+
+// ---------------------------------------------------------------
+// Supports listed in one suburb, across both registers
+// GET /api/register/area-supports?state=&suburb=
+// For each support category, how many register listings in this suburb list it (NDIS and My Aged Care combined). Feeds
+// "Supports listed in <suburb>" on the service x suburb pages, and the links from a provider to the service pages
+// that exist for its suburb. A category with at least MIN_SUBURB_LISTINGS listings has a service x suburb page.
+// ---------------------------------------------------------------
+const areaSupportsCache = new Map<string, { at: number; value: { category: string; count: number }[] }>();
+const AREA_SUPPORTS_TTL_MS = 30 * 60 * 1000;
+
+export async function computeAreaSupports(state: string, suburbSlug: string) {
+  const key = `${state}|${suburbSlug}`;
+  const hit = areaSupportsCache.get(key);
+  if (hit && Date.now() - hit.at < AREA_SUPPORTS_TTL_MS) return hit.value;
+  const rows = await RegisterListing.aggregate([
+    { $match: { areas: { $elemMatch: { state, suburbSlug } } } },
+    { $unwind: '$supportCategories' },
+    { $group: { _id: '$supportCategories', n: { $sum: 1 } } },
+    { $sort: { n: -1, _id: 1 } },
+  ]);
+  const value = (rows as { _id: string; n: number }[]).map((r) => ({ category: r._id, count: r.n }));
+  areaSupportsCache.set(key, { at: Date.now(), value });
+  return value;
+}
+
+export async function getAreaSupports(req: Request, res: Response) {
+  const state = parseState(req.query.state);
+  const suburb = str(req.query.suburb).toLowerCase();
+  if (!state || !/^[a-z0-9-]{1,80}$/.test(suburb)) return res.status(400).json({ error: 'state and suburb are required.' });
+  const categories = await computeAreaSupports(state, suburb);
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json({ state, suburb, minPage: MIN_SUBURB_LISTINGS, minIndexed: MIN_INDEXABLE_SERVICE_LOCATION, categories });
+}
+
+/** Service x suburb pages that exist (and are indexed) for a listing's first area, for its own support categories. */
+export async function serviceLinksFor(doc: { supportCategories: string[]; areas: { state: string; suburbSlug: string; suburb: string }[] }) {
+  const first = doc.areas[0];
+  if (!first) return [];
+  const supports = await computeAreaSupports(first.state, first.suburbSlug);
+  const counts = new Map(supports.map((s) => [s.category, s.count]));
+  return doc.supportCategories
+    // Only the supports that have a service x suburb page at all (REAL_SERVICES), and only the indexed ones.
+    .filter((c) => (REAL_SERVICES as readonly string[]).includes(c) && (counts.get(c) ?? 0) >= MIN_INDEXABLE_SERVICE_LOCATION)
+    .slice(0, 8)
+    .map((c) => ({
+      service: c,
+      slug: c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      state: first.state,
+      suburbSlug: first.suburbSlug,
+      suburb: first.suburb,
+      count: counts.get(c) ?? 0,
+    }));
 }
 
 // ---------------------------------------------------------------
@@ -442,6 +500,7 @@ export async function getRegisterListing(req: Request, res: Response) {
     abn: doc.abn ?? null,
     location: (await primaryLocations([doc as never])).get(String(doc._id)) ?? null,
     related: await listItemsWithLogos(related as never[], first ? { state: first.state, suburbSlug: first.suburbSlug } : undefined),
+    serviceLinks: await serviceLinksFor(doc as never),
   });
 }
 

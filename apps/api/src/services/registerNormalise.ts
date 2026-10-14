@@ -250,6 +250,15 @@ export function safeProviderSlug(slug: string): string {
 export const MIN_SUBURB_LISTINGS = 3;
 
 /**
+ * A service x suburb page (/services/:service/:state/:suburb) is built from the same listings as the register's suburb
+ * page for that place, plus the service dimension. With only three or four listings it adds almost nothing the suburb
+ * page does not already say, so below this many it stays reachable (and linked) but is `noindex,follow` and left out of
+ * the sitemap. About a third of these pages sat at three or four listings when this was set. Mirrored in apps/web's
+ * registerMeta.ts as MIN_INDEXABLE_SERVICE_LOCATION.
+ */
+export const MIN_INDEXABLE_SERVICE_LOCATION = 5;
+
+/**
  * The site's real, promoted service list (apps/web/src/data/providers.ts
  * SERVICES, minus "All services") — each name is also an exact
  * REGISTER_SUPPORT_CATEGORIES value, which is what lets a service map

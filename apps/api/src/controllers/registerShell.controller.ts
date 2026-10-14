@@ -6,9 +6,9 @@ import RegisterListing from '../models/RegisterListing.js';
 import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import WorkerReview from '../models/WorkerReview.js';
-import { MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
+import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersPaidFirst } from '../services/providerPriority.js';
-import { categoryListings, computeCategoryOverview, computeHub, computeServiceSuburbs } from './register.controller.js';
+import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
@@ -246,11 +246,25 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     ...(suburbSlug ? [{ name: suburbName as string, path: base }] : []),
   ];
 
-  let extra = '';
-  if (!suburbSlug) {
-    const hub = await hubFor(kind.type);
-    extra = `<h2>Suburbs in ${esc(STATE_NAMES[code])}</h2><ul>${hub.suburbs.filter((s) => s.state === code).slice(0, 40).map((s) => li(`${base}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>`;
-  }
+  // The visible page (apps/web/src/pages/public/register/RegisterListPage.tsx) shows the supports listed in the area with
+  // their counts, and more suburbs in the state. The crawler HTML says the same things, from the same data.
+  const facets = (await RegisterListing.aggregate([
+    { $match: filter },
+    { $unwind: '$supportCategories' },
+    { $group: { _id: '$supportCategories', n: { $sum: 1 } } },
+    { $sort: { n: -1, _id: 1 } },
+  ])) as { _id: string; n: number }[];
+  const topFacets = facets.slice(0, 3);
+  const hubForKind = await hubFor(kind.type);
+  const nearby = hubForKind.suburbs.filter((s) => s.state === code && s.slug !== suburbSlug).slice(0, suburbSlug ? 18 : 40);
+  const extra = nearby.length
+    ? `<h2>${suburbSlug ? `More suburbs in ${esc(STATE_NAMES[code])}` : `Suburbs in ${esc(STATE_NAMES[code])} with the most listings`}</h2>` +
+      `<ul>${nearby.map((s) => li(`/${kindPath}/${stateSlug}/${s.slug}`, s.suburb, `(${fmt(s.count)})`)).join('')}</ul>`
+    : '';
+  const supportsHtml = facets.length && !filtered
+    ? `<h2>Supports listed in ${esc(areaName)}</h2><p>Each number is how many listings in this area list that support.</p>` +
+      `<ul>${facets.slice(0, 12).map((f) => li(`${base}?category=${encodeURIComponent(f._id)}`, f._id, `(${fmt(f.n)})`)).join('')}</ul>`
+    : '';
   let workersHtml = '';
   if (!filtered && total > 0) {
     try {
@@ -271,16 +285,29 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     description: trimTo(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,
-    jsonLd: [breadcrumbLd(site, crumbs)],
+    jsonLd: [
+      breadcrumbLd(site, crumbs),
+      {
+        id: 'register-area',
+        data: {
+          '@type': 'CollectionPage', name: `${kind.label} providers in ${areaName}`, url: `${site}${base}`, inLanguage: 'en-AU',
+          isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+          mainEntity: {
+            '@type': 'ItemList', numberOfItems: total,
+            itemListElement: docs.map((d, i) => ({ '@type': 'ListItem', position: (page - 1) * PAGE_SIZE + i + 1, name: registerName(d), url: `${site}/${kindPath}/${d.slug}` })),
+          },
+        },
+      },
+    ],
     body:
       `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
       `<h1>${esc(kind.label)} providers in ${esc(areaName)}</h1>` +
-      `<p>${fmt(total)} ${esc(kind.plain)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.</p>` +
-      `<h2>Using this local register list</h2><p>Location information can reflect a registered address, an office or an area associated with a public record. It does not necessarily show where a provider currently sends workers or has vacancies. Open each record to check the organisation and identifier, then confirm that the provider delivers the required support in ${esc(areaName)}.</p>` +
-      `<h2>Questions for shortlisted providers</h2><p>Ask about the exact service, worker qualifications, registration requirements, earliest start date and continuity when a regular worker is unavailable. Request all rates and terms in writing, including travel, reports, cancellations and administration. Also ask how the provider handles consent, privacy, incidents, complaints and ending or changing services.</p>` +
-      `<h2>Verify before making an arrangement</h2><p>Match the provider's legal name and identifier to the official source, especially where trading names are similar. Public registration is one check, not a guarantee of service quality, funding approval or personal fit. Compare more than one option where practical and keep the source record, quote and service agreement.</p>` +
+      `<p>${fmt(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.` +
+      `${topFacets.length && !filtered ? ` The supports listed most often here are ${topFacets.map((f) => `${esc(f._id.toLowerCase())} (${fmt(f.n)})`).join(', ')}.` : ''}</p>` +
+      supportsHtml +
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : '')).join('')}</ul>` +
-      `<p>${pager}</p>${workersHtml}${extra}`,
+      `<p>${pager}</p>${workersHtml}${extra}` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>`,
   };
 }
 
@@ -296,12 +323,40 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
   const shown = doc.areas.slice(0, 2).map((a) => `${a.suburb}, ${a.state}`);
   const more = doc.areaCount - shown.length;
   const thin = doc.services.length === 0;
+  const name = registerName(doc);
+  const areaLabel = (a: { suburb: string; state: string }) => `${a.suburb}, ${a.state}`;
+
+  // What the visible page shows (apps/web/src/pages/public/register/RegisterProviderPage.tsx), from the same data:
+  // other providers in the first area, and the service pages that exist (and are indexed) for it.
+  const [related, serviceLinks] = await Promise.all([
+    first
+      ? RegisterListing.find({ type: kind.type, areas: { $elemMatch: { state: first.state, suburbSlug: first.suburbSlug } }, _id: { $ne: doc._id } })
+          .select('slug name').sort({ nameLower: 1 }).limit(6).lean()
+      : Promise.resolve([] as { slug: string; name: string }[]),
+    serviceLinksFor(doc as never),
+  ]);
+
+  const byState = new Map<string, typeof doc.areas>();
+  for (const a of doc.areas.slice(0, 120)) byState.set(a.state, [...(byState.get(a.state) ?? []), a]);
+  const areasHtml = byState.size
+    ? `<h2>Where ${esc(name)} is listed</h2>` +
+      [...byState.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([code, areas]) =>
+        `<h3>${esc(STATE_NAMES[code] ?? code)}</h3><ul>${areas.map((a) => li(`/${kindPath}/${a.state.toLowerCase()}/${a.suburbSlug}`, a.suburb)).join('')}</ul>`).join('') +
+      (doc.areaCount > Math.min(doc.areas.length, 120) ? `<p>Showing ${fmt(Math.min(doc.areas.length, 120))} of ${fmt(doc.areaCount)} areas.</p>` : '')
+    : '';
+  const host = doc.website ? doc.website.replace(/^https?:\/\//, '') : '';
+  const glance =
+    `<ul><li>Register: ${esc(kind.label)} provider register</li>` +
+    `<li>${doc.states.length === 1 ? 'State' : 'States'}: ${esc(doc.states.map((s) => STATE_NAMES[s] ?? s).join(', '))}</li>` +
+    `<li>Areas listed: ${fmt(doc.areaCount)}</li>` +
+    `<li>Website: ${doc.website ? `<a href="${esc(doc.website)}" rel="nofollow noopener noreferrer">${esc(host)}</a>` : 'Not listed'}</li>` +
+    `${doc.abn ? `<li>ABN: ${esc(doc.abn)}</li>` : ''}</ul>`;
 
   return {
     status: 200,
-    title: providerTitle(registerName(doc), kind.label, where),
+    title: providerTitle(name, kind.label, where),
     description: trimTo(
-      `${registerName(doc)} is ${kind.listedAs}${shown.length ? ` for ${shown.join(' and ')}${more > 0 ? ` and ${more} more area${more === 1 ? '' : 's'}` : ''}` : ''}. See the supports listed, where it operates and how to check its current status.`,
+      `${name} is ${kind.listedAs}${shown.length ? ` for ${shown.join(' and ')}${more > 0 ? ` and ${more} more area${more === 1 ? '' : 's'}` : ''}` : ''}. See the supports listed, where it operates and how to check its current status.`,
       158
     ),
     canonical: p,
@@ -311,22 +366,30 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
         id: 'register-provider',
         data: {
           '@type': 'Organization',
-          name: registerName(doc),
+          name,
           ...(doc.website ? { url: doc.website } : {}),
           areaServed: doc.states.map((s) => ({ '@type': 'AdministrativeArea', name: STATE_NAMES[s] ?? s })),
         },
       },
-      breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: `${kind.label} providers`, path: `/${kindPath}` }, { name: registerName(doc), path: p }]),
+      breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: `${kind.label} providers`, path: `/${kindPath}` }, { name, path: p }]),
     ],
     body:
-      `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/${kindPath}">${esc(kind.label)} providers</a> / ${esc(registerName(doc))}</nav>` +
-      `<h1>${esc(registerName(doc))}</h1>` +
-      `<p>${esc(registerName(doc))} is ${esc(kind.listedAs)} in ${esc(doc.states.map((s) => STATE_NAMES[s] ?? s).join(', '))}. This listing comes from the ${esc(kind.register)} — check the official register for its current status.</p>` +
+      `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/${kindPath}">${esc(kind.label)} providers</a> / ${esc(name)}</nav>` +
+      `<h1>${esc(name)}</h1>` +
+      `<p>${esc(name)} is ${esc(kind.listedAs)}${doc.areas.length ? ` for ${esc(doc.areas.slice(0, 3).map(areaLabel).join(', '))}${doc.areaCount > 3 ? ` and ${fmt(doc.areaCount - 3)} more area${doc.areaCount - 3 === 1 ? '' : 's'}` : ''}` : ''}.</p>` +
+      glance +
       (doc.services.length ? `<h2>Supports listed</h2><ul>${doc.services.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : '') +
-      (doc.areas.length ? `<h2>Areas listed</h2><ul>${doc.areas.slice(0, 60).map((a) => li(`/${kindPath}/${a.state.toLowerCase()}/${a.suburbSlug}`, `${a.suburb}, ${a.state}`)).join('')}</ul>` : '') +
-      `<h2>What this register record means</h2><p>This page summarises public-source information linked to the named organisation. It is a verification starting point, not an endorsement. A registration or public record does not by itself confirm service quality, current capacity, service-area coverage, funding acceptance or whether a particular worker is suitable for one person's needs.</p>` +
-      `<h2>Verify the details before engaging the provider</h2><p>Confirm the legal entity, identifier and current status against the official source. Ask which services are delivered at the relevant location, who will provide them, what qualifications or screening apply and when support can realistically start. Request complete rates for sessions, travel, reports, cancellations and administration, plus the process for incidents, complaints and ending an agreement.</p>` +
-      `<h2>Compare the service arrangement</h2><p>Registration requirements vary by program and support type. Check whether registration is required for the intended service and funding arrangement rather than assuming every listed provider can deliver it. Keep the source check, quote, service agreement and important answers in writing. SolDirectory does not claim that this record shows live capacity.</p>` +
+      areasHtml +
+      (serviceLinks.length
+        ? `<h2>Supports in ${esc(first!.suburb)}</h2><p>Where this provider lists these supports for ${esc(where)}, there is a page for the support in that suburb.</p>` +
+          `<ul>${serviceLinks.map((l) => li(`/services/${l.slug}/${l.state.toLowerCase()}/${l.suburbSlug}`, `${l.service} in ${l.suburb}`, `(${fmt(l.count)} listings)`)).join('')}</ul>`
+        : '') +
+      `<h2>Before you engage a provider</h2><ul>` +
+      `<li>Confirm the provider’s current status on <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>.</li>` +
+      `<li>Ask whether they have capacity to start, and when. This listing doesn’t say.</li>` +
+      `<li>Ask how they screen and train their workers, and what they charge — see our <a href="/guides/choosing-a-provider">guide to choosing a provider</a>.</li></ul>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>` +
+      (related.length ? `<h2>Other providers listed in ${esc(where)}</h2><ul>${related.map((r) => li(`/${kindPath}/${r.slug}`, registerName(r))).join('')}</ul>` : '') +
       `<p><a href="/${kindPath}">Browse the full register</a> · <a href="/find-a-provider">Compare provider profiles</a> · <a href="/locations">Browse by location</a></p>`,
   };
 }
@@ -1502,21 +1565,6 @@ const SVC_COMPARE: [string, string, string][] = [
   ['Availability and continuity', 'A directory listing does not prove current capacity. Ask about start dates, rostering and cover when a regular worker is unavailable.', 'When could you start, and what happens if my regular worker is away?'],
   ['Pricing and funding', 'Rates and what is included can differ between providers. Ask for a written service agreement before supports begin.', 'What are your rates, what is included, and do you accept my funding type?'],
 ];
-const SVC_CREDENTIALS: [string, string][] = [
-  ['NDIS registration', "Ask for their registration number and check it against the NDIS Commission's public register."],
-  ['Insurance', 'Ask to see current public liability and professional indemnity certificates.'],
-  ['Qualifications', 'Ask which specific staff member is assigned and what their relevant qualification is.'],
-  ['Experience', "Ask how long they've delivered this exact service."],
-  ['Compliance', 'Ask about their worker screening status and how they handle incidents or complaints.'],
-];
-const SVC_FAQ: [string, string][] = [
-  ['How does SolDirectory work?', 'SolDirectory is a directory and referral service. You can search for providers, or send one free request. Providers who cover your area and offer the support you need are notified and contact you directly.'],
-  ['Does it cost anything to use?', 'No. It is free for participants, families and coordinators. Search filters determine which providers qualify; eligible Pro and Growth members are shown before Starter members, with alphabetical ordering inside each plan group.'],
-  ['How do I know a provider is registered?', "Providers supply their own registration details. Before you engage a provider, confirm their registration with them directly or on the NDIS Commission's public provider register."],
-  ['Which funding types can I use?', 'Providers list the funding types they accept, such as NDIS, aged care, private and DVA. When you send a request you choose how the supports are funded so that we can match you with providers who accept it. Confirm details with the provider.'],
-  ['How quickly will a provider respond?', 'Providers are notified as soon as you send a request. Response times vary between providers, so we do not publish an estimate here. We report response times only when enough real enquiries have been answered to make the figure accurate.'],
-  ['Does SolDirectory provide the supports?', 'No. SolDirectory does not deliver supports, does not recommend or endorse providers, and does not take a commission on your services.'],
-];
 
 async function serviceLocationPage(site: string, serviceSlug: string, stateSlug: string, suburbSlug: string): Promise<Page> {
   const service = REAL_SERVICES.find((s) => slugifyService(s) === serviceSlug);
@@ -1542,11 +1590,13 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     registrationGroups: new RegExp(`^${escapeRegex(service)}$`, 'i'),
     serviceSuburbs: new RegExp(`^\\s*${escapeRegex(suburbName)}\\s*$`, 'i'),
   };
-  const [providerTotal, providerDocs, ndisListings, agedListings] = await Promise.all([
+  const [providerTotal, providerDocs, ndisListings, agedListings, ndisTotal, agedTotal] = await Promise.all([
     Provider.countDocuments(providerFilter),
     findProvidersPaidFirst<any>(providerFilter, 'legalEntityName tradingName slug registrationGroups', { limit: 12 }),
-    RegisterListing.find({ type: 'ndis', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(12).lean(),
-    RegisterListing.find({ type: 'aged_care', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(12).lean(),
+    RegisterListing.find({ type: 'ndis', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(6).lean(),
+    RegisterListing.find({ type: 'aged_care', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(6).lean(),
+    RegisterListing.countDocuments({ type: 'ndis', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }),
+    RegisterListing.countDocuments({ type: 'aged_care', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }),
   ]);
 
   const registerTotal = row.count;
@@ -1561,57 +1611,43 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     ? `<h2>SolDirectory providers</h2><p>${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider offers' : 'providers offer'} ${esc(serviceLower)} and services ${esc(suburbName)}.</p><ul>${providerDocs.map((p: any) => li(`/directory/${p.slug}`, p.tradingName || p.legalEntityName, (p.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul>`
     : `<h2>SolDirectory providers</h2><p>No SolDirectory providers have registered ${esc(serviceLower)} for ${esc(suburbName)} yet. Send a free request and any provider who covers this area and support can respond.</p>`;
 
-  const regList = [...ndisListings.map((d: any) => ({ ...d, type: 'ndis' as const })), ...agedListings.map((d: any) => ({ ...d, type: 'aged_care' as const }))];
-  const registerBrowseLinks = [
-    ...(ndisListings.length
-      ? [`<a href="/ndis-providers/${stateSlug}/${suburbSlug}?category=${encodeURIComponent(service)}">See all NDIS register listings in ${esc(suburbName)}</a>`]
-      : []),
-    ...(agedListings.length
-      ? [`<a href="/aged-care-providers/${stateSlug}/${suburbSlug}?category=${encodeURIComponent(service)}">See all aged care register listings</a>`]
-      : []),
-  ];
-  const registerHtml = registerTotal > 0
-    ? `<h2>Listed on the public register</h2>` +
-      `<p>${fmt(registerTotal)} organisation${registerTotal === 1 ? '' : 's'} on the NDIS and My Aged Care registers list ${esc(serviceLower)} among their supports for ${esc(suburbName)}, ${esc(code)}. A register listing shows what the register says, not who currently has capacity.</p>` +
-      `<ul>${regList.slice(0, 12).map((d) => li(`/${d.type === 'ndis' ? 'ndis-providers' : 'aged-care-providers'}/${d.slug}`, registerName(d), (d.supportCategories ?? []).slice(0, 3).join(', '))).join('')}</ul>` +
-      (registerBrowseLinks.length ? `<p>${registerBrowseLinks.join(' · ')}</p>` : '')
-    : '';
+  // One section per register, as the page shows them (RegisterNearby.tsx), each with its own count and listings.
+  const registerHtml = [
+    { type: 'ndis' as const, kindPath: 'ndis-providers' as const, listings: ndisListings },
+    { type: 'aged_care' as const, kindPath: 'aged-care-providers' as const, listings: agedListings },
+  ].filter((r) => r.listings.length > 0).map((r) => {
+    const k = KINDS[r.kindPath];
+    return `<h2>${esc(k.label)} register listings for ${esc(serviceLower)} in ${esc(suburbName)}</h2>` +
+      `<p>${fmt(r.type === 'ndis' ? ndisTotal : agedTotal)} ${esc(k.plain)} ${(r.type === 'ndis' ? ndisTotal : agedTotal) === 1 ? 'listing includes' : 'listings include'} ${esc(serviceLower)} among the supports recorded on the ${esc(k.register)} for ${esc(suburbName)}, ${esc(code)}. A register listing shows what the register says, not who currently has capacity.</p>` +
+      `<ul>${r.listings.map((d: any) => li(`/${r.kindPath}/${d.slug}`, registerName(d), (d.supportCategories ?? []).slice(0, 3).join(', '))).join('')}</ul>` +
+      `<p><a href="/${r.kindPath}/${stateSlug}/${suburbSlug}?category=${encodeURIComponent(service)}">See all ${fmt(r.type === 'ndis' ? ndisTotal : agedTotal)} ${esc(k.plain)} providers listed in ${esc(suburbName)}</a></p>`;
+  }).join('');
 
-  // Other real services with demand in this exact suburb, and other
-  // suburbs with demand for this service in the same state — both real,
-  // both drawn from the same computeServiceSuburbs data as this page's
-  // own existence, so every link here leads to another real page.
-  const otherServiceRows = await Promise.all(
-    REAL_SERVICES.filter((s) => s !== service).map(async (s) => ({ s, has: (await computeServiceSuburbs(s)).some((r) => r.state === code && r.slug === suburbSlug) }))
-  );
-  const relatedServicesHtml = otherServiceRows.some((r) => r.has)
-    ? `<h2>Other supports in ${esc(suburbName)}</h2><ul>${otherServiceRows.filter((r) => r.has).map((r) => li(`/services/${slugifyService(r.s)}/${stateSlug}/${suburbSlug}`, `${r.s} in ${suburbName}`)).join('')}</ul>`
+  // Other supports with a page here: the register listings in this suburb, counted by support (computeAreaSupports),
+  // limited to the supports that have an indexed page for this suburb.
+  const areaSupports = await computeAreaSupports(code, suburbSlug);
+  const supportRows = areaSupports
+    .filter((r) => r.category !== service && r.count >= MIN_INDEXABLE_SERVICE_LOCATION && (REAL_SERVICES as readonly string[]).includes(r.category))
+    .slice(0, 12);
+  const relatedServicesHtml = supportRows.length
+    ? `<h2>Other supports listed in ${esc(suburbName)}</h2><p>Each number is how many register listings in ${esc(suburbName)} list that support.</p>` +
+      `<ul>${supportRows.map((r) => li(`/services/${slugifyService(r.category)}/${stateSlug}/${suburbSlug}`, `${r.category} in ${suburbName}`, `(${fmt(r.count)})`)).join('')}</ul>`
     : '';
-  const otherSuburbs = suburbs.filter((s) => s.state === code && s.slug !== suburbSlug).slice(0, 12);
+  const otherSuburbs = suburbs.filter((s) => s.state === code && s.slug !== suburbSlug && s.count >= MIN_INDEXABLE_SERVICE_LOCATION).slice(0, 12);
   const otherSuburbsHtml = otherSuburbs.length
     ? `<h2>${esc(service)} in other ${esc(stateName)} suburbs</h2><ul>${otherSuburbs.map((s) => li(`/services/${serviceSlug}/${stateSlug}/${s.slug}`, `${service} in ${s.suburb}`, `(${fmt(s.count)})`)).join('')}</ul>`
-    : '';
-  const topNationally = suburbs.filter((s) => !(s.state === code && s.slug === suburbSlug)).slice(0, 10);
-  const nationalHtml = topNationally.length
-    ? `<h2>Where ${esc(serviceLower)} is most listed nationally</h2>` +
-      `<p>Across Australia, ${fmt(suburbs.reduce((sum, s) => sum + s.count, 0))} register listings offer ${esc(serviceLower)} across ${fmt(suburbs.length)} suburbs. These are the suburbs with the most listings:</p>` +
-      `<ul>${topNationally.map((s) => li(`/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}`, `${service} in ${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>`
     : '';
 
   const description = providerTotal > 0
     ? `${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider offers' : 'providers offer'} ${serviceLower} in ${suburbName}${registerTotal > 0 ? `, plus ${fmt(registerTotal)} organisations listed on the public register` : ''}. Compare options and get matched for free.`
     : `${fmt(registerTotal)} organisations on the public NDIS and My Aged Care registers list ${serviceLower} for ${suburbName}, ${code}. Browse supports, compare options and get matched for free.`;
+  // The full guide lives on the service's own page (/services/<service>). Here: the short answer, what it may include, and
+  // the link, so a suburb page is mostly about the suburb.
   const editorialHtml = editorial
-    ? `<h2>A practical guide to ${esc(serviceLower)}</h2>` +
+    ? `<h2>${esc(service)} at a glance</h2>` +
       `<p>${esc(editorial.shortAnswer)}</p>` +
-      editorial.overview.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('') +
       `<h3>What ${esc(serviceLower)} may include</h3><ul>${editorial.includes.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-      `<h3>Planning the support</h3><ul>${editorial.planning.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-      `<h3>Questions to ask providers</h3><ul>${editorial.providerQuestions.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-      `<h3>Funding considerations</h3>${editorial.funding.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
-      `<h3>Safeguards and records</h3><ul>${editorial.safeguards.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-      `<h3>Official information</h3><ul>${editorial.sources.map((source) => `<li><a href="${esc(source.href)}" rel="noopener nofollow">${esc(source.label)}</a></li>`).join('')}</ul>` +
-      `<p>Program rules, prices and eligibility can change. Confirm current requirements with the responsible government body and the provider before relying on this general information.</p>`
+      `<p><a href="/services/${serviceSlug}">Read the full guide to ${esc(serviceLower)}</a>: planning, funding, questions to ask and official information.</p>`
     : '';
 
   const body =
@@ -1622,19 +1658,13 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     `${providerTotal > 0 ? `, and ${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider currently offers' : 'providers currently offer'} it here` : ''}.` +
     ` Providers set their own supports, service areas and availability, and confirm their capacity each week. Before you engage a provider, confirm their registration, insurance and worker screening directly with them.</p>` +
     (SVC_DESCRIPTION[service] ? `<h2>About ${esc(serviceLower)}</h2><p>${esc(SVC_DESCRIPTION[service])} People in ${esc(suburbName)} and the surrounding ${esc(stateName)} area can search for a provider below, or send a free request and let providers who cover this area respond directly.</p>` : '') +
+    providersHtml +
+    `<p>Eligible Pro and Growth members are shown before Starter members, alphabetically within each group. Placement is not endorsement; compare suitability, safeguards, availability, fees and service terms directly.</p>` +
+    registerHtml +
     editorialHtml +
-    providersHtml + registerHtml +
     `<h2>What to compare before choosing</h2><p>Use these ${esc(serviceLower)}-specific checks when you contact providers in ${esc(suburbName)}. Confirm each answer directly: a directory listing does not prove current capacity.</p>` +
     SVC_COMPARE.map(([t, b, ask]) => `<h3>${esc(t)}</h3><p>${esc(b)}</p><p><strong>Ask:</strong> ${esc(ask)}</p>`).join('') +
-    `<h2>How providers are listed</h2>` +
-    `<p><strong>How ordering works.</strong> Service and location filters determine which member providers qualify. Eligible Pro and Growth members are shown before Starter members, with providers listed alphabetically inside each plan group.</p>` +
-    `<p><strong>Placement is not endorsement.</strong> Plan priority does not mean SolDirectory has assessed or recommends a provider. Compare suitability, safeguards, availability, fees and service terms directly.</p>` +
-    `<p><strong>Availability.</strong> Providers confirm each week that they are taking referrals. A provider who has not confirmed recently is removed from results until they do.</p>` +
-    `<p><strong>Provider-supplied details.</strong> Registration, insurance and other details are supplied by providers. Always confirm them directly with a provider before you engage them.</p>` +
-    `<h2>How to check a provider's credentials</h2><p>Confirm these five things directly with any provider before booking — a directory listing alone doesn't prove current status.</p>` +
-    `<ol>${SVC_CREDENTIALS.map(([t, b]) => `<li><strong>${esc(t)}</strong> ${esc(b)}</li>`).join('')}</ol>` +
-    relatedServicesHtml + otherSuburbsHtml + nationalHtml +
-    `<h2>Frequently asked questions</h2>${SVC_FAQ.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('')}` +
+    relatedServicesHtml + otherSuburbsHtml +
     `<p><a href="/find-a-provider?service=${encodeURIComponent(service)}">See all ${esc(serviceLower)} providers</a></p>`;
 
   return {
@@ -1646,21 +1676,14 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     })(),
     description: trimTo(description, 158),
     canonical: path,
-    noindex: false,
+    // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
+    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION,
     jsonLd: [
       breadcrumbLd(site, crumbs),
       { id: 'service-location', data: {
         '@type': 'Service', name: `${service} in ${suburbName}, ${code}`, serviceType: service,
         areaServed: { '@type': 'City', name: suburbName, containedInPlace: { '@type': 'State', name: stateName } },
         provider: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
-      } },
-      { id: 'service-location-faq', data: {
-        '@type': 'FAQPage',
-        mainEntity: SVC_FAQ.map(([question, answer]) => ({
-          '@type': 'Question',
-          name: question,
-          acceptedAnswer: { '@type': 'Answer', text: answer },
-        })),
       } },
     ],
     body,
