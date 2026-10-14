@@ -5,6 +5,7 @@ import { BLOG_COVERS } from './blogCovers.js';
 import { BLOG_KEY_POINTS } from './blogKeyPoints.js';
 import { BLOG_SEO_TITLES } from './blogSeoTitles.js';
 import { ARTICLE_FAQS } from './blogFaqs.js';
+import { BLOG_SEO_DESCRIPTIONS } from './blogSeoDescriptions.js';
 
 /** Time-sensitive explainers written from specific official announcements. Evergreen guides live in blogGuides.js. */
 const NEWS_POSTS = [
@@ -153,7 +154,9 @@ const withCover = (post) => {
   const seoTitle = withImage.seoTitle ?? BLOG_SEO_TITLES[post.slug];
   // Questions and answers, restated from the article itself (blogFaqs.js).
   const faq = withImage.faq ?? ARTICLE_FAQS[post.slug];
-  return { ...withImage, ...(keyPoints ? { keyPoints } : {}), ...(seoTitle ? { seoTitle } : {}), ...(faq ? { faq } : {}) };
+  // A meta description that is a whole sentence, for the articles whose summary is longer than a search snippet.
+  const seoDescription = withImage.seoDescription ?? BLOG_SEO_DESCRIPTIONS[post.slug];
+  return { ...withImage, ...(keyPoints ? { keyPoints } : {}), ...(seoTitle ? { seoTitle } : {}), ...(seoDescription ? { seoDescription } : {}), ...(faq ? { faq } : {}) };
 };
 
 export const EDITORIAL_BLOG_POSTS = [...NEWS_POSTS, ...GUIDE_POSTS, ...WORKER_POSTS, ...PROVIDER_POSTS].map(withCover);

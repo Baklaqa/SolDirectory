@@ -66,6 +66,8 @@ export interface EditorialBlogPost {
   keyPoints?: string[];
   /** Shorter title for search results and link previews (the page heading stays `title`). */
   seoTitle?: string;
+  /** Meta description when `summary` is longer than a search snippet (158 characters); a whole sentence, never cut off. */
+  seoDescription?: string;
   /** Questions and answers shown under the article and marked up as FAQ structured data. */
   faq?: { question: string; answer: string }[];
   source: EditorialBlogSource;

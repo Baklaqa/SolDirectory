@@ -1438,7 +1438,7 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
   return {
     status: 200,
     title: `${editorial.seoTitle ?? editorial.title} | SolDirectory`,
-    description: trimTo(editorial.summary, 158),
+    description: trimTo(editorial.seoDescription ?? editorial.summary, 158),
     canonical: path,
     noindex: expired,
     ogImage: `${site}${editorial.coverImage}`,

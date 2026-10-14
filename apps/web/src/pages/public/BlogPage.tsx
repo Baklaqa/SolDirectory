@@ -48,7 +48,7 @@ function editorialToPost(article: EditorialBlogPost): WPBlogPost {
     excerpt: article.summary,
     featuredImage: { url: article.coverImage, alt: article.coverAlt },
     terms: [category],
-    seo: { title: `${article.seoTitle ?? article.title} | SolDirectory`, description: article.summary, ogImage: article.coverImage, noindex: false },
+    seo: { title: `${article.seoTitle ?? article.title} | SolDirectory`, description: article.seoDescription ?? article.summary, ogImage: article.coverImage, noindex: false },
     date: article.publishedAt,
     modified: Date.parse(article.checkedAt) >= Date.parse(article.publishedAt) ? article.checkedAt : article.publishedAt,
     authorName: 'SolDirectory',
