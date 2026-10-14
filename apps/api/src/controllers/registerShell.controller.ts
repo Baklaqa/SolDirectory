@@ -20,6 +20,11 @@ import {
   COORDINATOR_PAGE,
   PROVIDER_PAGE_DESCRIPTION,
   PROVIDER_PAGE_UPDATED,
+  STATE_CENTRES,
+  WORKER_HERO_CHECKS,
+  WORKER_PAGE_DESCRIPTION,
+  WORKER_PAGE_TITLE,
+  WORKER_PAGE_UPDATED,
   type EditorialBlogPost,
   type Topic, type ShellEditorial,
 } from '@soldirectory/topic-content';
@@ -858,7 +863,7 @@ function supportCoordinatorsPage(site: string): Page {
   };
 }
 
-function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | 'locations' | 'providers' | 'workers'): Page {
+function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | 'locations' | 'providers'): Page {
   const pages: Record<typeof key, Omit<Page, 'status' | 'noindex'>> = {
     home: {
       title: 'SolDirectory | Find NDIS and aged care providers',
@@ -939,19 +944,6 @@ function publicMarketingPage(site: string, key: 'home' | 'find' | 'services' | '
         `<h2>Assess every request independently</h2><p>Before accepting work, confirm the person's support requirements, location, schedule, risks, communication preferences, funding and decision-making arrangements. Check whether registration or specialist qualifications are required. Agree scope, rates, travel, cancellations, privacy, incidents, complaints and exit terms in a written service agreement.</p>` +
         `<h2>Directory position and subscriptions</h2><p>Search filters determine which profiles qualify. Eligible Pro and Growth members are shown before Starter members, with alphabetical ordering inside each plan group. Priority placement is not an endorsement or quality rating, and no plan guarantees enquiries or work. SolDirectory does not take a percentage of fees agreed between a provider and participant.</p>` +
         `<p>People searching for support can use the <a href="/find-a-provider">provider directory</a>, browse <a href="/services">service guides</a> and review public <a href="/ndis-providers">NDIS</a> or <a href="/aged-care-providers">aged care</a> register records. Providers should describe their own status accurately and never imply that a listing is an endorsement.</p>`,
-    },
-    workers: {
-      title: 'Independent support workers | SolDirectory',
-      description: 'Create an independent worker profile with services, experience, location and availability so eligible organisations can assess suitable opportunities.',
-      canonical: '/independent-workers',
-      jsonLd: [breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Independent workers', path: '/independent-workers' }])],
-      body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Independent workers</nav><h1>Create an independent support worker profile</h1>` +
-        `<p>Independent support workers, nurses and allied health assistants can publish a structured professional profile describing services, experience, location, languages and availability. Eligible organisations can browse public profiles and request contact about suitable opportunities.</p>` +
-        `<h2>Information to include</h2><p>Describe the supports you deliver, participant groups and relevant experience in practical terms. Add your suburb, travel area, preferred schedule, languages, transport arrangements and indicative rate. Keep availability and professional evidence current so an organisation can decide whether a conversation is worthwhile.</p>` +
-        `<h2>Checks and professional responsibilities</h2><p>Depending on the role, you may need an NDIS Worker Screening Check, Working with Children Check, aged care screening, professional registration, first aid training, qualifications or insurance. A profile does not replace verification. Organisations must check evidence directly and decide whether a worker is suitable for a particular role.</p>` +
-        `<h2>Clarify the engagement</h2><p>Before accepting work, confirm the tasks, goals, location, schedule, supervision, reporting, rate, travel, cancellations, privacy, incidents and complaints. Make clear whether the arrangement is employment or independent contracting and obtain professional advice where needed. SolDirectory does not employ workers, set conditions, supervise services or guarantee work.</p>` +
-        `<h2>How contact works</h2><p>Contact details are not displayed publicly. Authorised organisations can search the <a href="/independent-workers/find">worker directory</a> and request contact after considering the profile. Workers decide whether an opportunity fits their availability and professional scope. Participants and representatives looking for provider services should use the <a href="/find-a-provider">public provider directory</a> or submit an enquiry.</p>` +
-        `<p>Workers can create an account to maintain their profile. Provider organisations looking to list services should instead review the <a href="/providers">provider listing information</a>. Publishing a profile is not an endorsement and does not guarantee an engagement.</p>`,
     },
   };
   return { status: 200, noindex: false, ...pages[key] };
@@ -1636,6 +1628,63 @@ const LEGACY_SERVICE_REDIRECTS: Record<string, string> = {
   'response-time-data': '/support-coordinators#provider-checks',
 };
 
+/** Supports offered as tiles on /independent-workers, and the three whose suburbs it lists. */
+const WORKER_SUPPORTS = ['Personal care', 'Domestic assistance', 'Transport', 'Therapy services', 'Nursing'];
+const WORKER_BY_SUPPORT = ['Personal care', 'Domestic assistance', 'Transport'];
+
+/**
+ * /independent-workers. Mirrors apps/web/src/pages/public/IndependentWorkers.tsx and its extras (WorkerExtras): the same
+ * heading, introduction and data-driven sections. The profile, steps, safeguards, guides and questions arrive from the
+ * shared reading copy (hubCopy), which is appended to this body.
+ */
+async function workersPage(site: string): Promise<Page> {
+  const hub = await hubFor('ndis');
+  const bySupport = await Promise.all(WORKER_BY_SUPPORT.map(async (service) => ({ service, rows: (await computeServiceSuburbs(service)).slice(0, 6) })));
+  const shownBySupport = bySupport.filter((s) => s.rows.length > 0);
+  const path = '/independent-workers';
+  return {
+    status: 200,
+    title: WORKER_PAGE_TITLE,
+    description: WORKER_PAGE_DESCRIPTION,
+    canonical: path,
+    noindex: false,
+    jsonLd: [
+      breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Independent workers', path }]),
+      {
+        id: 'independent-workers-page',
+        data: {
+          '@type': 'WebPage', name: 'Create a professional profile for independent support work', description: WORKER_PAGE_DESCRIPTION, url: `${site}${path}`,
+          inLanguage: 'en-AU', dateModified: WORKER_PAGE_UPDATED,
+          isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site },
+          publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${site}/` },
+        },
+      },
+    ],
+    body:
+      `<nav aria-label="Breadcrumb"><a href="/">Home</a> / Independent workers</nav><h1>Create a professional profile for independent support work</h1>` +
+      `<p>Present your services, experience, location and availability in one profile. Eligible provider organisations can search the worker directory and contact you.</p>` +
+      `<h2>Join the worker directory</h2><ul>${WORKER_HERO_CHECKS.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>` +
+      `<p><a href="/signup?type=worker">Create a worker profile</a>. Already registered? <a href="/login">Worker login</a> · <a href="/independent-workers/find">Browse worker profiles</a></p>` +
+      `<h2>Supports you can offer</h2><p>Choose the supports that match your skills, experience and checks. Each page explains what the support involves and where organisations are listed for it.</p>` +
+      `<ul>${WORKER_SUPPORTS.map((name) => li(`/services/${slugifyService(name)}`, name)).join('')}</ul>` +
+      (hub.suburbs.length
+        ? `<h2>Suburbs with the most organisations on the NDIS register</h2><p>The number beside each suburb is how many organisations the public NDIS register lists there. It shows where organisations are based, not how much work there is, and a busy suburb can also mean more workers looking for the same work.</p>` +
+          `<ul>${hub.suburbs.slice(0, 18).map((s) => li(`/ndis-providers/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>`
+        : '') +
+      (shownBySupport.length
+        ? `<h2>Where each kind of support is listed</h2>` +
+          shownBySupport.map(({ service, rows }) =>
+            `<h3>${esc(service)}</h3><ul>${rows.map((r) => li(`/services/${slugifyService(service)}/${r.state.toLowerCase()}/${r.slug}`, `${r.suburb}, ${r.state}`)).join('')}</ul>` +
+            `<p><a href="/services/${slugifyService(service)}">About ${esc(service.toLowerCase())} →</a></p>`).join('')
+        : '') +
+      `<h2>Independent support work by state and territory</h2><p>Start with the state where you live, then look at its capital and regional centres to see which organisations are listed near you.</p>` +
+      `<ul>${STATE_CENTRES.filter((c) => STATE_NAMES[c.code]).map((c) => `<li><a href="/ndis-providers/${c.code.toLowerCase()}">${esc(STATE_NAMES[c.code])}</a>: ${esc(c.capital)}${c.centres.length ? `, ${esc(c.centres.slice(0, 4).join(', '))} and more` : ''}</li>`).join('')}</ul>` +
+      `<p>Prefer to search by suburb or postcode? <a href="/locations">Browse all locations</a>.</p>` +
+      `<h2>Create your Independent Worker profile</h2><p>Register your professional details and make your profile available in the worker directory.</p>` +
+      `<p><a href="/signup?type=worker">Register as an Independent Worker</a></p>`,
+  };
+}
+
 /** GET /seo-shell/<original path>?<original query> — see the file comment. */
 export async function registerShell(req: Request, res: Response) {
   const url = new URL(req.originalUrl, 'http://x');
@@ -1663,7 +1712,7 @@ export async function registerShell(req: Request, res: Response) {
   } else if (root === 'providers' && parts.length === 1) {
     page = publicMarketingPage(site, 'providers');
   } else if (root === 'independent-workers' && parts.length === 1) {
-    page = publicMarketingPage(site, 'workers');
+    page = await workersPage(site);
   } else if (root === 'services' && parts.length === 2) {
     try {
       page = await servicePage(site, parts[1]);

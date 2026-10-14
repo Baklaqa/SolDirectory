@@ -371,13 +371,25 @@ const INDEPENDENT_WORKERS = {
       paragraphs: ['SolDirectory provides the profile and search tools. Any engagement is arranged directly between you and the organisation contacting you.'],
       list: WORKER_HOW_IT_WORKS.map(([title, body]) => ({ text: body, title })),
     },
+    {
+      heading: 'How contact works',
+      paragraphs: [
+        'Contact details are not displayed publicly. Authorised organisations can search the worker directory and request contact after considering the profile. Workers decide whether an opportunity fits their availability and professional scope. Participants and representatives looking for provider services should use the public provider directory or submit an enquiry.',
+        'Workers can create an account to maintain their profile. Provider organisations looking to list services should instead review the provider listing information. Publishing a profile is not an endorsement and does not guarantee an engagement.',
+      ],
+      links: [
+        { to: '/independent-workers/find', label: 'Browse worker profiles' },
+        { to: '/providers', label: 'Provider listing information' },
+        { to: '/find-a-provider', label: 'Search the provider directory' },
+      ],
+    },
     { heading: 'Checks and arrangements remain important', list: WORKER_SAFEGUARDS.map((s) => ({ text: s.text, title: s.title })) },
     { heading: 'Six things to settle before your first shift', list: WORKER_SETUP_STEPS.map((s) => ({ text: s.body, title: s.title, to: s.link.to, label: s.link.label })) },
     { heading: 'Guides for independent workers', list: articleLinks(WORKER_PAGE_GUIDES) },
     {
       heading: 'Looking for a worker rather than offering work?',
       paragraphs: ['This page is for workers. Participants and families can search the public directory, send one request to matched providers, and read what to ask before choosing.'],
-      links: [{ to: '/find-a-provider', label: 'Find a provider' }, { to: blog('questions-to-ask-an-independent-ndis-support-worker'), label: 'Questions to ask a worker' }],
+      links: [{ to: '/find-a-provider', label: 'Search the provider directory' }, { to: blog('questions-to-ask-an-independent-ndis-support-worker'), label: 'Questions to ask a worker' }],
     },
   ],
   faqs: qa(INDEPENDENT_WORKER_FAQS),

@@ -173,7 +173,7 @@ export default function WorkerExtras() {
             <p>This page is for workers. Participants and families can search the public directory, send one request to matched providers, and read what to ask before choosing.</p>
           </div>
           <div className="xp-aside-links">
-            <Link to="/find-a-provider">Find a provider →</Link>
+            <Link to="/find-a-provider">Search the provider directory →</Link>
             <Link to="/blog/questions-to-ask-an-independent-ndis-support-worker">Questions to ask a worker →</Link>
           </div>
         </aside>

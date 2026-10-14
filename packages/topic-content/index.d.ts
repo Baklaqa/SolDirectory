@@ -91,6 +91,11 @@ export interface PageFaq { question: string; answer: string }
 export const INDEPENDENT_WORKER_FAQS: readonly PageFaq[];
 export const PROVIDER_FAQS: readonly PageFaq[];
 /** ISO date the /providers guidance last changed. */
+export const WORKER_PAGE_TITLE: string;
+export const WORKER_PAGE_DESCRIPTION: string;
+/** ISO date the /independent-workers guidance last changed. */
+export const WORKER_PAGE_UPDATED: string;
+export const WORKER_HERO_CHECKS: readonly string[];
 export const PROVIDER_PAGE_UPDATED: string;
 export const PROVIDER_PAGE_DESCRIPTION: string;
 export const WORKER_PAGE_GUIDES: readonly string[];

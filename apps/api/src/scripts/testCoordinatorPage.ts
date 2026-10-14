@@ -5,7 +5,7 @@
  * formed, the visible date is the date in the data), the /providers description and questions, and the response-header
  * middleware. No database or network.
  */
-import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS, hubCopy, PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED } from '@soldirectory/topic-content';
+import { COORDINATOR_PAGE as P, EDITORIAL_BLOG_POSTS, GUIDE_DOCS, hubCopy, PROVIDER_FAQS, PROVIDER_PAGE_DESCRIPTION, PROVIDER_PAGE_UPDATED, WORKER_HERO_CHECKS, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_TITLE, WORKER_PAGE_UPDATED, INDEPENDENT_WORKER_FAQS } from '@soldirectory/topic-content';
 import { securityHeaders } from '../middleware/securityHeaders.js';
 
 let failed = 0;
@@ -62,6 +62,14 @@ check('provider FAQ questions are unique', new Set(providerQuestions).size === p
 check('provider FAQs include the listing how-to and the profile contents', providerQuestions.some((q) => /list my NDIS provider business/i.test(q)) && providerQuestions.some((q) => /provider profile include/i.test(q)));
 check('the /providers description fits a search result (150-160 characters)', PROVIDER_PAGE_DESCRIPTION.length >= 150 && PROVIDER_PAGE_DESCRIPTION.length <= 160, String(PROVIDER_PAGE_DESCRIPTION.length));
 check('the /providers date is a real, past date', !Number.isNaN(Date.parse(PROVIDER_PAGE_UPDATED)) && Date.parse(`${PROVIDER_PAGE_UPDATED}T00:00:00Z`) <= now + 24 * 3600 * 1000);
+
+// ---- /independent-workers ----
+check('the workers title and description fit a search result', WORKER_PAGE_TITLE.length <= 65 && WORKER_PAGE_DESCRIPTION.length >= 140 && WORKER_PAGE_DESCRIPTION.length <= 160, `${WORKER_PAGE_TITLE.length} / ${WORKER_PAGE_DESCRIPTION.length}`);
+check('the workers date is a real, past date', !Number.isNaN(Date.parse(WORKER_PAGE_UPDATED)) && Date.parse(`${WORKER_PAGE_UPDATED}T00:00:00Z`) <= now + 24 * 3600 * 1000);
+check('the workers hero has three points', WORKER_HERO_CHECKS.length === 3);
+const workerQs = INDEPENDENT_WORKER_FAQS.map((f) => f.question);
+check('worker FAQ questions are unique', new Set(workerQs).size === workerQs.length);
+check('the workers reading copy explains how contact works', (hubCopy('/independent-workers')?.sections ?? []).some((s) => s.heading === 'How contact works'));
 
 // ---- register hubs ----
 for (const [path, host] of [['/ndis-providers', 'ndiscommission.gov.au'], ['/aged-care-providers', 'myagedcare.gov.au']] as const) {

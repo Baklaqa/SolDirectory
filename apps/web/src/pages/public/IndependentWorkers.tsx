@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageHero from '../../components/topic/PageHero';
 import { bannerFor } from '../../data/bannerImages';
@@ -9,35 +9,47 @@ import './IndependentWorkers.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
 import WorkerExtras from '../../components/extras/WorkerExtras';
 import AccordionRows from '../../components/ui/AccordionRows';
-import { INDEPENDENT_WORKER_FAQS, WORKER_HOW_IT_WORKS, WORKER_PROFILE_DETAILS, WORKER_SAFEGUARDS } from '@soldirectory/topic-content';
+import {
+  INDEPENDENT_WORKER_FAQS, hubCopy, WORKER_HERO_CHECKS, WORKER_HOW_IT_WORKS, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_TITLE, WORKER_PAGE_UPDATED,
+  WORKER_PROFILE_DETAILS, WORKER_SAFEGUARDS,
+} from '@soldirectory/topic-content';
 
 const PROFILE_DETAILS = WORKER_PROFILE_DETAILS as unknown as string[][];
 
 const STEPS = WORKER_HOW_IT_WORKS as unknown as string[][];
 
-const HERO_CHECKS = [
-  'One profile for your services and availability',
-  'Eligible organisations search and contact you',
-  'No guarantee of work: you choose what to accept',
-];
+const HERO_CHECKS = WORKER_HERO_CHECKS as unknown as string[];
 
 const FAQS = INDEPENDENT_WORKER_FAQS as { question: string; answer: string }[];
 
+// Same words the crawler HTML carries (packages/topic-content/hubContent.js).
+const CONTACT = hubCopy('/independent-workers')?.sections.find((s) => s.heading === 'How contact works');
+
 export default function IndependentWorkers() {
   const navigate = useNavigate();
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     applySeoTags({
-      title: 'Independent Support Workers | SolDirectory',
-      description: 'Create an independent worker profile with your services, experience, location and availability so eligible organisations can find and contact you. Includes guides to worker screening, the Code of Conduct, ABN and tax, rates and paperwork.',
+      title: WORKER_PAGE_TITLE,
+      description: WORKER_PAGE_DESCRIPTION,
+      canonicalUrl: `${window.location.origin}/independent-workers`,
+    });
+    setJsonLd('independent-workers-page', {
+      '@type': 'WebPage',
+      name: 'Create a professional profile for independent support work',
+      description: WORKER_PAGE_DESCRIPTION,
+      url: `${window.location.origin}/independent-workers`,
+      inLanguage: 'en-AU',
+      dateModified: WORKER_PAGE_UPDATED,
+      isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin },
+      publisher: { '@type': 'Organization', name: 'SolDirectory', url: `${window.location.origin}/` },
     });
     setJsonLd('independent-workers-faq', {
       '@type': 'FAQPage',
       mainEntity: FAQS.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
     });
     window.scrollTo(0, 0);
-    return () => setJsonLd('independent-workers-faq', null);
+    return () => { setJsonLd('independent-workers-page', null); setJsonLd('independent-workers-faq', null); };
   }, []);
 
   return (
@@ -107,26 +119,31 @@ export default function IndependentWorkers() {
 
         <WorkerExtras />
 
+        {CONTACT && (
+          <div className="iw-wrap">
+            <section className="iw-contact" aria-labelledby="iw-contact-heading">
+              <div className="iw-process-head">
+                <span className="eyebrow"><span className="eyebrow-rule" />Privacy and contact</span>
+                <h2 id="iw-contact-heading" className="iw-h2">{CONTACT.heading}</h2>
+                {CONTACT.paragraphs?.map((p) => <p key={p}>{p}</p>)}
+              </div>
+              {CONTACT.links && (
+                <div className="iw-pills">
+                  {CONTACT.links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         <div className="iw-wrap">
           <section className="iw-faq" aria-labelledby="iw-faq-heading">
             <div className="iw-faq-head">
               <span className="eyebrow"><span className="eyebrow-rule" />Questions</span>
-              <h2 id="iw-faq-heading" className="iw-h2">Independent worker questions</h2>
+              <h2 id="iw-faq-heading" className="iw-h2">Frequently asked questions</h2>
               <p>Not sure whether a profile suits you? Start with the basics here.</p>
             </div>
-            <div className="iw-faq-list">
-              {FAQS.map((item, index) => {
-                const open = openFaq === index;
-                return (
-                  <div className={`iw-faq-item${open ? ' is-open' : ''}`} key={item.question}>
-                    <button type="button" aria-expanded={open} onClick={() => setOpenFaq(open ? null : index)}>
-                      {item.question}<span aria-hidden="true">{open ? '−' : '+'}</span>
-                    </button>
-                    {open && <p>{item.answer}</p>}
-                  </div>
-                );
-              })}
-            </div>
+            <AccordionRows marker="question" label="Independent worker questions" items={FAQS.map((f) => ({ title: f.question, body: f.answer }))} />
           </section>
 
           <section className="iw-cta">
@@ -137,7 +154,7 @@ export default function IndependentWorkers() {
             <button className="btn-gradient btn-lg" onClick={() => navigate('/signup?type=worker')}>Register as an Independent Worker</button>
           </section>
         </div>
-        <RelatedArticles standalone themes={['workers', 'choosing']} heading="Working with an independent worker" />
+        <RelatedArticles standalone themes={['workers', 'choosing']} />
       </main>
       <PublicFooter />
     </>

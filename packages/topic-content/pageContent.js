@@ -55,6 +55,16 @@ export const INDEPENDENT_WORKER_FAQS = [
   },
 ];
 
+/** /independent-workers: one title, description and set of hero points for the page and its crawler HTML. */
+export const WORKER_PAGE_TITLE = 'Independent support workers | SolDirectory';
+export const WORKER_PAGE_DESCRIPTION = 'Create an independent worker profile with services, experience, location and availability so eligible organisations can assess suitable opportunities.';
+export const WORKER_PAGE_UPDATED = '2026-10-13';
+export const WORKER_HERO_CHECKS = [
+  'One profile for your services and availability',
+  'Eligible organisations search and contact you',
+  'No guarantee of work: you choose what to accept',
+];
+
 /** The date /providers guidance last changed (used for dateModified in the page's structured data). */
 export const PROVIDER_PAGE_UPDATED = '2026-10-13';
 
