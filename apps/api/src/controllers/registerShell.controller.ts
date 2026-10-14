@@ -158,7 +158,8 @@ interface Page {
 /** Shared page copy writes links as [label](/path); this turns them into plain anchors (the web app renders the same markup). */
 const inline = (text: string) => esc(text).replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (_m, label: string, href: string) => `<a href="${href}">${label}</a>`);
 
-const li = (href: string, text: string, extra = '') => `<li><a href="${esc(href)}">${esc(text)}</a>${extra ? ` ${esc(extra)}` : ''}</li>`;
+// External links carry the same rel as the visible pages' (noopener noreferrer); internal links need none.
+const li = (href: string, text: string, extra = '') => `<li><a href="${esc(href)}"${/^https?:\/\//i.test(href) ? ' rel="noopener noreferrer"' : ''}>${esc(text)}</a>${extra ? ` ${esc(extra)}` : ''}</li>`;
 
 function breadcrumbLd(site: string, crumbs: { name: string; path: string }[]) {
   return {
