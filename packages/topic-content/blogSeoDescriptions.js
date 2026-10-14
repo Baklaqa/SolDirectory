@@ -7,6 +7,8 @@
  *   node -e "import('@soldirectory/topic-content').then(m=>console.log(m.EDITORIAL_BLOG_POSTS.filter(p=>(p.seoDescription??p.summary).length>158).map(p=>p.slug)))"
  */
 export const BLOG_SEO_DESCRIPTIONS = {
+  'how-to-choose-an-ndis-provider-questions-to-ask':
+    'A practical checklist of 12 questions for comparing NDIS providers, from how a service fits your plan to what happens when something goes wrong.',
   'ndis-budget-changes-october-2026-what-to-check':
     'Some budgets in two NDIS support categories are changing as plans are created, reassessed or renewed. Here is how to check what it means for a plan.',
   'ndis-claims-after-90-days-from-15-october-2026':
