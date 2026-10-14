@@ -362,7 +362,7 @@ export default function BlogPage() {
             <header className="blog-hero-art" style={{ backgroundImage: `url(${postImage(article)})` }}>
               <div className="blog-hero-art-shade">
                 <div className="blog-wrap">
-                  <nav className="blog-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/blog">Updates & insights</Link><span>/</span><span>{article.categories[0]?.name || 'Article'}</span></nav>
+                  <nav className="blog-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/blog">Updates & insights</Link><span>/</span><span aria-current="page">{article.categories[0]?.name || 'Article'}</span></nav>
                   <div className="blog-hero-art-copy">
                     <div className="blog-article-categories">
                       {article.categories.map((category) => <span key={category.id}>{category.name}</span>)}
