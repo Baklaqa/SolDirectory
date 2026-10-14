@@ -143,7 +143,7 @@ export default function IndependentWorkers() {
               <h2 id="iw-faq-heading" className="iw-h2">Frequently asked questions</h2>
               <p>Not sure whether a profile suits you? Start with the basics here.</p>
             </div>
-            <AccordionRows marker="question" label="Independent worker questions" items={FAQS.map((f) => ({ title: f.question, body: f.answer }))} />
+            <AccordionRows marker="none" label="Independent worker questions" items={FAQS.map((f) => ({ title: f.question, body: f.answer }))} />
           </section>
 
           <section className="iw-cta">

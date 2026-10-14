@@ -20,7 +20,8 @@ export default function AccordionRows({
   label,
 }: {
   items: AccordionItem[];
-  marker?: 'number' | 'check' | 'question';
+  /** The small badge before each title: a number, a tick, or none (the default for question lists is none). */
+  marker?: 'number' | 'check' | 'none';
   tone?: 'light' | 'dark';
   defaultOpen?: number | null;
   label?: string;
@@ -35,7 +36,7 @@ export default function AccordionRows({
         const panelId = `${base}-p${index}`;
         const buttonId = `${base}-b${index}`;
         return (
-          <div className={`acc-row${isOpen ? ' is-open' : ''}`} key={item.title} role="listitem">
+          <div className={`acc-row${isOpen ? ' is-open' : ''}${marker === 'none' ? ' acc-row-plain' : ''}`} key={item.title} role="listitem">
             <h3>
               <button
                 type="button"
@@ -44,7 +45,7 @@ export default function AccordionRows({
                 aria-controls={panelId}
                 onClick={() => setOpen(isOpen ? null : index)}
               >
-                <span className="acc-mark" aria-hidden="true">{marker === 'check' ? '✓' : marker === 'question' ? '?' : String(index + 1).padStart(2, '0')}</span>
+                {marker !== 'none' && <span className="acc-mark" aria-hidden="true">{marker === 'check' ? '✓' : String(index + 1).padStart(2, '0')}</span>}
                 <span className="acc-title">{item.title}</span>
                 <span className="acc-chevron" aria-hidden="true" />
               </button>

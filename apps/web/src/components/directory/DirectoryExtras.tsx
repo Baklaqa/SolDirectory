@@ -143,7 +143,7 @@ export default function DirectoryExtras({ onChooseService }: { onChooseService: 
       <section className="dx-section" aria-labelledby="dx-faq">
         <span className="eyebrow"><span className="eyebrow-rule" />Questions people ask</span>
         <h2 id="dx-faq" className="dx-h2">Frequently asked questions</h2>
-        <AccordionRows marker="question" label="Frequently asked questions" items={FAQS.map((f) => ({ title: f.q, body: f.a }))} />
+        <AccordionRows marker="none" label="Frequently asked questions" items={FAQS.map((f) => ({ title: f.q, body: f.a }))} />
       </section>
 
       <section className="dx-section" aria-labelledby="dx-states">

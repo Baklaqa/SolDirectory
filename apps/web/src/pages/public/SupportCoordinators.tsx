@@ -125,7 +125,7 @@ export default function SupportCoordinators() {
         </Row>
 
         <Row heading={P.faqsHeading} eyebrow="Questions people ask">
-          <AccordionRows marker="question" label={P.faqsHeading} items={P.faqs.map((f) => ({ title: f.question, body: f.answer }))} />
+          <AccordionRows marker="none" label={P.faqsHeading} items={P.faqs.map((f) => ({ title: f.question, body: f.answer }))} />
         </Row>
 
         <Row heading={P.officialHeading}>

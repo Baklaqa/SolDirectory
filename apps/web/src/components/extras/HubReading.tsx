@@ -88,7 +88,7 @@ export default function HubReading({ path, eyebrow = 'About this page' }: { path
             <h2 id={`${id}-faq`}>Frequently asked questions</h2>
           </div>
           <div className="hr-body">
-            <AccordionRows marker="question" label="Frequently asked questions" items={faqs.map((f) => ({ title: f.question, body: f.answer }))} />
+            <AccordionRows marker="none" label="Frequently asked questions" items={faqs.map((f) => ({ title: f.question, body: f.answer }))} />
           </div>
         </section>
       )}
