@@ -111,8 +111,8 @@ export const COORDINATOR_PAGE = {
 
   officialHeading: 'Official checks and guidance',
   official: [
-    { label: 'NDIS Commission provider registers', href: 'https://www.ndiscommission.gov.au/providers/provider-registers' },
-    { label: 'NDIS worker screening', href: 'https://www.ndiscommission.gov.au/workers/worker-screening' },
+    { label: 'NDIS Commission provider registers', href: 'https://www.ndiscommission.gov.au/provider-registration/find-registered-provider' },
+    { label: 'NDIS worker screening', href: 'https://www.ndiscommission.gov.au/workforce/worker-screening' },
     { label: 'NDIS guidance on working with providers', href: 'https://www.ndis.gov.au/participants/working-providers' },
     { label: 'My Aged Care provider search', href: 'https://www.myagedcare.gov.au/find-a-provider' },
   ],

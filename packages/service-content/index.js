@@ -1,5 +1,5 @@
-const NDIS_MAIN = { label: 'NDIS supports and services', href: 'https://www.ndis.gov.au/participants/using-your-plan/managing-your-plan/supports-funded-ndis' };
-const NDIS_COMMISSION = { label: 'NDIS Quality and Safeguards Commission', href: 'https://www.ndiscommission.gov.au/participants' };
+const NDIS_MAIN = { label: 'NDIS supports and services', href: 'https://www.ndis.gov.au/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports' };
+const NDIS_COMMISSION = { label: 'NDIS Quality and Safeguards Commission', href: 'https://www.ndiscommission.gov.au/' };
 const MY_AGED_CARE = { label: 'My Aged Care help at home', href: 'https://www.myagedcare.gov.au/help-at-home' };
 
 export const SERVICE_EDITORIAL = {
@@ -321,7 +321,7 @@ export const SERVICE_EDITORIAL = {
       'Review statements regularly and question duplicate, unfamiliar or incorrectly categorised claims promptly.',
       'Check privacy, cyber-security, complaints, business-continuity and record-transfer processes.'
     ],
-    sources: [{ label: 'NDIS plan management', href: 'https://www.ndis.gov.au/participants/creating-your-plan/ways-manage-your-funding/plan-management' }, { label: 'NDIS Pricing Arrangements and Price Limits', href: 'https://www.ndis.gov.au/providers/pricing-arrangements' }, NDIS_COMMISSION]
+    sources: [{ label: 'NDIS plan management', href: 'https://www.ndis.gov.au/participants/creating-your-plan/ways-manage-your-funding/plan-management' }, { label: 'NDIS Pricing Arrangements and Price Limits', href: 'https://www.ndis.gov.au/providers/pricing-and-payments/pricing/pricing-arrangements' }, NDIS_COMMISSION]
   }
 };
 

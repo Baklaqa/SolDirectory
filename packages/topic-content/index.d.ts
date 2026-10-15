@@ -6,13 +6,15 @@ export interface Topic {
 
 export interface ShellEditorial {
   overview: string;
+  /** Funding topics only: the topic's own short paragraphs and key points. */
+  summary?: string[];
+  keyPoints?: string[];
   checks: string[];
   faq: { question: string; answer: string }[];
   steps?: string[];
   records?: string[];
   providerQuestions?: string[];
   pitfalls?: string[];
-  deepDive?: string[];
   reviewChecklist?: string[];
   sources?: { label: string; href: string }[];
 }
@@ -163,6 +165,34 @@ export interface ConditionContentItem { slug: string; name: string; categoryGrou
 export interface ConditionContentGroup { title: string; note?: string; items: ConditionContentItem[] }
 /** General information for each /condition/:slug page, in display groups. */
 export const CONDITION_CONTENT_GROUPS: ConditionContentGroup[];
+export interface FundingTopicContent {
+  slug: string;
+  name: string;
+  categoryGroup: string;
+  summary: string[];
+  keyPoints: string[];
+  faq: { question: string; answer: string };
+  fundingFilter?: 'NDIA-managed' | 'Plan-managed' | 'Self-managed';
+}
+export interface FundingContentGroup {
+  title: string;
+  items: FundingTopicContent[];
+}
+/** Written content for the 25 funding topics, in the order the page groups them. */
+export const FUNDING_CONTENT_GROUPS: FundingContentGroup[];
+export function fundingTopicContent(slug: string): FundingTopicContent | undefined;
+export function fundingFaqs(topic: Topic): { question: string; answer: string }[];
+export function conditionFaqs(name: string, relatedCategories?: string[]): { question: string; answer: string }[];
+export interface LanguageSpecifics {
+  heading: string;
+  about: string[];
+  stepsHeading: string;
+  steps: string[];
+  forFamilies: string;
+  sources: { label: string; href: string }[];
+}
+/** What is specific to the language and access topics that have no register data of their own (keyed by topic slug). */
+export const LANGUAGE_SPECIFICS: Record<string, LanguageSpecifics>;
 export const LINK_TERMS: readonly { re: RegExp; slug: string; scopes: readonly string[] }[];
 export const MAX_LINKS_PER_ARTICLE: number;
 export interface LinkState { used: Set<string>; count: number }

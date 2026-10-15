@@ -52,7 +52,7 @@ async function loadTs(relPath) {
 }
 
 const {
-  GUIDE_DOCS, fundingShellEditorial, EDITORIAL_BLOG_POSTS, GLOSSARY, EDITORIAL_STANDARDS,
+  GUIDE_DOCS, fundingShellEditorial, FUNDING_SEO_DESCRIPTIONS, EDITORIAL_BLOG_POSTS, GLOSSARY, EDITORIAL_STANDARDS,
   INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS,
 } = await import(pathToFileURL(path.resolve(webRoot, '../../packages/topic-content/index.js')).href);
 const { FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT } = await loadTs('src/data/fundingContent.ts');
@@ -275,21 +275,19 @@ for (const f of FUNDING_CONTENT) {
     path: `/funding/${f.slug}`,
     canonical: `/funding/${f.slug}/`, // the form the menu and FundingTopicPage's own canonical use
     title: `${f.name} | Funding | SolDirectory`,
-    description: trim(f.summary, 155),
+    description: trim(FUNDING_SEO_DESCRIPTIONS[f.slug] ?? f.summary[0], 155),
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Funding', path: '/funding' }, { name: f.name, path: `/funding/${f.slug}` }],
-    body: (c) => `${c}<h1>${esc(f.name)}</h1><p>${esc(f.summary)}</p>` +
-      '<p>This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over time — always confirm current detail with the relevant official body before relying on it.</p>' +
-      `<h2>How to understand ${esc(f.name)}</h2><p>${esc(editorial.overview)}</p>` +
-      `<h2>What to confirm before arranging support</h2>${ul(editorial.checks.map(esc))}` +
+    body: (c) => `${c}<h1>${esc(f.name)}</h1>` +
+      `<h2>About ${esc(f.name)}</h2>${f.summary.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
+      `<h3>At a glance</h3>${ul(f.keyPoints.map(esc))}` +
+      '<p>This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over time. Always confirm current detail with the relevant official body before relying on it.</p>' +
       `<h2>How to prepare before arranging support</h2>${ul((editorial.steps ?? []).map(esc))}` +
-      `<h2>What this page can and cannot confirm</h2><p>This guide explains the usual questions, records and safeguards connected with ${esc(f.name.toLowerCase())}, but it cannot confirm an individual approval, available budget, current provider capacity or payment outcome. Check the current arrangement with the responsible funding body and ask the provider to put its role, complete fees, service scope and approval dependencies in writing before support begins.</p>` +
-      `<h2>Information and records to have ready</h2><p>Organised records help a funding body or provider answer the right question, prepare an accurate quote and resolve billing issues before they interrupt support.</p>${ul((editorial.records ?? []).map(esc))}` +
-      `<h2>Questions to ask providers</h2>${ul((editorial.providerQuestions ?? []).map(esc))}` +
+      `<h2>Information and records to have ready</h2><p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>${ul((editorial.records ?? []).map(esc))}` +
+      `<h2>Questions to ask a provider</h2><p>A provider should be able to explain its role, fees and billing process without implying that a directory listing guarantees funding approval.</p>${ul((editorial.providerQuestions ?? []).map(esc))}` +
       `<h2>Common mistakes to avoid</h2>${ul((editorial.pitfalls ?? []).map(esc))}` +
-      `<h2>How to make and review the funding arrangement</h2>${(editorial.deepDive ?? []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
-      `<h2>Review checklist</h2><p>Recheck the arrangement whenever services, circumstances, rates or program rules change. Confirm that older approvals still cover the service, provider and dates involved.</p>${ul((editorial.reviewChecklist ?? []).map(esc))}` +
+      `<h2>Reviewing the arrangement</h2><p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>${ul((editorial.reviewChecklist ?? []).map(esc))}` +
       `<h2>Frequently asked questions</h2>${editorial.faq.map((item) => `<h3>${esc(item.question)}</h3><p>${esc(item.answer)}</p>`).join('')}` +
-      `<h2>Official sources</h2>${ul((editorial.sources ?? []).map((source) => `<a href="${esc(source.href)}" rel="noopener">${esc(source.label)}</a>`))}` +
+      `<h2>Official sources</h2>${ul((editorial.sources ?? []).map((source) => `<a href="${esc(source.href)}" rel="noopener noreferrer">${esc(source.label)}</a>`))}` +
       (siblings.length ? `<h2>Other topics in ${esc(f.categoryGroup)}</h2>${ul(siblings.map((s) => a(`/funding/${s.slug}/`, s.name)))}` : '') +
       `<p>${a('/find-a-provider', 'Find a provider')} &middot; ${a('/funding', 'All funding topics')}</p>`,
   });

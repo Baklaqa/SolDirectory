@@ -7,7 +7,6 @@ export interface FundingEditorial {
   records: string[];
   providerQuestions: string[];
   pitfalls: string[];
-  faqs: { question: string; answer: string }[];
   sources: { label: string; href: string }[];
 }
 
@@ -18,7 +17,6 @@ interface FundingGroupGuide {
   records: string[];
   providerQuestions: string[];
   pitfalls: string[];
-  authority: string;
   sources: { label: string; href: string }[];
 }
 
@@ -41,10 +39,9 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
       'What happens if the NDIA rejects a claim or the participant disputes an invoice?',
     ],
     pitfalls: ['Assuming a funded category automatically covers every service', 'Using an outdated price limit or support-item description', 'Starting without written rates and cancellation terms', 'Waiting until the plan is nearly exhausted before reviewing spending'],
-    authority: 'the NDIA',
     sources: [
-      { label: 'NDIS: Using your plan', href: 'https://www.ndis.gov.au/participants/using-your-plan' },
-      { label: 'NDIS pricing arrangements', href: 'https://www.ndis.gov.au/providers/pricing-arrangements' },
+      { label: 'NDIS: Using your plan', href: 'https://www.ndis.gov.au/participants/using-your-funding/understanding-your-ndis-funding/guide-using-your-funding' },
+      { label: 'NDIS pricing arrangements', href: 'https://www.ndis.gov.au/providers/pricing-and-payments/pricing/pricing-arrangements' },
     ],
   },
   'Aged Care': {
@@ -65,10 +62,9 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
       'Which costs are government funded and which remain the person’s responsibility?',
     ],
     pitfalls: ['Relying on an old program name or superseded fee description', 'Comparing headline prices without checking all recurring charges', 'Assuming approval means a provider has immediate capacity', 'Signing before understanding change, suspension and exit terms'],
-    authority: 'My Aged Care',
     sources: [
       { label: 'My Aged Care', href: 'https://www.myagedcare.gov.au/' },
-      { label: 'Aged care costs and fees', href: 'https://www.myagedcare.gov.au/how-much-will-i-pay' },
+      { label: 'Aged care costs and fees', href: 'https://www.myagedcare.gov.au/how-do-aged-care-costs-work' },
     ],
   },
   Veterans: {
@@ -89,9 +85,8 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
       'What happens if DVA changes or declines the approval?',
     ],
     pitfalls: ['Assuming every Gold or White Card covers the same services', 'Booking before referral or approval requirements are met', 'Using a provider that cannot bill the relevant DVA program', 'Treating general disability registration as proof of DVA eligibility'],
-    authority: 'the Department of Veterans’ Affairs',
     sources: [
-      { label: 'DVA health and support services', href: 'https://www.dva.gov.au/get-support/health-support' },
+      { label: 'DVA health and support services', href: 'https://www.dva.gov.au/what-we-help-with/health-support' },
       { label: 'DVA contact information', href: 'https://www.dva.gov.au/about-us/contact-us' },
     ],
   },
@@ -113,9 +108,8 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
       'What happens if the claim is delayed, reduced or declined?',
     ],
     pitfalls: ['Assuming a service is covered because a similar service was covered before', 'Confusing a rebate with full payment', 'Starting before written approval where prior approval is required', 'Failing to check annual limits, waiting periods or provider eligibility'],
-    authority: 'the responsible insurer, scheme or program',
     sources: [
-      { label: 'Services Australia health care and payments', href: 'https://www.servicesaustralia.gov.au/health-care' },
+      { label: 'Services Australia health care and payments', href: 'https://www.servicesaustralia.gov.au/medicare' },
       { label: 'Private Health Insurance Ombudsman', href: 'https://www.ombudsman.gov.au/complaints/private-health-insurance-complaints' },
     ],
   },
@@ -137,40 +131,13 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
       'How can I access my records, correct an error or move to another provider?',
     ],
     pitfalls: ['Giving broad authority without clear consent limits', 'Confusing administration with personal financial or legal advice', 'Ignoring conflicts where one organisation controls several services', 'Relying on verbal advice without checking current official guidance'],
-    authority: 'the relevant funding body',
     sources: [
-      { label: 'NDIS: Managing your plan', href: 'https://www.ndis.gov.au/participants/using-your-plan/managing-your-plan' },
-      { label: 'NDIS Commission participant resources', href: 'https://www.ndiscommission.gov.au/participants' },
+      { label: 'NDIS: Managing your plan', href: 'https://www.ndis.gov.au/participants/using-your-funding/plan-implementation-meeting/guide-your-management-options' },
+      { label: 'NDIS Commission participant resources', href: 'https://www.ndiscommission.gov.au/' },
     ],
   },
 };
 
 export function fundingEditorialFor(topic: FundingContent): FundingEditorial {
-  const guide = GROUP_GUIDES[topic.categoryGroup];
-  const lower = topic.name.toLowerCase();
-  return {
-    ...guide,
-    faqs: [
-      {
-        question: `Who can confirm whether ${lower} applies to me?`,
-        answer: `Eligibility and individual coverage should be confirmed with ${guide.authority}. A provider can explain its services and billing, but it cannot make a binding funding decision on behalf of the responsible body.`,
-      },
-      {
-        question: `Does a provider listing prove it accepts ${lower}?`,
-        answer: 'No. A directory or public-register listing describes a provider and the supports it lists. Confirm the exact funding arrangement, approval and current availability directly before booking.',
-      },
-      {
-        question: 'What costs should I confirm before services begin?',
-        answer: 'Ask for the service rate, travel, cancellations, reports, administration, equipment or consumables, and any gap or personal contribution in writing. Check which costs the funding body will actually pay.',
-      },
-      {
-        question: 'What if the rules or my circumstances change?',
-        answer: `Recheck the current guidance with ${guide.authority}, tell relevant providers promptly and update written agreements or approvals before relying on the changed arrangement.`,
-      },
-      {
-        question: 'Is this page personal financial or funding advice?',
-        answer: 'No. It is general information for preparing questions and comparing options. Use current official guidance and seek qualified advice where a decision has legal, financial or clinical consequences.',
-      },
-    ],
-  };
+  return GROUP_GUIDES[topic.categoryGroup];
 }

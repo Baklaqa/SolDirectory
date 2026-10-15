@@ -7,8 +7,8 @@ export interface ConditionEditorial {
   sources: { label: string; href: string }[];
 }
 
-const NDIS_ACCESS = { label: 'NDIS access and eligibility', href: 'https://www.ndis.gov.au/applying-access-ndis' };
-const NDIS_SUPPORTS = { label: 'NDIS supports and services', href: 'https://www.ndis.gov.au/participants/using-your-plan/managing-your-plan/supports-funded-ndis' };
+const NDIS_ACCESS = { label: 'NDIS access and eligibility', href: 'https://www.ndis.gov.au/applying/application-process/how-apply' };
+const NDIS_SUPPORTS = { label: 'NDIS supports and services', href: 'https://www.ndis.gov.au/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports' };
 const MY_AGED_CARE = { label: 'My Aged Care assessments', href: 'https://www.myagedcare.gov.au/assessment' };
 const HEALTHDIRECT = { label: 'Healthdirect health information', href: 'https://www.healthdirect.gov.au/' };
 

@@ -1,7 +1,7 @@
 import { bannerFor, hubHeaderStyle } from '../../data/bannerImages';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { LANGUAGE_TOPICS, languageShellEditorial, type Topic } from '@soldirectory/topic-content';
+import { LANGUAGE_SPECIFICS, LANGUAGE_TOPICS, languageShellEditorial, type Topic } from '@soldirectory/topic-content';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import { ProviderCardItem } from './ProviderListingPage';
 import Pagination from '../../components/ui/Pagination';
@@ -25,15 +25,17 @@ const topicFor = (slug: string) => LANGUAGE_TOPICS.find((topic) => topic.slug ==
 const groups = [...new Set(LANGUAGE_TOPICS.map((topic) => topic.categoryGroup))];
 
 const sources = [
-  { label: 'NDIS: language interpreting services', href: 'https://www.ndis.gov.au/contact/ndis-translations-and-interpreting' },
+  { label: 'NDIS: information in other languages', href: 'https://www.ndis.gov.au/languages' },
   { label: 'TIS National: interpreting services', href: 'https://www.tisnational.gov.au/' },
-  { label: 'NAATI: find a credentialed practitioner', href: 'https://www.naati.com.au/online-directory/' },
-  { label: 'NDIS Quality and Safeguards Commission', href: 'https://www.ndiscommission.gov.au/participants' },
+  { label: 'NAATI: find a credentialed practitioner', href: 'https://directory.naati.com.au/' },
+  { label: 'NDIS Quality and Safeguards Commission', href: 'https://www.ndiscommission.gov.au/' },
 ];
 
 export default function LanguageTopicPage() {
   const { slug = '' } = useParams();
   const topic = topicFor(slug.toLowerCase());
+  // Written, sourced content for the topics with no register data of their own (packages/topic-content/languageSpecifics.js).
+  const specifics = topic ? LANGUAGE_SPECIFICS[topic.slug] : undefined;
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get('page')) || 1);
   const [items, setItems] = useState<PublicProviderCard[]>([]);
@@ -66,10 +68,12 @@ export default function LanguageTopicPage() {
     const canonical = `${window.location.origin}/language/${topic.slug}/`;
     const editorial = languageShellEditorial(topic);
     applySeoTags({
-      title: seoTitle(`${topic.name} language support providers`),
-      description: `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`,
+      title: seoTitle(specifics ? specifics.heading : `${topic.name} language support providers`),
+      description: specifics
+        ? specifics.about[0].slice(0, 155).replace(/\s+\S*$/, '').replace(/[,;:\s]+$/, '') + (specifics.about[0].length > 155 ? '…' : '')
+        : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`,
       canonicalUrl: page > 1 ? `${canonical}?page=${page}` : canonical,
-      noindex: !loading && !error && total === 0 && registerTotal === 0,
+      noindex: !loading && !error && total === 0 && registerTotal === 0 && !specifics,
     });
     setJsonLd('language-page', { '@type': 'WebPage', name: `${topic.name} speaking support providers`, url: canonical, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin } });
     setJsonLd('language-breadcrumbs', { '@type': 'BreadcrumbList', itemListElement: [
@@ -79,7 +83,7 @@ export default function LanguageTopicPage() {
     ] });
     setJsonLd('language-faq', { '@type': 'FAQPage', mainEntity: editorial.faq.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) });
     return () => { setJsonLd('language-page', null); setJsonLd('language-breadcrumbs', null); setJsonLd('language-faq', null); };
-  }, [topic, page, loading, error, total, registerTotal]);
+  }, [topic, page, loading, error, total, registerTotal, specifics]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
@@ -89,7 +93,9 @@ export default function LanguageTopicPage() {
   const siblings = LANGUAGE_TOPICS.filter((item) => item.categoryGroup === topic.categoryGroup && item.slug !== topic.slug);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const toc: TopicTocItem[] = [
-    { id: 'about', label: 'Overview' }, { id: 'providers', label: 'Providers' },
+    { id: 'about', label: 'Overview' },
+    ...(specifics ? [{ id: 'specifics', label: 'What to know' }] : []),
+    { id: 'providers', label: 'Providers' },
     ...((registerTotal ?? 0) > 0 ? [{ id: 'register-providers', label: 'On the register' }] : []),
     { id: 'communication', label: 'Communication planning' }, { id: 'interpreters', label: 'Interpreters' },
     ...(interpretingTotal > 0 ? [{ id: 'interpreting-providers', label: 'Interpreting providers' }] : []),
@@ -104,8 +110,8 @@ export default function LanguageTopicPage() {
       relatedHeading="Reading before you choose"
       crumbs={[{ label: 'Home', to: '/' }, { label: 'Language', to: '/language' }, { label: topic.name }]}
       eyebrow={topic.categoryGroup}
-      title={`${topic.name} speaking support providers`}
-      description={heroExcerpt(editorial.overview)}
+      title={specifics ? specifics.heading : `${topic.name} speaking support providers`}
+      description={heroExcerpt(specifics ? specifics.about[0] : editorial.overview)}
       image={bannerFor({ text: `${topic.name} ${topic.categoryGroup} language`, section: 'conditions' })}
       toc={toc}
     >
@@ -114,6 +120,20 @@ export default function LanguageTopicPage() {
         <p>{editorial.overview}</p>
         <p className="wp-cpt-table-note">Providers supply their own language information. SolDirectory does not test fluency, interpreting credentials or cultural competence.</p>
       </section>
+
+      {specifics && (
+        <section id="specifics" className="wp-cpt-section">
+          <h2>{specifics.heading}</h2>
+          {specifics.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          <h3>{specifics.stepsHeading}</h3>
+          <ul className="wp-cpt-plain-list">{specifics.steps.map((step) => <li key={step}>{step}</li>)}</ul>
+          <p>{specifics.forFamilies}</p>
+          <h3>Official information</h3>
+          <ul className="wp-cpt-plain-list">
+            {specifics.sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}
+          </ul>
+        </section>
+      )}
 
       <section id="providers" className="wp-cpt-section">
         <h2>Providers that list {topic.name}</h2>

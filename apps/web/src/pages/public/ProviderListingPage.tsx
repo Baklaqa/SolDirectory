@@ -11,6 +11,7 @@ import { listProvidersBy, listPublicAreas, listPublicConditions, type CountRow, 
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { conditionBySlug, CONDITION_CATEGORY_GROUPS } from '../../data/conditionContent';
+import { conditionFaqs } from '@soldirectory/topic-content';
 import { conditionEditorialFor } from '../../data/conditionEditorial';
 import './Home.css';
 import './Directory.css';
@@ -22,32 +23,6 @@ const PAGE_SIZE = 12;
 /** Mirrors MIN_INDEXABLE_PROVIDERS in the API's providersPublic.controller.ts. */
 const MIN_INDEXABLE = 3;
 const fmt = (n: number) => n.toLocaleString('en-AU');
-
-const conditionFaqs = (name: string) => {
-  const lower = name.toLowerCase();
-  return [
-    {
-      question: `Does SolDirectory verify a provider’s experience with ${lower}?`,
-      answer: 'No. Providers write their own profiles, including which conditions they have experience supporting. Confirm the details that matter to you directly with the provider.',
-    },
-    {
-      question: 'No providers are listed here yet — what can I do?',
-      answer: 'Submit a free enquiry and we’ll notify suitable providers in your area as they join and confirm their capacity — there’s no cost and no obligation.',
-    },
-    {
-      question: 'Is this page medical advice?',
-      answer: 'No. It’s general information to help with browsing providers. For anything about diagnosis, treatment or a specific person’s needs, speak with a GP or the relevant specialist.',
-    },
-    {
-      question: `Does a diagnosis of ${lower} automatically qualify someone for funding?`,
-      answer: 'No. Funding bodies apply their own current eligibility rules and usually consider functional impact, the support requested and available evidence. Confirm requirements with the responsible program.',
-    },
-    {
-      question: 'What should I ask before choosing a provider?',
-      answer: `Ask about direct experience with ${lower}, the allocated worker’s training, communication and safety planning, current availability, fees, funding, service agreements and how support will be reviewed.`,
-    },
-  ];
-};
 
 type Mode = 'area' | 'condition';
 
@@ -167,7 +142,7 @@ export default function ProviderListingPage({ mode }: { mode: Mode }) {
         { '@type': 'ListItem', position: 3, name: row.name, item: `${window.location.origin}${base}` },
       ],
     });
-    const faqs = conditionMeta ? conditionFaqs(conditionMeta.name) : [];
+    const faqs = conditionMeta ? conditionFaqs(conditionMeta.name, conditionMeta.relatedCategories) : [];
     setJsonLd('condition-page', conditionMeta ? {
       '@type': 'WebPage',
       name: heading,
@@ -327,7 +302,7 @@ function ConditionContentSections({ meta }: { meta: NonNullable<ReturnType<typeo
   const group = CONDITION_CATEGORY_GROUPS.find((g) => g.title === meta.categoryGroup);
   const siblings = (group?.items ?? []).filter((c) => c.slug !== meta.slug);
   const lower = meta.name.toLowerCase();
-  const faqs = conditionFaqs(meta.name);
+  const faqs = conditionFaqs(meta.name, meta.relatedCategories);
   const editorial = conditionEditorialFor(meta);
 
   return (

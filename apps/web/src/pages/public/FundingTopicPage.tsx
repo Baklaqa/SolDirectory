@@ -13,7 +13,7 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { fundingBySlug, FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT, type FundingContent } from '../../data/fundingContent';
 import { fundingEditorialFor } from '../../data/fundingEditorial';
-import { FUNDING_SEO_DESCRIPTIONS, fundingShellEditorial } from '@soldirectory/topic-content';
+import { FUNDING_SEO_DESCRIPTIONS, fundingFaqs, fundingShellEditorial } from '@soldirectory/topic-content';
 import './Home.css';
 import './Directory.css';
 import './register/register.css';
@@ -67,7 +67,7 @@ export default function FundingTopicPage() {
     applySeoTags({
       title: `${meta.name} | Funding | SolDirectory`,
       // The same description the crawler HTML carries (packages/topic-content/fundingSeoDescriptions.js).
-      description: FUNDING_SEO_DESCRIPTIONS[meta.slug] ?? `${meta.summary.slice(0, 155).replace(/\s+\S*$/, '')}…`,
+      description: FUNDING_SEO_DESCRIPTIONS[meta.slug] ?? `${meta.summary[0].slice(0, 155).replace(/\s+\S*$/, '')}…`,
       canonicalUrl: `${window.location.origin}/funding/${meta.slug}/`,
     });
     setJsonLd('funding-breadcrumbs', {
@@ -78,17 +78,17 @@ export default function FundingTopicPage() {
         { '@type': 'ListItem', position: 3, name: meta.name, item: `${window.location.origin}/funding/${meta.slug}/` },
       ],
     });
-    const editorial = fundingEditorialFor(meta);
+    const faqs = fundingFaqs(meta);
     setJsonLd('funding-page', {
       '@type': 'WebPage',
       name: meta.name,
-      description: meta.summary,
+      description: meta.summary[0],
       url: `${window.location.origin}/funding/${meta.slug}/`,
       isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin },
     });
     setJsonLd('funding-faq', {
       '@type': 'FAQPage',
-      mainEntity: editorial.faqs.map((faq) => ({
+      mainEntity: faqs.map((faq) => ({
         '@type': 'Question',
         name: faq.question,
         acceptedAnswer: { '@type': 'Answer', text: faq.answer },
@@ -125,12 +125,12 @@ export default function FundingTopicPage() {
   const hasMembers = !!meta.fundingFilter && !loading && items.length > 0;
   const editorial = fundingEditorialFor(meta);
   const longform = fundingShellEditorial(meta);
+  const faqs = fundingFaqs(meta);
 
   const toc: TopicTocItem[] = [{ id: 'overview', label: 'Overview' }];
   if (hasMembers) toc.push({ id: 'providers', label: 'Providers on SolDirectory' });
   if (link) toc.push({ id: 'register-providers', label: 'Providers on the register' });
   toc.push({ id: 'access', label: 'How to access or use it' });
-  toc.push({ id: 'scope', label: 'What to verify' });
   toc.push({ id: 'records', label: 'What to have ready' });
   toc.push({ id: 'provider-questions', label: 'Questions for providers' });
   toc.push({ id: 'pitfalls', label: 'Common mistakes' });
@@ -147,13 +147,17 @@ export default function FundingTopicPage() {
       crumbs={[{ label: 'Home', to: '/' }, { label: 'Funding', to: '/funding' }, { label: meta.name }]}
       eyebrow={meta.categoryGroup}
       title={meta.name}
-      description={heroExcerpt(meta.summary)}
+      description={heroExcerpt(meta.summary[0])}
       image={bannerFor({ text: `${meta.name} ${meta.categoryGroup}`, section: 'funding' })}
       toc={toc}
     >
       <section id="overview" className="wp-cpt-short" ref={topRef}>
         <h2>About {meta.name}</h2>
-        <p>{meta.summary}</p>
+        {meta.summary.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        <h3>At a glance</h3>
+        <ul className="wp-cpt-plain-list">
+          {meta.keyPoints.map((point) => <li key={point}>{point}</li>)}
+        </ul>
         <p className="wp-cpt-table-note">
           This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over
           time — always confirm current detail with the relevant official body before relying on it.
@@ -203,11 +207,6 @@ export default function FundingTopicPage() {
         </ol>
       </section>
 
-      <section id="scope" className="wp-cpt-section">
-        <h2>What this page can and cannot confirm</h2>
-        <p>This guide explains the usual questions, records and safeguards connected with {meta.name.toLowerCase()}, but it cannot confirm an individual approval, available budget, current provider capacity or payment outcome. Check the current arrangement with the responsible funding body and ask the provider to put its role, complete fees, service scope and approval dependencies in writing before support begins.</p>
-      </section>
-
       <section id="records" className="wp-cpt-section">
         <h2>Information and records to have ready</h2>
         <p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>
@@ -232,10 +231,8 @@ export default function FundingTopicPage() {
       </section>
 
       <section id="funding-arrangement" className="wp-cpt-section">
-        <h2>How to make and review the funding arrangement</h2>
-        {(longform.deepDive ?? []).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        <h3>Review checklist</h3>
-        <p>Recheck the arrangement at regular intervals and whenever services, circumstances, rates or program rules change. Record who confirmed each important decision and the date it was made. Before relying on an older approval or agreement, confirm that it remains current and still covers the service, provider and dates involved.</p>
+        <h2>Reviewing the arrangement</h2>
+        <p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>
         <ul className="wp-cpt-plain-list">
           {(longform.reviewChecklist ?? []).map((item) => <li key={item}>{item}</li>)}
         </ul>
@@ -244,7 +241,7 @@ export default function FundingTopicPage() {
       <section id="faq" className="wp-cpt-section">
         <h2>Frequently asked questions</h2>
         <div className="wp-cpt-faq-list">
-          {editorial.faqs.map((faq) => (
+          {faqs.map((faq) => (
             <details className="wp-cpt-faq-item" key={faq.question}>
               <summary>{faq.question}</summary>
               <p>{faq.answer}</p>

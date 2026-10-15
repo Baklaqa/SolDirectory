@@ -68,7 +68,7 @@ export const GUIDE_DOCS = {
       { label: 'Read the plan management basics guide', href: '/guides/plan-management-basics' },
       { label: 'Browse NDIS funding topics', href: '/funding' },
     ],
-    officialLink: { label: 'NDIS Pricing Arrangements and Price Limits', href: 'https://www.ndis.gov.au/providers/pricing-arrangements' },
+    officialLink: { label: 'NDIS Pricing Arrangements and Price Limits', href: 'https://www.ndis.gov.au/providers/pricing-and-payments/pricing/pricing-arrangements' },
   },
   'choosing-a-provider': {
     slug: 'choosing-a-provider',
@@ -138,7 +138,7 @@ export const GUIDE_DOCS = {
       { label: 'Check aged care public-register listings', href: '/aged-care-providers' },
       { label: 'Explore support by location', href: '/locations' },
     ],
-    officialLink: { label: 'NDIS Commission complaints information', href: 'https://www.ndiscommission.gov.au/about/complaints' },
+    officialLink: { label: 'NDIS Commission complaints information', href: 'https://www.ndiscommission.gov.au/complaints' },
   },
   'plan-management-basics': {
     slug: 'plan-management-basics',
@@ -205,7 +205,7 @@ export const GUIDE_DOCS = {
       { label: 'Compare NDIS providers', href: '/find-a-provider' },
       { label: 'Check current pricing concepts', href: '/guides/ndis-price-guide' },
     ],
-    officialLink: { label: 'NDIS: managing your plan', href: 'https://www.ndis.gov.au/participants/using-your-plan/managing-your-plan' },
+    officialLink: { label: 'NDIS: managing your plan', href: 'https://www.ndis.gov.au/participants/using-your-funding/plan-implementation-meeting/guide-your-management-options' },
   },
   'aged-care-support': {
     slug: 'aged-care-support',

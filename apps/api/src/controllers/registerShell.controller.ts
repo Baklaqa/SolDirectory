@@ -13,7 +13,7 @@ import { workersForService, workersInArea } from './workersPublic.controller.js'
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_SPECIFICS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -728,9 +728,10 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
       `<ul>${conditionInfo.relatedCategories.map((c) => li(`/find-a-provider?service=${encodeURIComponent(c)}`, c)).join('')}</ul>`
     : '';
   const editorialBody = topic && editorial
-    ? supportsHtml + topicBody(topic, editorial, 'Planning and checking support', 'Questions to ask before choosing support') +
-      `<h2>Planning support around the person</h2>${(editorial.deepDive ?? []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
-      `<h2>Review checklist</h2><ul>${(editorial.reviewChecklist ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
+    ? supportsHtml +
+      `<h2>Planning and checking support</h2><p>${esc(editorial.overview)}</p>` +
+      `<h2>Questions to ask before choosing support</h2><ol>${editorial.checks.map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
+      `<h2>Frequently asked questions</h2>${editorial.faq.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join('')}` +
       `<h2>Official sources and further support</h2><ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>` +
       `<h2>Other conditions in ${esc(topic.categoryGroup)}</h2><ul>${siblings.map((item) => li(`/condition/${item.slug}/`, item.name)).join('')}</ul>`
     : '';
@@ -801,19 +802,19 @@ function fundingTopicPage(site: string, slug: string): Page {
   const base = `/funding/${topic.slug}`;
   const editorial = fundingShellEditorial(topic);
   const siblings = FUNDING_TOPICS.filter((item) => item.categoryGroup === topic.categoryGroup && item.slug !== topic.slug);
-  const fundingDetails =
-    `<h2>How to prepare before arranging support</h2><p>Start with the current approval, plan, policy or program guidance rather than relying on a provider’s general description. The same support may be paid differently depending on management, registration, referral, evidence and prior-approval requirements. Confirm who can make a binding decision and keep that decision with the service records.</p>` +
-    `<ol>${(editorial.steps ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
-    `<h2>What this page can and cannot confirm</h2><p>This guide explains the usual questions, records and safeguards connected with ${esc(topic.name.toLowerCase())}, but it cannot confirm an individual approval, available budget, current provider capacity or payment outcome. Check the current arrangement with the responsible funding body and ask the provider to put its role, complete fees, service scope and approval dependencies in writing before support begins.</p>` +
-    `<h2>Information and records to have ready</h2><p>Organised records help a funding body or provider answer the right question, prepare an accurate quote and resolve billing issues before they interrupt support. Share sensitive information only with consent and only where it is needed.</p>` +
-    `<ul>${(editorial.records ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-    `<h2>Questions to ask providers</h2><p>A provider should explain its role, eligibility or approval dependencies, complete fees and billing process without implying that a directory listing guarantees funding. Compare answers in writing rather than relying on a headline rate.</p>` +
-    `<ul>${(editorial.providerQuestions ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-    `<h2>Common mistakes to avoid</h2><ul>${(editorial.pitfalls ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-    `<h2>How to make and review the funding arrangement</h2>${(editorial.deepDive ?? []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
-    `<h2>Review checklist</h2><p>Recheck the arrangement at regular intervals and whenever services, circumstances, rates or program rules change. Record who confirmed each important decision and the date it was made. Before relying on an older approval or agreement, confirm that it remains current and still covers the service, provider and dates involved.</p>` +
-    `<ul>${(editorial.reviewChecklist ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
-    `<h2>Official sources</h2><ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>` +
+  // Mirrors FundingTopicPage.tsx, section for section.
+  const list = (items: string[] | undefined) => `<ul>${(items ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`;
+  const body =
+    `<h2>About ${esc(topic.name)}</h2>${(editorial.summary ?? []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
+    `<h3>At a glance</h3>${list(editorial.keyPoints)}` +
+    `<p>This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over time. Always confirm current detail with the relevant official body before relying on it.</p>` +
+    `<h2>How to prepare before arranging support</h2><ol>${(editorial.steps ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
+    `<h2>Information and records to have ready</h2><p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>${list(editorial.records)}` +
+    `<h2>Questions to ask a provider</h2><p>A provider should be able to explain its role, fees and billing process without implying that a directory listing guarantees funding approval.</p>${list(editorial.providerQuestions)}` +
+    `<h2>Common mistakes to avoid</h2>${list(editorial.pitfalls)}` +
+    `<h2>Reviewing the arrangement</h2><p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>${list(editorial.reviewChecklist)}` +
+    `<h2>Frequently asked questions</h2>${editorial.faq.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join('')}` +
+    `<h2>Official sources</h2>${`<ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>`}` +
     `<h2>Other ${esc(topic.categoryGroup)} topics</h2><ul>${siblings.map((item) => li(`/funding/${item.slug}`, item.name)).join('')}</ul>`;
   return {
     status: 200,
@@ -826,10 +827,7 @@ function fundingTopicPage(site: string, slug: string): Page {
       ...topicJsonLd(site, `${base}/`, topic.name, editorial),
     ],
     body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/funding">Funding</a> / ${esc(topic.name)}</nav>` +
-      `<h1>${esc(topic.name)}</h1><p>This page provides general information about ${esc(topic.name)}. Program names, eligibility, amounts and payment rules can change, so confirm current details with the responsible official body.</p>` +
-      topicBody(topic, editorial, `How to understand ${topic.name}`, 'What to confirm before arranging support') +
-      fundingDetails +
-      `<h2>Compare provider arrangements</h2><p>Ask for eligibility or approval requirements, the provider’s role, service rates, travel, cancellations, reports, administration, possible gaps and payment timing in writing. A public-register or directory listing does not prove that a provider accepts this funding arrangement or currently has capacity.</p>` +
+      `<h1>${esc(topic.name)}</h1>` + body +
       `<p><a href="/find-a-provider">Browse providers</a> or <a href="/funding">explore other funding topics</a>.</p>`,
   };
 }
@@ -923,7 +921,13 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
   const pager =
     (page > 1 ? `<a rel="prev" href="${esc(page === 2 ? base : `${base}?page=${page - 1}`)}">Previous page</a> ` : '') +
     (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page</a>` : '');
-  const heading = `${topic.name} speaking support providers`;
+  const specifics = LANGUAGE_SPECIFICS[topic.slug];
+  const heading = specifics ? specifics.heading : `${topic.name} speaking support providers`;
+  const specificsHtml = specifics
+    ? `<h2>${esc(specifics.heading)}</h2>${specifics.about.map((p) => `<p>${esc(p)}</p>`).join('')}` +
+      `<h3>${esc(specifics.stepsHeading)}</h3><ul>${specifics.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ul><p>${esc(specifics.forFamilies)}</p>` +
+      `<h3>Official information</h3><ul>${specifics.sources.map((s) => li(s.href, s.label)).join('')}</ul>`
+    : '';
 
   // What the public registers say about this language: the same data the page shows (LanguageRegisterProviders.tsx).
   const withListings = (snapshot ?? []).filter((s) => s.total > 0);
@@ -943,19 +947,20 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
 
   return {
     status: 200,
-    title: seoTitle(`${topic.name} language support providers`),
-    description: trimTo(`Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
+    title: seoTitle(specifics ? specifics.heading : `${topic.name} language support providers`),
+    description: trimTo(specifics ? specifics.about[0] : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
     canonical: page > 1 ? `${base}?page=${page}` : `${base}/`,
     // A language page with no member provider and no register listing that mentions it has only the shared guidance,
     // so it is reachable but kept out of search results until it has something specific to say.
-    noindex: snapshot !== null && total === 0 && registerTotal === 0,
+    noindex: snapshot !== null && total === 0 && registerTotal === 0 && !specifics,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Language', path: '/language' }, { name: topic.name, path: base }]),
       ...topicJsonLd(site, `${base}/`, heading, editorial),
     ],
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/language">Language</a> / ${esc(topic.name)}</nav>` +
-      `<h1>${esc(heading)}</h1><p>${esc(editorial.overview)}</p>` +
+      `<h1>${esc(heading)}</h1><p>${esc(specifics ? specifics.about[0] : editorial.overview)}</p>` +
+      specificsHtml +
       `<h2>Providers that list ${esc(topic.name)}</h2><p>${total > 0 ? `${fmt(total)} SolDirectory member ${total === 1 ? 'provider lists' : 'providers list'} ${esc(topic.name)}.` : `No SolDirectory member provider lists ${esc(topic.name)} at the moment.`} Providers supply their own language information, so confirm the specific worker, fluency, dialect, communication method and availability directly.</p>` +
       `<ul>${(docs as any[]).map((provider) => li(`/directory/${provider.slug}`, provider.tradingName || provider.legalEntityName, (provider.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul><p>${pager}</p>` +
       registerHtml +
@@ -964,10 +969,10 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
       `<h2>Privacy, consent and cultural safety</h2><p>Do not assume a family member should interpret, receive private information or make decisions. Confirm consent and decision-making arrangements directly. Cultural safety cannot be inferred from shared language alone; ask how the provider responds to community connections, gender preferences, faith, food, family roles and experiences of discrimination without stereotyping the person.</p>` +
       `<h2>Funding and written service terms</h2><p>Interpreter and translation costs depend on the program, purpose and current rules. Confirm approval, booking responsibility and fees before support begins. Request important terms in an accessible format and check rates, travel, cancellations, reports, interpreter arrangements and exit terms.</p>` +
       `<h2>Official sources</h2><ul>` +
-      li('https://www.ndis.gov.au/contact/ndis-translations-and-interpreting', 'NDIS translations and interpreting') +
+      li('https://www.ndis.gov.au/languages', 'NDIS information in other languages') +
       li('https://www.tisnational.gov.au/', 'TIS National') +
-      li('https://www.naati.com.au/online-directory/', 'NAATI practitioner directory') +
-      li('https://www.ndiscommission.gov.au/participants', 'NDIS Quality and Safeguards Commission') +
+      li('https://directory.naati.com.au/', 'NAATI practitioner directory') +
+      li('https://www.ndiscommission.gov.au/', 'NDIS Quality and Safeguards Commission') +
       `</ul><p><a href="/language">Browse other language and communication guides</a></p>`,
   };
 }
