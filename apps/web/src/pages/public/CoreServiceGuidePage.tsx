@@ -40,7 +40,7 @@ export default function CoreServiceGuidePage({ slug }: { slug: string }) {
       title={name}
       description={editorial.shortAnswer}
       image={bannerFor({ text: name, section: 'services' })}
-      imageAlt={`${name} support`}
+      imageAlt=""
     />
     <main className="legal-page">
       <section className="legal-section"><h2>Understanding {name.toLowerCase()}</h2>{editorial.overview.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section>

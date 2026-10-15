@@ -25,7 +25,7 @@
 }
 .guide-hub-header::before,
 .guide-hub-header::after { content: ''; position: absolute; inset: 0; z-index: -1; }
-.guide-hub-header::before { background: url('/images/why-sol-directory.jpg') center 42% / cover; }
+.guide-hub-header::before { background: url('/images/banners/guides.jpg') center 42% / cover; }
 .guide-hub-header::after { background: linear-gradient(90deg, rgba(5, 27, 58, 0.96), rgba(8, 39, 79, 0.86) 58%, rgba(8, 39, 79, 0.62)); }
 .guide-hub-header-inner { max-width: 1180px; margin: 0 auto; padding: clamp(52px, 7vw, 90px) clamp(20px, 5vw, 56px); }
 .guide-hub-eyebrow { display: block; margin-bottom: 14px; color: #C9DFFF; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }

@@ -86,7 +86,7 @@ export default function Login() {
           <div className="login-aside-content">
             <p className="login-eyebrow">Sol Directory</p>
             <div className="login-feature-image">
-              <PhotoSlot src="/images/login-hero.jpg" alt="A support worker with a participant" variant="care" />
+              <PhotoSlot src="/images/banners/general.jpg" alt="Two women talking at a table by a window" variant="care" />
             </div>
             <h2 className="login-aside-heading">{content.asideHeading}</h2>
             <p className="login-aside-paragraph">{content.asideParagraph}</p>

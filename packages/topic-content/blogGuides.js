@@ -70,7 +70,7 @@ export const GUIDE_POSTS = [
     category: 'Choosing providers',
     publishedAt: '2026-10-12T10:50:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/six-checks-on-every-provider.jpg',
+    coverImage: '/images/banners/support-coordination-2.jpg',
     coverAlt: 'A support worker talking with an older person in a care setting',
     source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
     additionalSources: [
@@ -114,7 +114,7 @@ export const GUIDE_POSTS = [
     category: 'Choosing providers',
     publishedAt: '2026-10-12T10:40:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/banners/plan-management-5.jpg',
+    coverImage: '/images/banners/general-2.jpg',
     coverAlt: 'Printed forms, a calculator and a phone on a table',
     source: { label: 'NDIS: Working with providers', url: ndis('/participants/working-providers'), date: 'Current guidance page' },
     additionalSources: [
@@ -367,7 +367,7 @@ export const GUIDE_POSTS = [
     category: 'Plans and funding',
     publishedAt: '2026-10-12T09:50:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/banners/plan-management-6.jpg',
+    coverImage: '/images/banners/funding-veterans.jpg',
     coverAlt: 'Papers, a calculator and a cup of coffee on a desk',
     source: { label: 'NDIS: Changing your plan', url: ndis('/participants/changing-your-plan'), date: 'Current guidance page' },
     additionalSources: [
@@ -660,7 +660,7 @@ export const GUIDE_POSTS = [
     category: 'Everyday supports',
     publishedAt: '2026-10-12T11:40:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/banners/personal-care-2.jpg',
+    coverImage: '/images/banners/therapy.jpg',
     coverAlt: 'Two older women holding hands with a younger woman',
     source: { label: 'NDIS: What are NDIS supports?', url: ndis('/participants/using-your-funding/understanding-your-ndis-funding/what-are-ndis-supports'), date: 'Current guidance page' },
     additionalSources: [
@@ -950,7 +950,7 @@ export const GUIDE_POSTS = [
     category: 'Your rights',
     publishedAt: '2026-10-12T12:40:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/banners/condition-intellectual.jpg',
+    coverImage: '/images/banners/employment-2.jpg',
     coverAlt: 'Three women smiling together against a red wall',
     source: { label: 'NDIS: Your rights and responsibilities', url: ndis('/participants/working-providers/your-rights-and-responsibilities'), date: 'Current guidance page' },
     additionalSources: [
@@ -1532,7 +1532,7 @@ export const GUIDE_POSTS = [
     category: 'Aged care',
     publishedAt: '2026-10-12T13:30:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/six-checks-on-every-provider.jpg',
+    coverImage: '/images/banners/support-coordination-2.jpg',
     coverAlt: 'A support worker talking with an older person in a care setting',
     source: { label: 'My Aged Care: Checking quality of care', url: mac('/checking-quality-care'), date: 'Current guidance page' },
     additionalSources: [

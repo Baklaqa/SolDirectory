@@ -46,7 +46,7 @@ export default function ForProviders() {
       title: 'List your provider business | SolDirectory',
       description: PROVIDER_PAGE_DESCRIPTION,
       canonicalUrl: `${window.location.origin}/providers`,
-      ogImage: `${window.location.origin}/images/providers.jpg`,
+      ogImage: `${window.location.origin}/images/banners/general-2.jpg`,
     });
     setJsonLd('providers-page', {
       '@type': 'WebPage',
@@ -93,8 +93,8 @@ export default function ForProviders() {
           eyebrow="For providers"
           title="Receive relevant enquiries in your service area"
           description="People looking for NDIS and aged care support send a request. SolDirectory compares it with provider service areas, funding arrangements and confirmed capacity, and delivers relevant enquiries by email or SMS for your team to assess."
-          image="/images/login-hero.jpg"
-          imageAlt="A provider team at work in an office"
+          image="/images/banners/general.jpg"
+          imageAlt=""
           panel={{
             title: 'List your business',
             checks: HERO_CHECKS,
@@ -137,7 +137,7 @@ export default function ForProviders() {
 
           <section className="fp-reach" aria-labelledby="fp-reach-heading">
             <div className="fp-reach-photo">
-              <PhotoSlot src="/images/providers.jpg" alt="A support worker helping a participant" variant="care" />
+              <PhotoSlot src="/images/banners/general-2.jpg" alt="Two people talking across a table" variant="care" />
             </div>
             <div className="fp-reach-body">
               <span className="eyebrow"><span className="eyebrow-rule" />How enquiries reach you</span>

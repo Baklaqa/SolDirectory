@@ -65,7 +65,7 @@ const NEWS_POSTS = [
     category: 'Provider updates',
     publishedAt: '2026-10-09T08:30:00+10:00',
     checkedAt: '2026-10-09T08:30:00+10:00',
-    coverImage: '/images/six-checks-on-every-provider.jpg',
+    coverImage: '/images/banners/support-coordination-2.jpg',
     coverAlt: 'A support worker talking with an older person in a care setting',
     source: {
       label: 'NDIS: Increasing integrity checks on older claims',

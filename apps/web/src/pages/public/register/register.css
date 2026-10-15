@@ -148,10 +148,10 @@
   z-index: -1;
 }
 .provider-page-header::before {
-  background: url('/images/providers.jpg') center 38% / cover;
+  background: url('/images/banners/general-2.jpg') center 38% / cover;
 }
 .provider-page-header--worker::before {
-  background-image: url('/images/why-sol-directory.jpg');
+  background-image: url('/images/banners/employment-2.jpg');
   background-position: center 35%;
 }
 .provider-page-header::after {

@@ -247,6 +247,10 @@ function ClaimBox({ kind, listing }: { kind: RegisterKind; listing: RegisterList
         Claim this listing to keep your details up to date and receive enquiries from people looking for support. We’ll check your request against
         your business’s own website or ABN before anything changes, so it can take a few days.
       </p>
+      <p>
+        To correct this listing, or to have it or its logo removed, use the same form: choose “Other” as your role and say what should change.
+        <Link to="/terms#corrections-removals-and-copyright-concerns"> How we handle corrections and copyright concerns</Link>.
+      </p>
       {state === 'done' ? (
         <p className="reg-form-ok" role="status">Thanks — we’ve got your request and will be in touch by email.</p>
       ) : (

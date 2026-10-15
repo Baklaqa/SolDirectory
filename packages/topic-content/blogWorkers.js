@@ -302,7 +302,7 @@ export const WORKER_POSTS = [
     category: 'For workers',
     publishedAt: '2026-10-13T09:50:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/why-sol-directory.jpg',
+    coverImage: '/images/banners/employment-2.jpg',
     coverAlt: 'A support worker and a woman using a walker looking at a notebook together',
     source: { label: 'NDIS Commission: NDIS Practice Standards', url: ndisc('/rules-and-standards/ndis-practice-standards'), date: GUIDANCE },
     additionalSources: [

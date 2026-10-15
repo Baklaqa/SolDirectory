@@ -38,6 +38,13 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         ],
       },
       {
+        heading: 'Information about businesses',
+        body: [
+          'The directory also shows public information about businesses and organisations: their name, ABN, the states and suburbs they service, the supports they list, their website address and, where the business publishes one, a link to its logo. It comes from public registers (such as the NDIS Commission and My Aged Care provider registers) and from the business’s own website. For a sole trader this may identify a person. A business can ask us to correct or remove its listing at any time; see the Terms of use.',
+          'A logo shown from a business’s own website is loaded directly from that website; we do not copy it. Your browser asks for it without telling that site which page you were viewing.',
+        ],
+      },
+      {
         heading: 'Why we collect it',
         body: [
           'To match your enquiry with suitable providers, to let those providers contact you, to send provider alerts you explicitly request and verify, to run provider accounts and billing, to keep the directory accurate, and to meet our legal obligations. We collect sensitive information only with your consent.',
@@ -102,6 +109,34 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         ],
       },
       {
+        heading: 'Names, logos and register information',
+        body: [
+          'Business and organisation names, logos and trademarks shown on SolDirectory belong to their owners. They are shown only to identify the business, and their appearance does not mean the owner has joined, approved or recommended SolDirectory.',
+          'SolDirectory is independent. It is not part of, and is not endorsed by, the National Disability Insurance Agency, the NDIS Quality and Safeguards Commission, My Aged Care, Services Australia or the Department of Veterans’ Affairs. Where we link to their pages or describe their programs, it is to point you to the official source.',
+          'Some listings are built from public register information about registered providers. Registers change and our copy may be out of date. Check a provider’s current status on the official register before you rely on it.',
+        ],
+      },
+      {
+        heading: 'Our content and photographs',
+        body: [
+          'The guides, articles, design and original text on SolDirectory belong to SolDirectory or its licensors. You may link to our pages and quote short extracts with a link back. You must not copy or republish the directory or our guides in bulk without our written permission.',
+          'Photographs on the site are used under the licence of the site they came from (mostly Unsplash) and are credited on the Photo credits page. The people shown are not SolDirectory providers, workers or participants, and a photo never means that a person has a particular condition or that a provider is recommended.',
+        ],
+      },
+      {
+        heading: 'Content you submit',
+        body: [
+          'If you upload a logo, photo, text or documents, you confirm that you own them or have permission to use them, that they do not infringe anyone’s rights and that they do not show a person without their consent. You give SolDirectory a non-exclusive, royalty-free licence to store and display that material to run your listing, for as long as the listing is active.',
+        ],
+      },
+      {
+        heading: 'Corrections, removals and copyright concerns',
+        body: [
+          'If a listing, image or piece of text on SolDirectory is wrong, infringes your rights or should not be shown, tell us. Give the page address, say what is wrong and, for a copyright or trademark concern, which work or mark it is and how you are connected to it. A business named in a register listing can ask us at any time to correct or remove its details or logo; the “Is this your business?” form on the listing is the quickest way.',
+          'We review these requests promptly and remove or correct material where the concern is reasonable. We may keep a record of the request.',
+        ],
+      },
+      {
         heading: 'Cost',
         body: [
           'Using “Get matched” and searching the directory is free for families, participants and coordinators. Providers may choose a paid plan; see the provider agreement.',
@@ -133,6 +168,12 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         ],
       },
       {
+        heading: 'Your logo, photos and text',
+        body: [
+          'You may upload only a logo, photo or text that you own or have permission to use. You give SolDirectory a non-exclusive, royalty-free licence to display it on your listing while the listing is active, and you can remove it at any time. We may remove material that infringes someone’s rights or shows a person without their consent.',
+        ],
+      },
+      {
         heading: 'Weekly capacity confirmation',
         body: [
           'Each week we ask you to confirm that you are still taking referrals. If you do not confirm within seven days, your listing is paused automatically and you will not appear in search results or receive new enquiries until you confirm again. Confirming is free and takes one click.',
@@ -145,7 +186,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         ],
       },
       {
-        heading: 'No paid ranking',
+        heading: 'How listings are ordered',
         body: ['Search filters determine which providers qualify based on service, area and other selected criteria. Eligible Pro and Growth members are shown before Starter members, with alphabetical ordering inside each plan group. Priority placement is not an endorsement or quality rating.'],
       },
       {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PublicHeader, PublicFooter } from './PublicLayout';
 import { LEGAL_DOCS, LEGAL_REVIEWED } from './legalContent';
 import { siteConfig } from '../../config/siteConfig';
@@ -7,8 +7,11 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import './LegalPage.css';
 
 /** One template for all four legal pages — pass the doc's slug. */
+const sectionId = (heading: string) => heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
 export default function LegalPage({ slug }: { slug: keyof typeof LEGAL_DOCS | string }) {
   const doc = LEGAL_DOCS[slug];
+  const { hash } = useLocation();
 
   useEffect(() => {
     if (doc) {
@@ -26,9 +29,11 @@ export default function LegalPage({ slug }: { slug: keyof typeof LEGAL_DOCS | st
         url: canonicalUrl,
       } : null);
     }
-    window.scrollTo(0, 0);
+    // A link such as /terms#corrections-removals-and-copyright-concerns lands on its section; otherwise start at the top.
+    const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (target) target.scrollIntoView(); else window.scrollTo(0, 0);
     return () => setJsonLd('legal-page', null);
-  }, [doc]);
+  }, [doc, hash]);
 
   if (!doc) return null;
 
@@ -51,7 +56,7 @@ export default function LegalPage({ slug }: { slug: keyof typeof LEGAL_DOCS | st
         )}
 
         {doc.sections.map((s) => (
-          <section key={s.heading} className="legal-section">
+          <section key={s.heading} id={sectionId(s.heading)} className="legal-section">
             <h2>{s.heading}</h2>
             {s.body.map((p, i) => <p key={i}>{p}</p>)}
           </section>

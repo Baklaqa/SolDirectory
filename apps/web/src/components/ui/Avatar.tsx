@@ -34,7 +34,9 @@ export default function Avatar({ src, name, size = 'md', shape = 'round' }: Avat
   const [failed, setFailed] = useState(false);
   const cls = `avatar avatar-${size} avatar-${shape}`;
   if (src && !failed) {
-    return <img className={cls} src={src} alt="" loading="lazy" onError={() => setFailed(true)} />;
+    // referrerPolicy: a logo can live on the business's own site, and the visitor's browser fetches it from there. Sending no
+    // referrer keeps the page the visitor is on (their search, suburb and filters) from being passed to that site.
+    return <img className={cls} src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
   }
   return (
     <span className={`${cls} avatar-fallback avatar-grad-${gradientIndexOf(name)}`} aria-hidden="true">

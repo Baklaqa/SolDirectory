@@ -511,7 +511,7 @@ export default function Directory() {
                   <li key={p.id} className="dir-card">
                     <div className="dir-card-top">
                       {p.logoUrl
-                        ? <img className="dir-logo" src={p.logoUrl} alt="" loading="lazy" />
+                        ? <img className="dir-logo" src={p.logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />
                         : <span className="dir-logo dir-logo-fallback" aria-hidden="true">{initials(name)}</span>}
                       <div className="dir-card-title">
                         <h3>{p.slug ? <Link to={`/directory/${p.slug}`}>{name}</Link> : name}</h3>

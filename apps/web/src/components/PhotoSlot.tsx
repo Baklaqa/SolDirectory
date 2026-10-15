@@ -3,18 +3,16 @@ import { useState } from 'react';
 type Variant = 'care' | 'meeting' | 'team';
 
 interface PhotoSlotProps {
-  src: string; // e.g. "/images/hero.jpg" — drop a real file at this path in /public
+  src: string; // a credited photo under /images/banners (see apps/web/IMAGE_RIGHTS.md)
   alt: string;
   variant?: Variant;
   className?: string;
 }
 
 /**
- * Drop a real photo at /public{src} (e.g. public/images/hero.jpg for
- * src="/images/hero.jpg") and it renders automatically. Until then,
- * shows a finished-looking illustration instead of an empty box or a
- * fabricated stock-photo URL — see README "Photography" section for
- * exact filenames and free-license search terms.
+ * Shows a credited photo (public/images/banners, listed in credits.json; see
+ * apps/web/IMAGE_RIGHTS.md). If the file cannot load, it shows a finished-looking
+ * illustration instead of an empty box. Never point it at a photo with no recorded source.
  */
 export default function PhotoSlot({ src, alt, variant = 'care', className = '' }: PhotoSlotProps) {
   const [failed, setFailed] = useState(false);

@@ -62,7 +62,7 @@ export default function IndependentWorkers() {
           title="Create a professional profile for independent support work"
           description="Present your services, experience, location and availability in one profile. Eligible provider organisations can search the worker directory and contact you."
           image={bannerFor({ text: 'support worker personal care', section: 'services' })}
-          imageAlt="An independent support worker with a person they support"
+          imageAlt=""
           panel={{
             title: 'Join the worker directory',
             checks: HERO_CHECKS,

@@ -1,5 +1,5 @@
 .directory-page-header {
-  --directory-header-image: url('/images/providers.jpg');
+  --directory-header-image: url('/images/banners/general-2.jpg');
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -21,11 +21,11 @@
 .directory-page-header::after {
   background: linear-gradient(90deg, rgba(5, 27, 58, 0.94) 0%, rgba(8, 39, 79, 0.84) 52%, rgba(8, 39, 79, 0.58) 100%);
 }
-.directory-page-header--services { --directory-header-image: url('/images/six-checks-on-every-provider.jpg'); }
-.directory-page-header--locations { --directory-header-image: url('/images/front-view-smiley-girl-woman-indoors-hero.jpg'); }
-.directory-page-header--workers { --directory-header-image: url('/images/why-sol-directory.jpg'); }
-.directory-page-header--conditions { --directory-header-image: url('/images/reviews.jpg'); }
-.directory-page-header--funding { --directory-header-image: url('/images/providers.jpg'); }
+.directory-page-header--services { --directory-header-image: url('/images/banners/support-coordination-2.jpg'); }
+.directory-page-header--locations { --directory-header-image: url('/images/banners/locations-nsw-3.jpg'); }
+.directory-page-header--workers { --directory-header-image: url('/images/banners/employment-2.jpg'); }
+.directory-page-header--conditions { --directory-header-image: url('/images/banners/therapy.jpg'); }
+.directory-page-header--funding { --directory-header-image: url('/images/banners/general-2.jpg'); }
 .directory-page-header--workers::before { background-position: center 35%; }
 .directory-page-header-inner {
   max-width: var(--layout-content-max-width);

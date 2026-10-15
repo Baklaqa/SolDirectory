@@ -17,7 +17,7 @@ export const PROVIDER_POSTS = [
     category: 'For providers',
     publishedAt: '2026-10-13T10:00:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/login-hero.jpg',
+    coverImage: '/images/banners/general.jpg',
     coverAlt: 'A woman in a wheelchair at her desk while colleagues talk by a whiteboard',
     source: { label: 'NDIS Commission: Apply for registration', url: ndisc('/provider-registration/apply-registration'), date: GUIDANCE },
     additionalSources: [
@@ -354,7 +354,7 @@ export const PROVIDER_POSTS = [
     category: 'For providers',
     publishedAt: '2026-10-13T11:00:00+11:00',
     checkedAt: CHECKED,
-    coverImage: '/images/banners/condition-intellectual-3.jpg',
+    coverImage: '/images/banners/multicultural-3.jpg',
     coverAlt: 'A smiling woman in a white t-shirt',
     source: { label: 'NDIS: Working with providers', url: `${NDIS}/participants/working-providers`, date: GUIDANCE },
     additionalSources: [

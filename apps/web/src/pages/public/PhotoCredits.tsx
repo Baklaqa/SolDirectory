@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { applySeoTags } from '../../lib/seo';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import { Breadcrumbs } from './register/RegisterParts';
@@ -51,6 +52,15 @@ export default function PhotoCredits() {
           <a href={withUtm('https://unsplash.com/')} target="_blank" rel="noopener noreferrer">Unsplash</a>, used under the Unsplash licence. Thank you to the
           photographers below. The people in these photos are not SolDirectory providers, workers or participants, and no photo suggests that any provider is
           recommended.
+        </p>
+        <p>
+          Blog covers, support cards and the default share image are cropped or resized versions of these same photographs, credited here to the original
+          photographer. Pages about a specific condition, mental health, dementia or a language show hands, objects and places rather than identifiable
+          people, because a photo of a real person next to a diagnosis or a language suggests that person has it or speaks it.
+        </p>
+        <p>
+          Logos on register listings are loaded from each business&apos;s own website and are not copied. If you own a photo, logo or text shown on
+          SolDirectory and want it corrected or removed, see <Link to="/terms#corrections-removals-and-copyright-concerns">how to report a concern</Link>.
         </p>
         {credits === null && <p>Loading…</p>}
         {credits !== null && people.length === 0 && <p>No photographer credits to show.</p>}

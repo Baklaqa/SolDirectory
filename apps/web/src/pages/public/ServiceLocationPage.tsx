@@ -306,7 +306,7 @@ export default function ServiceLocationPage() {
       <PageHero
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Services', to: '/services' }, { label: serviceName }, { label: stateName }, { label: suburbName }]}
         image={bannerFor({ text: serviceName, section: 'locations', state: stateAbbr })}
-        imageAlt={`Support at home for people seeking ${serviceLower}`}
+        imageAlt=""
         eyebrow={<>{serviceName} · {stateName}</>}
         title={`Home ${serviceLower} providers in ${suburbName}, ${stateName}`}
         description={`Compare provider profiles and public-register listings for ${serviceLower} in ${suburbName}, then send one request to providers serving your area.`}

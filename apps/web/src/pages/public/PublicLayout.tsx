@@ -179,6 +179,7 @@ export function PublicFooter() {
           <Link to="/provider-agreement">Provider agreement</Link>
           <Link to="/lead-disclaimer">Enquiry disclaimer</Link>
           <Link to="/photo-credits">Photo credits</Link>
+          <Link to="/terms#corrections-removals-and-copyright-concerns">Report a concern</Link>
           <button type="button" className="public-footer-linkbtn" onClick={openConsentSettings}>Cookie settings</button>
         </div>
       </div>
@@ -186,6 +187,7 @@ export function PublicFooter() {
         © {new Date().getFullYear()}{siteConfig.legalEntity ? ` ${siteConfig.legalEntity}.` : ' SolDirectory.'} Provider details are
         supplied by providers. SolDirectory is a directory and referral
         service; it does not provide care and does not recommend any provider.
+        It is independent and is not affiliated with or endorsed by the NDIA, the NDIS Commission, My Aged Care or Services Australia.
       </div>
       <ScrollToTopButton />
     </footer>

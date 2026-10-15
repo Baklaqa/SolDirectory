@@ -107,7 +107,7 @@ export default function Home() {
       title: 'SolDirectory | Find NDIS and aged care providers',
       description: 'Search NDIS and aged care provider profiles by support and location, compare public-register listings, or submit one free provider enquiry.',
       canonicalUrl: `${window.location.origin}/`,
-      ogImage: `${window.location.origin}/images/front-view-smiley-girl-woman-indoors-hero.jpg`,
+      ogImage: `${window.location.origin}/images/share-default.jpg`,
     });
     setJsonLd('organization', {
       '@type': 'Organization',
@@ -126,7 +126,7 @@ export default function Home() {
 
       <section id="top" className="hero-section" data-pointer>
         <div className="hero-photo-bg">
-          <PhotoSlot src="/images/front-view-smiley-girl-woman-indoors-hero.jpg" alt="A support worker with a participant" variant="care" />
+          <PhotoSlot src="/images/banners/general-3.jpg" alt="Two women in conversation at a table, one holding a tablet" variant="care" />
           <div className="hero-photo-overlay" />
         </div>
         <div className="hero-inner">
@@ -181,7 +181,7 @@ export default function Home() {
       <section id="about" className="about-section">
         <div className="about-photo-wrap" data-reveal data-pointer>
           <div className="about-photo">
-            <PhotoSlot src="/images/why-sol-directory.jpg" alt="A family meeting a provider" variant="care" />
+            <PhotoSlot src="/images/banners/employment-2.jpg" alt="A woman smiling at her desk in an office" variant="care" />
           </div>
           {/* The headline figure is the live count of organisations on the public NDIS register, labelled as that.
               The "accepting enquiries" count (real members) stays in the figures row below, under its own label. */}
@@ -273,7 +273,7 @@ export default function Home() {
 
       <section className="checks-section">
         <div className="checks-photo-bg">
-          <PhotoSlot src="/images/six-checks-on-every-provider.jpg" alt="A provider team at work" variant="team" />
+          <PhotoSlot src="/images/banners/support-coordination-2.jpg" alt="A couple at a kitchen table going through a document" variant="team" />
           <div className="checks-photo-overlay" />
         </div>
         <div className="checks-inner">
@@ -376,7 +376,7 @@ export default function Home() {
         </div>
         <div className="providers-photo-wrap" data-reveal data-pointer style={{ '--rv': 1 } as CSSProperties}>
           <div className="providers-photo">
-            <PhotoSlot src="/images/providers.jpg" alt="A provider at their desk" variant="meeting" />
+            <PhotoSlot src="/images/banners/general-2.jpg" alt="Two people talking across a table" variant="meeting" />
           </div>
           <div className="providers-steps-card">
             <span className="providers-steps-label">Listing, in three steps</span>
