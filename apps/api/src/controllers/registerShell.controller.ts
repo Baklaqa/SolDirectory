@@ -8,12 +8,12 @@ import Worker from '../models/Worker.js';
 import WorkerReview from '../models/WorkerReview.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersPaidFirst } from '../services/providerPriority.js';
-import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
+import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -712,8 +712,23 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
     (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page</a>` : '');
   const editorial = topic ? conditionShellEditorial(topic) : null;
   const siblings = topic ? CONDITION_TOPICS.filter((item) => item.categoryGroup === topic.categoryGroup && item.slug !== topic.slug) : [];
+
+  // What the page itself shows for a condition (ProviderListingPage.tsx): the per-condition "About" text and the supports
+  // commonly linked to it. This is what makes one condition page different from the next; it is general information.
+  const conditionInfo = topic
+    ? CONDITION_CONTENT_GROUPS.flatMap((g) => g.items.map((item) => ({ ...item, note: g.note }))).find((item) => item.slug === topic.slug)
+    : undefined;
+  const lowerName = (conditionInfo?.name ?? '').toLowerCase();
+  const aboutHtml = conditionInfo
+    ? `<h2>About ${esc(conditionInfo.name)}</h2><p>${esc(conditionInfo.summary)}</p>` +
+      `<p>This is general information, not medical advice or a diagnosis. Every person’s needs are different — a provider’s general experience with ${esc(lowerName)} is a starting point for a conversation, not a guarantee of fit.${conditionInfo.note ? ` ${esc(conditionInfo.note)}` : ''}</p>`
+    : '';
+  const supportsHtml = conditionInfo && conditionInfo.relatedCategories.length
+    ? `<h2>Support commonly linked to ${esc(conditionInfo.name)}</h2><p>These are supports people with ${esc(lowerName)} commonly look for — not a personal recommendation, just a starting point for browsing.</p>` +
+      `<ul>${conditionInfo.relatedCategories.map((c) => li(`/find-a-provider?service=${encodeURIComponent(c)}`, c)).join('')}</ul>`
+    : '';
   const editorialBody = topic && editorial
-    ? topicBody(topic, editorial, 'Planning and checking support', 'Questions to ask before choosing support') +
+    ? supportsHtml + topicBody(topic, editorial, 'Planning and checking support', 'Questions to ask before choosing support') +
       `<h2>Planning support around the person</h2>${(editorial.deepDive ?? []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}` +
       `<h2>Review checklist</h2><ul>${(editorial.reviewChecklist ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>` +
       `<h2>Official sources and further support</h2><ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>` +
@@ -725,7 +740,9 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
     title: mode === 'condition'
       ? `${row.name} support providers${page > 1 ? ` (page ${page})` : ''} | SolDirectory`
       : `${heading}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
-    description: trimTo(`${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${mode === 'area' ? `${row.name} as an area they support` : `experience supporting ${row.name}`} on SolDirectory. See their supports and service areas, then get matched for free.`, 158),
+    description: conditionInfo
+      ? trimTo(`Understand support considerations for ${conditionInfo.name}, compare providers who list relevant experience, and prepare practical questions about funding, safety and fit.`, 158)
+      : trimTo(`${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${mode === 'area' ? `${row.name} as an area they support` : `experience supporting ${row.name}`} on SolDirectory. See their supports and service areas, then get matched for free.`, 158),
     canonical: page > 1 ? `${base}?page=${page}` : base,
     noindex: mode === 'area' && total < MIN_INDEXABLE_PROVIDERS,
     jsonLd: [{ id: 'directory-breadcrumbs', data: { '@type': 'BreadcrumbList', itemListElement: [
@@ -736,7 +753,8 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
     ...(editorial ? topicJsonLd(site, base, heading, editorial) : [])],
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="${parent.href}">${esc(parent.name)}</a> / ${esc(row.name)}</nav><h1>${esc(heading)}</h1>` +
-      `<p>${fmt(total)} ${total === 1 ? 'provider' : 'providers'} on SolDirectory.</p>` +
+      aboutHtml +
+      `<p>${total > 0 ? `${fmt(total)} ${total === 1 ? 'provider' : 'providers'} on SolDirectory.` : mode === 'condition' ? `No SolDirectory members have listed experience supporting ${esc(lowerName || row.name.toLowerCase())} yet. The supports below are what people commonly look for.` : 'No providers on SolDirectory yet.'}</p>` +
       `<ul>${(docs as any[]).map((p) => li(`/directory/${p.slug}`, p.tradingName || p.legalEntityName, (p.registrationGroups ?? []).length ? `– ${(p.registrationGroups as string[]).slice(0, 3).join(', ')}` : '')).join('')}</ul><p>${pager}</p>` + editorialBody,
   };
 }
@@ -871,12 +889,14 @@ function guidePage(site: string, slug: string): Page {
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Guides', path: '/guides' }, { name: guide.title, path }]),
       { id: 'guide-page', data: { '@type': 'WebPage', name: guide.title, description: guide.summary, url: `${site}${path}`, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: site } } },
+      ...(guide.faq?.length ? [{ id: 'guide-faq', data: { '@type': 'FAQPage', mainEntity: guide.faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
     ],
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides">Guides</a> / ${esc(guide.title)}</nav>` +
       `<h1>${esc(guide.title)}</h1><p>${esc(guide.summary)}</p>` +
       `<p>This guide provides general information, not personal advice. Program names, prices, eligibility and service rules can change. Confirm the details that apply today with the official source and relevant funding body before making a decision.</p>` +
       body +
+      (guide.faq?.length ? `<h2>Frequently asked questions</h2>${guide.faq.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
       `<h2>Continue your search</h2><ul>${guide.internalLinks.map((item) => li(item.href, item.label)).join('')}</ul>` +
       `<h2>Official source</h2><p><a href="${esc(guide.officialLink.href)}" rel="noopener noreferrer">${esc(guide.officialLink.label)}</a></p>` +
       `<h2>Other guides</h2><ul>${Object.values(GUIDE_DOCS).filter((item) => item.slug !== guide.slug).map((item) => li(`/guides/${item.slug}`, item.title)).join('')}</ul>`,
@@ -893,9 +913,11 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     slug: { $exists: true, $ne: null },
     languages: new RegExp(`^\\s*${topic.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'),
   };
-  const [docs, total] = await Promise.all([
+  const [docs, total, snapshot] = await Promise.all([
     findProvidersPaidFirst<any>(filter, 'legalEntityName tradingName slug registrationGroups', { skip: (page - 1) * LEVEL_PAGE, limit: LEVEL_PAGE }),
     Provider.countDocuments(filter),
+    // null when the lookup failed: an error must never read as "no listings" and hide the page.
+    computeLanguageSnapshot(topic.name).catch(() => null),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / LEVEL_PAGE));
   const pager =
@@ -903,12 +925,30 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page</a>` : '');
   const heading = `${topic.name} speaking support providers`;
 
+  // What the public registers say about this language: the same data the page shows (LanguageRegisterProviders.tsx).
+  const withListings = (snapshot ?? []).filter((s) => s.total > 0);
+  const registerTotal = withListings.reduce((n, s) => n + s.total, 0);
+  const registerHtml = registerTotal > 0
+    ? `<h2>Public-register providers that mention ${esc(topic.name)}</h2>` +
+      `<p>These providers appear on the ${withListings.map((s) => esc(KINDS[s.type === 'ndis' ? 'ndis-providers' : 'aged-care-providers'].register)).join(' and the ')}, and their own website mentions ${esc(topic.name)}. That is not proof of fluency, an interpreting credential or current availability, so ask the provider directly about the specific worker and how communication will work.</p>` +
+      withListings.map((s) => {
+        const kindPath = s.type === 'ndis' ? 'ndis-providers' : 'aged-care-providers';
+        const label = s.type === 'ndis' ? 'NDIS' : 'aged care';
+        return `<h3>${fmt(s.total)} ${label} ${s.total === 1 ? 'provider mentions' : 'providers mention'} ${esc(topic.name)}</h3>` +
+          `<p>By state: ${s.states.map((x) => `${esc(STATE_NAMES[x.state] ?? x.state)} (${fmt(x.n)})`).join(', ')}.</p>` +
+          (s.suburbs.length ? `<p>Suburbs with the most of these listings:</p><ul>${s.suburbs.map((x) => li(`/${kindPath}/${x.state.toLowerCase()}/${x.slug}`, `${x.suburb}, ${x.state}`, `(${fmt(x.n)})`)).join('')}</ul>` : '') +
+          (s.listings.length ? `<p>Listings covering the most areas:</p><ul>${s.listings.map((x) => li(`/${kindPath}/${x.slug}`, registerName(x))).join('')}</ul>` : '');
+      }).join('')
+    : '';
+
   return {
     status: 200,
     title: seoTitle(`${topic.name} language support providers`),
     description: trimTo(`Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
     canonical: page > 1 ? `${base}?page=${page}` : `${base}/`,
-    noindex: false,
+    // A language page with no member provider and no register listing that mentions it has only the shared guidance,
+    // so it is reachable but kept out of search results until it has something specific to say.
+    noindex: snapshot !== null && total === 0 && registerTotal === 0,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Language', path: '/language' }, { name: topic.name, path: base }]),
       ...topicJsonLd(site, `${base}/`, heading, editorial),
@@ -916,8 +956,9 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/language">Language</a> / ${esc(topic.name)}</nav>` +
       `<h1>${esc(heading)}</h1><p>${esc(editorial.overview)}</p>` +
-      `<h2>Providers that list ${esc(topic.name)}</h2><p>${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${esc(topic.name)}. Providers supply their own language information, so confirm the specific worker, fluency, dialect, communication method and availability directly.</p>` +
+      `<h2>Providers that list ${esc(topic.name)}</h2><p>${total > 0 ? `${fmt(total)} SolDirectory member ${total === 1 ? 'provider lists' : 'providers list'} ${esc(topic.name)}.` : `No SolDirectory member provider lists ${esc(topic.name)} at the moment.`} Providers supply their own language information, so confirm the specific worker, fluency, dialect, communication method and availability directly.</p>` +
       `<ul>${(docs as any[]).map((provider) => li(`/directory/${provider.slug}`, provider.tradingName || provider.legalEntityName, (provider.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul><p>${pager}</p>` +
+      registerHtml +
       topicBody(topic, editorial, 'Planning clear communication', 'Questions to ask before support begins') +
       `<h2>Bilingual support and qualified interpreters</h2><p>A bilingual support worker and an interpreter have different roles. Direct language-matched support may help everyday communication and relationships. A qualified independent interpreter may still be important for assessment, consent, complaints, complex decisions or technical information.</p>` +
       `<h2>Privacy, consent and cultural safety</h2><p>Do not assume a family member should interpret, receive private information or make decisions. Confirm consent and decision-making arrangements directly. Cultural safety cannot be inferred from shared language alone; ask how the provider responds to community connections, gender preferences, faith, food, family roles and experiences of discrimination without stereotyping the person.</p>` +

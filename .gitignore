@@ -51,3 +51,5 @@ apps/cms/wordpress
 
 # SEO audit bot output
 seo-report/
+apps/web/scripts/content-audit/corpus.json
+apps/web/scripts/content-audit/quality_rows.json

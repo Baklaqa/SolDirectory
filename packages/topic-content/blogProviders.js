@@ -308,7 +308,7 @@ export const PROVIDER_POSTS = [
     keyPoints: [
       'All NDIS providers are expected to have effective complaints management and resolution practices; for registered providers it is a condition of registration.',
       'Threatening someone, or trying to stop them from complaining, is against the law and can result in penalties.',
-      'Most people who complain want one or more of four things: acknowledgment, answers, action and an apology.',
+      'Many people who complain want one or more of four things: acknowledgment, answers, action and an apology.',
     ],
     sections: [
       {

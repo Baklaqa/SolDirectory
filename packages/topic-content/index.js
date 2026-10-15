@@ -6,6 +6,7 @@ export { EDITORIAL_STANDARDS } from './editorialContent.js';
 export { COORDINATOR_PAGE } from './coordinatorContent.js';
 export { ARTICLE_FAQS } from './blogFaqs.js';
 export { FUNDING_SEO_DESCRIPTIONS } from './fundingSeoDescriptions.js';
+export { CONDITION_CONTENT_GROUPS } from './conditionContent.js';
 export { LINK_TERMS, MAX_LINKS_PER_ARTICLE, newLinkState, linkParagraph, linkScopeFor, faqHtml } from './blogLinks.js';
 export { DIRECTORY_PAGE_TITLE, DIRECTORY_PAGE_HEADING, DIRECTORY_PAGE_DESCRIPTION, DIRECTORY_PAGE_UPDATED, DIRECTORY_PAGE_SUBTITLE, DIRECTORY_SUPPORTS, DIRECTORY_GUIDANCE, WORKER_PAGE_TITLE, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_UPDATED, WORKER_HERO_CHECKS, PROVIDER_PAGE_UPDATED, PROVIDER_PAGE_DESCRIPTION, INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS, DIRECTORY_STEPS, DIRECTORY_FAQS, STATE_CENTRES, LOCATION_FAQS, PROVIDER_UNDERSTAND, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_PATHS, PROVIDER_SAFEGUARDS, WORKER_PROFILE_DETAILS, WORKER_HOW_IT_WORKS, WORKER_SAFEGUARDS, PROVIDER_PLANS } from './pageContent.js';
 
@@ -239,12 +240,18 @@ export function conditionShellEditorial(topic) {
 }
 
 export function fundingShellEditorial(topic) {
+  // "Help With Funding" topics (plan managers, price guide, eligibility, budget categories, bookkeeping) explain how
+  // funding works; they are not a scheme a person is approved under, so the scheme-style questions would read as nonsense.
+  const informational = topic.categoryGroup === 'Help With Funding';
+  const lower = topic.name.toLowerCase();
   const detail = FUNDING_DETAILS[topic.categoryGroup];
   const longform = FUNDING_LONGFORM[topic.categoryGroup];
   return {
     overview: FUNDING_GUIDES[topic.categoryGroup],
     checks: [
-      `Confirm with the responsible funding body whether ${topic.name.toLowerCase()} applies to the person and proposed support.`,
+      informational
+        ? 'Confirm how this applies to the person’s own plan, what it does and does not cover, and who is responsible for each part.'
+        : `Confirm with the responsible funding body whether ${lower} applies to the person and proposed support.`,
       'Ask the provider to explain its role, approval requirements, billing process and full fees in writing.',
       'Check travel, cancellations, reports, administration, equipment, personal contributions and possible gaps.',
       'Keep approvals, service agreements, invoices and statements, and review them when circumstances or program rules change.',
@@ -252,7 +259,9 @@ export function fundingShellEditorial(topic) {
     ...detail,
     ...longform,
     faq: [
-      { question: `Does a provider listing prove it accepts ${topic.name.toLowerCase()}?`, answer: 'No. Confirm the exact funding arrangement and current availability directly with the provider before booking.' },
+      informational
+        ? { question: 'Is a listing a recommendation of a particular provider or service?', answer: 'No. This page explains the topic in general terms. Confirm each provider’s role, fees and availability directly before booking.' }
+        : { question: `Does a provider listing prove it accepts ${lower}?`, answer: 'No. Confirm the exact funding arrangement and current availability directly with the provider before booking.' },
       { question: 'Who makes the funding decision?', answer: 'The responsible government body, insurer, scheme or policy administrator applies its current eligibility and payment rules.' },
       { question: 'Which costs should be confirmed?', answer: 'Ask about service rates, travel, cancellations, reports, administration, equipment, possible gaps and personal contributions. Get the complete arrangement in writing.' },
       { question: 'What if circumstances or program rules change?', answer: 'Contact the responsible funding body, update relevant providers promptly and revise approvals or service agreements before relying on a changed arrangement.' },
@@ -262,6 +271,24 @@ export function fundingShellEditorial(topic) {
 }
 
 export function languageShellEditorial(topic) {
+  // "Access & Interpreting" topics (TIS National bookings, Easy Read, translated documents, Deafblind interpreters) are
+  // services and formats, not a language a worker speaks, so they get their own questions.
+  if (topic.categoryGroup === 'Access & Interpreting') {
+    return {
+      overview: `${topic.name} is about how information and interpreting are arranged around support, rather than a language a worker speaks. A provider listing is only a starting point: confirm who arranges the service, how it is booked and paid for, and how it will work for the person in practice.`,
+      checks: [
+        `Ask who arranges and books ${topic.name} for the person, and who pays for it.`,
+        'Confirm which information needs to be accessible (spoken, signed, written, Easy Read) and by when.',
+        'Ask when a qualified independent interpreter or translator will be used instead of a family member or a bilingual worker.',
+        'Check current availability, funding, privacy and the written service agreement.',
+      ],
+      faq: [
+        { question: `Does a listing prove that a provider can arrange ${topic.name}?`, answer: 'No. Providers supply their own information. Confirm what they can arrange, how it is booked and who pays before support begins.' },
+        { question: 'Is a bilingual worker the same as an accredited interpreter?', answer: 'No. A bilingual worker may communicate directly during support, while an accredited interpreter has a separate interpreting role. Ask what is appropriate for important, technical or consent-related discussions.' },
+        { question: 'Does SolDirectory assess cultural safety?', answer: 'No. Ask the provider how it works with the person’s culture, community, family relationships, privacy and decision-making preferences.' },
+      ],
+    };
+  }
   return {
     overview: `Finding support connected with ${topic.name} can make it easier to explain preferences, understand choices and take part in decisions. A provider listing is only a starting point: confirm who communicates in the requested language, their level of fluency, whether an accredited interpreter is needed and how communication will work in practice.`,
     checks: [

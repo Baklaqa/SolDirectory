@@ -206,6 +206,49 @@ export async function languageCounts(req: Request, res: Response) {
 }
 
 // ---------------------------------------------------------------
+// What the registers say about one language, for the language pages' crawler HTML: for each register, how many
+// listings mention it (their own website does), in which states and suburbs, and the broadest-coverage listings.
+// The same filter as /language-counts, so the numbers match what the page shows.
+// ---------------------------------------------------------------
+export interface LanguageSnapshot {
+  type: RegisterType;
+  total: number;
+  states: { state: string; n: number }[];
+  suburbs: { state: string; slug: string; suburb: string; n: number }[];
+  listings: { slug: string; name: string }[];
+}
+const languageSnapshotCache = new Map<string, { at: number; value: LanguageSnapshot[] }>();
+const LANGUAGE_SNAPSHOT_TTL_MS = 30 * 60 * 1000;
+
+export async function computeLanguageSnapshot(language: string): Promise<LanguageSnapshot[]> {
+  const hit = languageSnapshotCache.get(language);
+  if (hit && Date.now() - hit.at < LANGUAGE_SNAPSHOT_TTL_MS) return hit.value;
+  const types: RegisterType[] = ['ndis', 'aged_care'];
+  const value = await Promise.all(types.map(async (type): Promise<LanguageSnapshot> => {
+    const match = { type, languages: language };
+    const [total, states, suburbs, listings] = await Promise.all([
+      RegisterListing.countDocuments(match),
+      RegisterListing.aggregate([{ $match: match }, { $unwind: '$states' }, { $group: { _id: '$states', n: { $sum: 1 } } }, { $sort: { n: -1, _id: 1 } }]),
+      RegisterListing.aggregate([
+        { $match: match }, { $unwind: '$areas' },
+        { $group: { _id: { state: '$areas.state', slug: '$areas.suburbSlug', suburb: '$areas.suburb' }, n: { $sum: 1 } } },
+        { $sort: { n: -1, '_id.suburb': 1 } }, { $limit: 8 },
+      ]),
+      RegisterListing.find(match).sort({ areaCount: -1, nameLower: 1 }).limit(8).select('slug name').lean(),
+    ]);
+    return {
+      type,
+      total,
+      states: (states as { _id: string; n: number }[]).map((s) => ({ state: s._id, n: s.n })),
+      suburbs: (suburbs as { _id: { state: string; slug: string; suburb: string }; n: number }[]).map((s) => ({ ...s._id, n: s.n })),
+      listings: (listings as { slug: string; name: string }[]).map((l) => ({ slug: l.slug, name: l.name })),
+    };
+  }));
+  languageSnapshotCache.set(language, { at: Date.now(), value });
+  return value;
+}
+
+// ---------------------------------------------------------------
 // GET /api/register/category-counts?type=&category=
 // How many register listings list this support category, per state. Feeds the
 // "listed on the public register" block on the WordPress service pages.

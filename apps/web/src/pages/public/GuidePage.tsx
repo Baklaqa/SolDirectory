@@ -20,6 +20,10 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
         description: doc.summary,
         canonicalUrl: `${window.location.origin}${path}`,
       });
+      setJsonLd('guide-faq', doc.faq?.length ? {
+        '@type': 'FAQPage',
+        mainEntity: doc.faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+      } : null);
       setJsonLd('guide-breadcrumbs', {
         '@type': 'BreadcrumbList',
         itemListElement: [
@@ -30,7 +34,7 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
       });
     }
     window.scrollTo(0, 0);
-    return () => setJsonLd('guide-breadcrumbs', null);
+    return () => { setJsonLd('guide-breadcrumbs', null); setJsonLd('guide-faq', null); };
   }, [doc]);
 
   if (!doc) return null;
@@ -63,6 +67,18 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
             )}
           </section>
         ))}
+
+        {doc.faq && doc.faq.length > 0 && (
+          <section className="legal-section">
+            <h2>Frequently asked questions</h2>
+            {doc.faq.map((f) => (
+              <div key={f.question}>
+                <h3>{f.question}</h3>
+                <p>{f.answer}</p>
+              </div>
+            ))}
+          </section>
+        )}
 
         <section className="legal-section">
           <h2>Continue your search</h2>

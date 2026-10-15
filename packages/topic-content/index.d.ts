@@ -30,6 +30,8 @@ export interface GuideDoc {
   sections: GuideSection[];
   internalLinks: { label: string; href: string }[];
   officialLink: { label: string; href: string };
+  /** Questions and answers shown under the guide and marked up as FAQPage. */
+  faq?: { question: string; answer: string }[];
 }
 
 export const GUIDE_DOCS: Record<string, GuideDoc>;
@@ -157,6 +159,10 @@ export interface EditorialStandardsSection {
 export const ARTICLE_FAQS: Record<string, { question: string; answer: string }[]>;
 /** Meta description for each /funding/:slug page, 158 characters or fewer. */
 export const FUNDING_SEO_DESCRIPTIONS: Record<string, string>;
+export interface ConditionContentItem { slug: string; name: string; categoryGroup: string; summary: string; relatedCategories: string[] }
+export interface ConditionContentGroup { title: string; note?: string; items: ConditionContentItem[] }
+/** General information for each /condition/:slug page, in display groups. */
+export const CONDITION_CONTENT_GROUPS: ConditionContentGroup[];
 export const LINK_TERMS: readonly { re: RegExp; slug: string; scopes: readonly string[] }[];
 export const MAX_LINKS_PER_ARTICLE: number;
 export interface LinkState { used: Set<string>; count: number }

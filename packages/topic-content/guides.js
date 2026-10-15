@@ -1,3 +1,5 @@
+import { GUIDE_FAQS } from './guideFaqs.js';
+
 export const GUIDE_DOCS = {
   'ndis-price-guide': {
     slug: 'ndis-price-guide',
@@ -282,3 +284,8 @@ export const GUIDE_DOCS = {
     officialLink: { label: 'My Aged Care', href: 'https://www.myagedcare.gov.au' },
   },
 };
+
+// Questions and answers under each guide (guideFaqs.js).
+for (const [slug, faq] of Object.entries(GUIDE_FAQS)) {
+  if (GUIDE_DOCS[slug]) GUIDE_DOCS[slug].faq = faq;
+}

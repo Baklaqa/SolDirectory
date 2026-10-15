@@ -40,7 +40,8 @@ export default function LanguageTopicPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [registerTotal, setRegisterTotal] = useState(0);
+  // null until the register count is known; the page is kept out of search results when there is nothing specific on it.
+  const [registerTotal, setRegisterTotal] = useState<number | null>(null);
   const [interpretingTotal, setInterpretingTotal] = useState(0);
   const topRef = useRef<HTMLParagraphElement>(null);
   const { openMatchModal } = useMatchModal();
@@ -68,6 +69,7 @@ export default function LanguageTopicPage() {
       title: seoTitle(`${topic.name} language support providers`),
       description: `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`,
       canonicalUrl: page > 1 ? `${canonical}?page=${page}` : canonical,
+      noindex: !loading && !error && total === 0 && registerTotal === 0,
     });
     setJsonLd('language-page', { '@type': 'WebPage', name: `${topic.name} speaking support providers`, url: canonical, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin } });
     setJsonLd('language-breadcrumbs', { '@type': 'BreadcrumbList', itemListElement: [
@@ -77,7 +79,7 @@ export default function LanguageTopicPage() {
     ] });
     setJsonLd('language-faq', { '@type': 'FAQPage', mainEntity: editorial.faq.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) });
     return () => { setJsonLd('language-page', null); setJsonLd('language-breadcrumbs', null); setJsonLd('language-faq', null); };
-  }, [topic, page]);
+  }, [topic, page, loading, error, total, registerTotal]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
@@ -88,7 +90,7 @@ export default function LanguageTopicPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const toc: TopicTocItem[] = [
     { id: 'about', label: 'Overview' }, { id: 'providers', label: 'Providers' },
-    ...(registerTotal > 0 ? [{ id: 'register-providers', label: 'On the register' }] : []),
+    ...((registerTotal ?? 0) > 0 ? [{ id: 'register-providers', label: 'On the register' }] : []),
     { id: 'communication', label: 'Communication planning' }, { id: 'interpreters', label: 'Interpreters' },
     ...(interpretingTotal > 0 ? [{ id: 'interpreting-providers', label: 'Interpreting providers' }] : []),
     { id: 'questions', label: 'Questions to ask' }, { id: 'privacy', label: 'Privacy and consent' },
