@@ -237,6 +237,10 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
           />
         )}
 
+        {kind.type === 'ndis' && !filtered && facets.some((f) => f.category === 'Housing (SDA & SIL)') && (
+          <p className="reg-note">SDA is Specialist Disability Accommodation: purpose-built homes for people with very high support needs. SIL is Supported Independent Living: help with daily tasks in a shared or own home. Both are funded through an NDIS plan, and a listing here does not mean a provider has a vacancy.</p>
+        )}
+
         {facets.length > 0 && (
           <div className="reg-filters" role="group" aria-label="Filter by support">
             <button type="button" className="reg-chip" aria-pressed={!category} onClick={() => setParam({ category: null, page: null })}>All supports</button>
@@ -347,6 +351,14 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
         )}
 
         <VerifyNote kind={kind} />
+        {hub?.asOf && (
+          <p className="reg-asof">
+            Register data last imported on{' '}
+            <time dateTime={new Date(hub.asOf).toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' })}>
+              {new Date(hub.asOf).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' })}
+            </time>.
+          </p>
+        )}
         <GetMatchedCta
           title={`Looking for support in ${areaName}?`}
           body="We match you with providers who have recently confirmed they can take on new people. It’s free and there’s no obligation."

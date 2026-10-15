@@ -308,10 +308,12 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
       `<p>${fmt(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.` +
       `${topFacets.length && !filtered ? ` The supports listed most often here are ${topFacets.map((f) => `${esc(f._id.toLowerCase())} (${fmt(f.n)})`).join(', ')}.` : ''}</p>` +
       supportsHtml +
+      (kind.type === 'ndis' && !filtered && facets.some((f) => f._id === 'Housing (SDA & SIL)') ? `<p>SDA is Specialist Disability Accommodation: purpose-built homes for people with very high support needs. SIL is Supported Independent Living: help with daily tasks in a shared or own home. Both are funded through an NDIS plan, and a listing here does not mean a provider has a vacancy.</p>` : '') +
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : '')).join('')}</ul>` +
       `<p>${pager}</p>${workersHtml}${extra}` +
       (total > 0 && !filtered ? `<h2>Frequently asked questions</h2>${registerAreaFaqs(kind as any, areaName, total).map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>`,
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
+      (hubForKind.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hubForKind.asOf))}">${esc(registerDateLabel(hubForKind.asOf))}</time>.</p>` : ''),
   };
 }
 
