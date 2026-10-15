@@ -282,10 +282,9 @@ for (const f of FUNDING_CONTENT) {
       `<h3>At a glance</h3>${ul(f.keyPoints.map(esc))}` +
       '<p>This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over time. Always confirm current detail with the relevant official body before relying on it.</p>' +
       `<h2>How to prepare before arranging support</h2>${ul((editorial.steps ?? []).map(esc))}` +
-      `<h2>Information and records to have ready</h2><p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>${ul((editorial.records ?? []).map(esc))}` +
-      `<h2>Questions to ask a provider</h2><p>A provider should be able to explain its role, fees and billing process without implying that a directory listing guarantees funding approval.</p>${ul((editorial.providerQuestions ?? []).map(esc))}` +
+      `<h2>Information and records to have ready</h2>${ul((editorial.records ?? []).map(esc))}` +
+      `<h2>Questions to ask a provider</h2>${ul((editorial.providerQuestions ?? []).map(esc))}` +
       `<h2>Common mistakes to avoid</h2>${ul((editorial.pitfalls ?? []).map(esc))}` +
-      `<h2>Reviewing the arrangement</h2><p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>${ul((editorial.reviewChecklist ?? []).map(esc))}` +
       `<h2>Frequently asked questions</h2>${editorial.faq.map((item) => `<h3>${esc(item.question)}</h3><p>${esc(item.answer)}</p>`).join('')}` +
       `<h2>Official sources</h2>${ul((editorial.sources ?? []).map((source) => `<a href="${esc(source.href)}" rel="noopener noreferrer">${esc(source.label)}</a>`))}` +
       (siblings.length ? `<h2>Other topics in ${esc(f.categoryGroup)}</h2>${ul(siblings.map((s) => a(`/funding/${s.slug}/`, s.name)))}` : '') +

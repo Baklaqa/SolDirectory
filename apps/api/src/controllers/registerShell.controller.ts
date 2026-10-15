@@ -809,10 +809,9 @@ function fundingTopicPage(site: string, slug: string): Page {
     `<h3>At a glance</h3>${list(editorial.keyPoints)}` +
     `<p>This is general information, not financial or funding advice. Program names, amounts and eligibility rules change over time. Always confirm current detail with the relevant official body before relying on it.</p>` +
     `<h2>How to prepare before arranging support</h2><ol>${(editorial.steps ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
-    `<h2>Information and records to have ready</h2><p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>${list(editorial.records)}` +
-    `<h2>Questions to ask a provider</h2><p>A provider should be able to explain its role, fees and billing process without implying that a directory listing guarantees funding approval.</p>${list(editorial.providerQuestions)}` +
+    `<h2>Information and records to have ready</h2>${list(editorial.records)}` +
+    `<h2>Questions to ask a provider</h2>${list(editorial.providerQuestions)}` +
     `<h2>Common mistakes to avoid</h2>${list(editorial.pitfalls)}` +
-    `<h2>Reviewing the arrangement</h2><p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>${list(editorial.reviewChecklist)}` +
     `<h2>Frequently asked questions</h2>${editorial.faq.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join('')}` +
     `<h2>Official sources</h2>${`<ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>`}` +
     `<h2>Other ${esc(topic.categoryGroup)} topics</h2><ul>${siblings.map((item) => li(`/funding/${item.slug}`, item.name)).join('')}</ul>`;

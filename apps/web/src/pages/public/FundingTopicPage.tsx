@@ -13,7 +13,7 @@ import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { fundingBySlug, FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT, type FundingContent } from '../../data/fundingContent';
 import { fundingEditorialFor } from '../../data/fundingEditorial';
-import { FUNDING_SEO_DESCRIPTIONS, fundingFaqs, fundingShellEditorial } from '@soldirectory/topic-content';
+import { FUNDING_SEO_DESCRIPTIONS, fundingFaqs } from '@soldirectory/topic-content';
 import './Home.css';
 import './Directory.css';
 import './register/register.css';
@@ -124,7 +124,6 @@ export default function FundingTopicPage() {
   const link = fundingProviderLink(meta.slug);
   const hasMembers = !!meta.fundingFilter && !loading && items.length > 0;
   const editorial = fundingEditorialFor(meta);
-  const longform = fundingShellEditorial(meta);
   const faqs = fundingFaqs(meta);
 
   const toc: TopicTocItem[] = [{ id: 'overview', label: 'Overview' }];
@@ -134,7 +133,6 @@ export default function FundingTopicPage() {
   toc.push({ id: 'records', label: 'What to have ready' });
   toc.push({ id: 'provider-questions', label: 'Questions for providers' });
   toc.push({ id: 'pitfalls', label: 'Common mistakes' });
-  toc.push({ id: 'funding-arrangement', label: 'Reviewing the arrangement' });
   toc.push({ id: 'faq', label: 'FAQ' });
   toc.push({ id: 'sources', label: 'Official sources' });
   if (siblings.length > 0) toc.push({ id: 'related-funding', label: `Other ${meta.categoryGroup} topics` });
@@ -203,13 +201,12 @@ export default function FundingTopicPage() {
         <h2>{editorial.accessHeading}</h2>
         <p>{editorial.accessIntro}</p>
         <ol className="wp-cpt-plain-list">
-          {editorial.steps.map((step) => <li key={step}>{step}</li>)}
+          {meta.steps.map((step) => <li key={step}>{step}</li>)}
         </ol>
       </section>
 
       <section id="records" className="wp-cpt-section">
         <h2>Information and records to have ready</h2>
-        <p>Having the relevant records available makes it easier to confirm eligibility, obtain an accurate quote and resolve payment questions before they interrupt support.</p>
         <ul className="wp-cpt-plain-list">
           {editorial.records.map((record) => <li key={record}>{record}</li>)}
         </ul>
@@ -217,7 +214,6 @@ export default function FundingTopicPage() {
 
       <section id="provider-questions" className="wp-cpt-section">
         <h2>Questions to ask a provider</h2>
-        <p>A provider should be able to explain its role, fees and billing process without implying that a directory listing guarantees funding approval.</p>
         <ul className="wp-cpt-plain-list">
           {editorial.providerQuestions.map((question) => <li key={question}>{question}</li>)}
         </ul>
@@ -227,14 +223,6 @@ export default function FundingTopicPage() {
         <h2>Common mistakes to avoid</h2>
         <ul className="wp-cpt-plain-list">
           {editorial.pitfalls.map((pitfall) => <li key={pitfall}>{pitfall}</li>)}
-        </ul>
-      </section>
-
-      <section id="funding-arrangement" className="wp-cpt-section">
-        <h2>Reviewing the arrangement</h2>
-        <p>Recheck it when services, circumstances, rates or program rules change, and note who confirmed each decision and when.</p>
-        <ul className="wp-cpt-plain-list">
-          {(longform.reviewChecklist ?? []).map((item) => <li key={item}>{item}</li>)}
         </ul>
       </section>
 

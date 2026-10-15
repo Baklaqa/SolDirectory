@@ -15,7 +15,6 @@ export interface ShellEditorial {
   records?: string[];
   providerQuestions?: string[];
   pitfalls?: string[];
-  reviewChecklist?: string[];
   sources?: { label: string; href: string }[];
 }
 
@@ -171,6 +170,7 @@ export interface FundingTopicContent {
   categoryGroup: string;
   summary: string[];
   keyPoints: string[];
+  steps: string[];
   faq: { question: string; answer: string };
   fundingFilter?: 'NDIA-managed' | 'Plan-managed' | 'Self-managed';
 }

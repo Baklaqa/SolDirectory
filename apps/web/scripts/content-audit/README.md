@@ -22,12 +22,12 @@ Re-run `corpus.py` then `quality.py` against production after deploy for the rea
 
 | Family | Shared copy | Reading ease | Median words |
 |---|---|---|---|
-| /funding | 38% (was 47%) | 42 (was 31) | 745 |
-| /condition | 41% (was 69%) | 30 (was 29) | 618 |
+| /funding | 32% (was 47%) | 47 (was 31) | 633 |
+| /condition | 41% (was 69%) | 33 (was 29) | 611 |
 
-The shared-copy figure only counts a block as shared when it sits on at least a quarter of a family's pages, so the six NDIS
-funding pages (one group of six) still read about 70% shared: the group-level steps, records and provider questions are
-the same list on each of them by design.
+The shared-copy figure only counts a block as shared when it sits on at least a quarter of a family's pages. The six NDIS
+funding pages are the only group that reaches that threshold, so they read 50-60% shared while the other groups read
+about 35%. The records, provider questions and pitfalls lists are still group-level for every group.
 
 Aim for under about 50% shared copy in a family, with something real and specific to the page (register counts, per-topic
 text) above the template. A page with nothing specific should be kept out of search results until it has something.

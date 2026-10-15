@@ -403,3 +403,162 @@ for (const group of FUNDING_CONTENT_GROUPS) {
     item.faq = { question: faq[0], answer: faq[1] };
   }
 }
+
+/**
+ * What to do, in order, for this topic. Every step restates something the topic's summary already says, plus the
+ * contact the summary names. Replaces the group-wide step list the pages used to share.
+ */
+const TOPIC_STEPS = {
+  'agency-managed': [
+    'Check that each provider you want is registered with the NDIS Commission.',
+    'Ask the provider to claim through the NDIA’s payment system, so you do not handle invoices.',
+    'If you later want an unregistered provider, ask about changing to plan-managed or self-managed funding.',
+  ],
+  'plan-managed': [
+    'Ask a plan manager or support coordinator what the day-to-day experience is like, such as how invoices and records are handled.',
+    'Check that plan management is funded as its own item in your plan, so it does not reduce your support funding.',
+    'Choose registered or unregistered providers as suits you. Plan-managed funding works with both.',
+    'Notice how quickly they respond and how clearly they report your spending.',
+  ],
+  'self-managed': [
+    'Decide whether you or a nominee will pay providers and keep the records.',
+    'Keep every invoice and receipt, and pay providers before claiming the money back from the NDIA.',
+    'Submit each claim correctly and on time.',
+    'If it is too much, self-manage some funding categories and use plan or agency management for the rest.',
+  ],
+  'plan-reviews': [
+    'Find out when your scheduled review is, or ask for one earlier if something significant has changed.',
+    'Gather evidence of how your supports are being used.',
+    'Collect any new reports from allied health professionals.',
+    'Write down what has changed and why different funding is needed.',
+    'Ask a support coordinator or plan manager to help you prepare.',
+  ],
+  'change-of-circumstances': [
+    'Decide whether the change is significant, such as in support needs, where you live, informal support or contact details.',
+    'Report it to the NDIA through myplace, the NDIS app or the contact centre.',
+    'Report promptly. A plan that no longer matches your situation can mean funding that does not fit.',
+    'Ask a support coordinator if you are not sure the change is big enough to report.',
+  ],
+  'first-plan-support': [
+    'Read the plan carefully, or read it with someone.',
+    'Find out which budget categories are flexible and which are tied to a specific support.',
+    'Decide on a management option before booking services.',
+    'Ask whether support coordination is funded in your plan, and use it to connect with providers and get supports running.',
+    'Use the NDIS “Getting started” resources and contact centre for current guidance.',
+  ],
+  'home-care-packages': [
+    'Contact My Aged Care on 1800 200 422 and ask for an aged care assessment.',
+    'Ask which program you are assessed into and what it covers now, because programs and names have changed through reform.',
+    'Choose an approved provider to manage the package.',
+    'Ask which funding level applies, based on your assessed need.',
+  ],
+  'commonwealth-home-support': [
+    'Contact My Aged Care on 1800 200 422 to confirm what applies now.',
+    'Decide which services you need, such as domestic assistance, transport, home maintenance or social support.',
+    'Ask CHSP providers about the specific services they fund directly.',
+  ],
+  'support-at-home': [
+    'Ask My Aged Care on 1800 200 422 how Support at Home applies to you.',
+    'Get an aged care assessment through My Aged Care, whichever structure is current.',
+    'Confirm the exact funding levels and what is included.',
+    'If you already receive support, ask how people already receiving support move across.',
+  ],
+  'residential-fees': [
+    'Ask for an aged care assessment and a means assessment. My Aged Care on 1800 200 422 is the place to begin both.',
+    'Expect your financial assessment, through Services Australia or the Department of Veterans’ Affairs, to decide the means-tested care fee.',
+    'Decide how to pay accommodation costs: a lump sum, a daily payment, or a combination.',
+    'Ask each facility about optional extra service fees.',
+  ],
+  'dva-community-nursing': [
+    'Check that you hold a DVA Gold Card, or a White Card for accepted conditions.',
+    'Ask a GP for a referral.',
+    'Confirm eligibility and referral steps with DVA on 1800 838 372.',
+    'Expect the nursing to be delivered by a DVA-contracted nursing provider.',
+  ],
+  'dva-home-care': [
+    'Check your card type and whether your need relates to an accepted condition.',
+    'Contact DVA on 1800 838 372 to confirm current eligibility and get an assessment.',
+    'Expect services to be arranged through DVA’s own systems, not a general aged care pathway.',
+  ],
+  'veterans-home-care': [
+    'Contact DVA on 1800 838 372 to confirm current eligibility and scope.',
+    'Ask for an assessment. The program is assessed and coordinated through DVA.',
+    'Expect services to be delivered by contracted providers.',
+  ],
+  'rehabilitation-appliances': [
+    'Ask a health professional, such as an occupational therapist, to assess you and recommend the item.',
+    'Submit the recommendation through DVA’s approval process before buying anything.',
+    'Check with DVA on 1800 838 372 what is available, because items are tied to accepted conditions and DVA’s item schedules.',
+  ],
+  'open-arms-referrals': [
+    'Phone Open Arms on 1800 011 046. The line is open 24 hours a day.',
+    'Ask whether you qualify. It is for current and former ADF members and their families.',
+    'A GP or DVA can refer you, but a formal referral is not always needed.',
+    'Choose individual, couples, family or group counselling.',
+  ],
+  'private-fee-for-service': [
+    'Ask the provider for a clear, itemised quote before starting.',
+    'Ask what is included, because the provider sets its own rates and terms.',
+    'Remember that the eligibility and claims processes of funded schemes do not apply.',
+  ],
+  'icare-workers-compensation': [
+    'Contact the case manager at your workers compensation insurer or scheme.',
+    'Ask what your particular claim covers, and for how long.',
+    'Remember that rules differ by state and claim type. icare is the scheme in NSW, and other states and territories have their own.',
+  ],
+  'private-health-insurance': [
+    'Ask your insurer what your policy covers for the service you need.',
+    'Ask how much of your annual limit is left.',
+    'Claim through the insurer, often at the session itself.',
+  ],
+  'medicare-care-plans': [
+    'Book a GP appointment and ask whether you meet the criteria.',
+    'Ask the GP to prepare the plan and the referral.',
+    'Book an eligible allied health provider, such as for physiotherapy, psychology, podiatry or dietetics.',
+    'Claim the Medicare rebate for the sessions.',
+  ],
+  'state-funded-programs': [
+    'Ask your state or territory human services, disability or seniors department what programs exist.',
+    'Ask a local support coordinator or social worker, who may know of smaller programs.',
+    'Check each program’s own eligibility and application process.',
+    'Do not assume a program in one state applies, or exists, in another.',
+  ],
+  'plan-managers': [
+    'Compare how quickly each plan manager responds.',
+    'Ask what reporting and visibility they give you about your own spending.',
+    'Ask how early they flag budget problems.',
+    'Change plan managers if it is not working well.',
+  ],
+  'bookkeeping-invoicing': [
+    'Set up a simple, consistent system for receipts and claim records.',
+    'Use consistent file names.',
+    'Submit invoices promptly.',
+    'Reconcile regularly, so funding does not run out unexpectedly.',
+    'Consider a bookkeeping service or accounting software suited to disability-sector invoicing.',
+  ],
+  'price-guide-explained': [
+    'Find the support item in the NDIS’s current published pricing document.',
+    'Check the limit for your state or territory, and for evenings, weekends or public holidays.',
+    'Do not rely on a figure quoted from memory, because prices and support item numbers are updated periodically.',
+    'If you self-manage, remember the limits do not apply in the same way, but value for money still matters.',
+  ],
+  'funding-eligibility': [
+    'Work out which schemes could apply to you. More than one may.',
+    'Ask each body through its own process: NDIS on 1800 800 110, My Aged Care on 1800 200 422, DVA on 1800 838 372.',
+    'For a Medicare care plan, ask a GP to assess you against the set criteria.',
+  ],
+  'budget-categories': [
+    'Open your plan documents in myplace or the NDIS app. They are the record of what was approved.',
+    'Find your Core, Capacity Building and Capital budgets.',
+    'Check which are flexible. Core is typically the most flexible.',
+    'Ask a support coordinator or plan manager to walk through the breakdown.',
+  ],
+};
+
+for (const group of FUNDING_CONTENT_GROUPS) {
+  for (const item of group.items) {
+    const steps = TOPIC_STEPS[item.slug];
+    if (!steps) throw new Error(`fundingContent: no steps for ${item.slug}`);
+    item.steps = steps;
+  }
+}

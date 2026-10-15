@@ -122,57 +122,34 @@ const FUNDING_GUIDES = {
 
 const FUNDING_DETAILS = {
   'NDIS Plans': {
-    steps: ['Read the current plan and identify the relevant budget, management type and plan dates.', 'Confirm how the proposed support fits with the NDIA, planner, plan manager or support coordinator.', 'Compare providers on service fit, registration where required, availability, complete rates and written terms.', 'Monitor invoices and budget use, and raise changed circumstances or likely budget pressure early.'],
     records: ['The current NDIS plan and implementation notes', 'Service agreements, quotes and cancellation terms', 'Invoices, budget statements and payment records', 'Assessments, reports and evidence relevant to plan decisions'],
     providerQuestions: ['Can you work with this plan-management arrangement, and must you be registered for this support?', 'Which support item or budget do you expect to use, and why?', 'What are your rates for sessions, travel, reports, cancellations and non-face-to-face work?', 'How will you report progress, spending or concerns before the budget runs short?', 'What happens if the NDIA rejects a claim or an invoice is disputed?'],
     pitfalls: ['Assuming a funded category covers every service', 'Using an outdated price limit or support-item description', 'Starting without written rates and cancellation terms', 'Waiting until the plan is nearly exhausted before reviewing spending'],
     sources: [{ label: 'NDIS: Using your plan', href: 'https://www.ndis.gov.au/participants/using-your-funding/understanding-your-ndis-funding/guide-using-your-funding' }, { label: 'NDIS pricing arrangements', href: 'https://www.ndis.gov.au/providers/pricing-and-payments/pricing/pricing-arrangements' }],
   },
   'Aged Care': {
-    steps: ['Contact My Aged Care or review the person’s current assessment, approval and support plan.', 'Confirm which current program applies, what services are approved and whether a waiting period applies.', 'Ask providers for availability, inclusions, contributions, management charges and exit terms in writing.', 'Review services and costs when needs, income, living arrangements or program rules change.'],
     records: ['My Aged Care reference number and assessment outcome', 'Support plan, approval notices and provider agreement', 'Current fee schedule, budget statements and invoices', 'Health, safety and communication information shared with consent'],
     providerQuestions: ['Are you approved to deliver the current program and required services?', 'What fees, contributions, management charges, travel or establishment costs apply?', 'When can support start, and what happens if needs increase or a regular worker is absent?', 'How are service changes, complaints and moving to another provider handled?', 'Which costs are government funded and which remain the person’s responsibility?'],
     pitfalls: ['Relying on an old program name or fee description', 'Comparing headline prices without all recurring charges', 'Assuming approval means immediate provider capacity', 'Signing before understanding suspension, change and exit terms'],
     sources: [{ label: 'My Aged Care', href: 'https://www.myagedcare.gov.au/' }, { label: 'Aged care costs and fees', href: 'https://www.myagedcare.gov.au/how-do-aged-care-costs-work' }],
   },
   Veterans: {
-    steps: ['Check the veteran’s card coverage and whether the need relates to an accepted condition.', 'Confirm assessment, referral and prior-approval requirements with DVA or the treating practitioner.', 'Use a DVA-contracted or otherwise eligible provider where the program requires one.', 'Confirm any contribution, service limit and review date before support begins.'],
     records: ['DVA card details and accepted-condition information', 'Referral, assessment or prior-approval documents', 'Treatment or support plan and relevant clinical instructions', 'Provider quotes, service records and DVA correspondence'],
     providerQuestions: ['Are you authorised or contracted for this DVA program?', 'Is a referral or prior approval required before the first service?', 'Will you bill DVA directly, and could the veteran have an out-of-pocket cost?', 'How do you coordinate with treating professionals or a DVA case manager?', 'What happens if DVA changes or declines the approval?'],
     pitfalls: ['Assuming every card covers the same services', 'Booking before referral or approval requirements are met', 'Using a provider that cannot bill the relevant DVA program', 'Treating disability registration as proof of DVA eligibility'],
     sources: [{ label: 'DVA health and support services', href: 'https://www.dva.gov.au/what-we-help-with/health-support' }, { label: 'DVA contact information', href: 'https://www.dva.gov.au/about-us/contact-us' }],
   },
   'Other Funding': {
-    steps: ['Identify the exact insurer, scheme, policy, claim or private-payment arrangement.', 'Confirm eligibility, referral, approval, provider and service requirements with the payer.', 'Obtain a written quote showing the full fee, expected benefit and likely gap.', 'Keep invoices and outcome records, and recheck cover before an approval period ends.'],
     records: ['Policy, membership or claim details', 'Referral, approval or case-manager correspondence', 'Written quote and explanation of likely gaps', 'Invoices, receipts and benefit statements'],
     providerQuestions: ['Do you bill this scheme directly, or must the person pay and claim?', 'Is a referral, approval number or case-manager authority required?', 'What is the total fee and likely out-of-pocket amount?', 'Are there annual limits, waiting periods, approved-provider rules or session caps?', 'What happens if the claim is delayed, reduced or declined?'],
     pitfalls: ['Assuming a service is covered because it was covered before', 'Confusing a rebate with full payment', 'Starting before required written approval', 'Failing to check annual limits, waiting periods or provider eligibility'],
     sources: [{ label: 'Services Australia health care and payments', href: 'https://www.servicesaustralia.gov.au/medicare' }, { label: 'Private Health Insurance Ombudsman', href: 'https://www.ombudsman.gov.au/complaints/private-health-insurance-complaints' }],
   },
   'Help With Funding': {
-    steps: ['Define the funding question or administrative problem that needs to be solved.', 'Choose a service with the appropriate role, authority and current scheme knowledge.', 'Agree record access, consent boundaries, fees, deliverables and review points in writing.', 'Check decisions against the current plan, budget and official program guidance.'],
     records: ['Current plan, budget or funding approval', 'Service agreement and authority or consent settings', 'Invoices, statements and reconciliations', 'Written advice, decisions and follow-up actions'],
     providerQuestions: ['What is your role, and which decisions remain with the person or funding body?', 'What qualifications, registration or relevant scheme experience do you have?', 'How are fees calculated and reported against the available budget?', 'Do you receive referral fees or offer other services that create a conflict?', 'How can records be accessed, errors corrected or the service changed?'],
     pitfalls: ['Giving broad authority without clear consent limits', 'Confusing administration with personal financial or legal advice', 'Ignoring conflicts where one organisation controls several services', 'Relying on verbal advice without checking current official guidance'],
     sources: [{ label: 'NDIS: Managing your plan', href: 'https://www.ndis.gov.au/participants/using-your-funding/plan-implementation-meeting/guide-your-management-options' }, { label: 'NDIS Commission participant resources', href: 'https://www.ndiscommission.gov.au/' }],
-  },
-};
-
-const FUNDING_LONGFORM = {
-  'NDIS Plans': {
-    reviewChecklist: ['Check the plan dates, management type and relevant budget.', 'Identify stated, quoted or registration-dependent supports.', 'Forecast committed services through the remaining plan period.', 'Reconcile invoices with attendance and written rates.', 'Review goals, outcomes and service frequency at agreed intervals.', 'Report material changes through the appropriate NDIA pathway.'],
-  },
-  'Aged Care': {
-    reviewChecklist: ['Confirm the current assessment, approval and program.', 'Compare direct-care value after all recurring charges.', 'Record consent, communication and cultural requirements.', 'Check worker continuity and after-hours arrangements.', 'Review services after health or living circumstances change.', 'Keep final statements and records when changing providers.'],
-  },
-  Veterans: {
-    reviewChecklist: ['Check card coverage and accepted-condition relevance.', 'Confirm referral and prior-approval requirements.', 'Verify the provider for the exact DVA program.', 'Record approval numbers, limits and review dates.', 'Clarify direct billing and possible personal costs.', 'Coordinate renewals before current authority expires.'],
-  },
-  'Other Funding': {
-    reviewChecklist: ['Name the exact policy, scheme, claim or private arrangement.', 'Check referrals, waiting periods and prior approval.', 'Obtain the total fee, expected benefit and gap.', 'Confirm provider recognition with the payer.', 'Keep receipts and reconcile benefit statements.', 'Recheck limits when an approval or policy period changes.'],
-  },
-  'Help With Funding': {
-    reviewChecklist: ['Define the question and expected deliverable.', 'Confirm role boundaries and relevant experience.', 'Limit consent and system access to what is necessary.', 'Record fees and possible conflicts of interest.', 'Keep written advice, reconciliations and decisions.', 'Review whether the service is resolving the original problem.'],
   },
 };
 
@@ -269,7 +246,6 @@ export function fundingShellEditorial(topic) {
   const informational = topic.categoryGroup === 'Help With Funding';
   const lower = topic.name.toLowerCase();
   const detail = FUNDING_DETAILS[topic.categoryGroup];
-  const longform = FUNDING_LONGFORM[topic.categoryGroup];
   const own = fundingTopicContent(topic.slug);
   return {
     overview: FUNDING_GUIDES[topic.categoryGroup],
@@ -284,7 +260,7 @@ export function fundingShellEditorial(topic) {
       'Keep approvals, service agreements, invoices and statements, and review them when circumstances or program rules change.',
     ],
     ...detail,
-    ...longform,
+    steps: own ? own.steps : [],
     faq: fundingFaqs(topic),
   };
 }

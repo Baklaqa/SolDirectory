@@ -3,7 +3,6 @@ import type { FundingContent } from './fundingContent';
 export interface FundingEditorial {
   accessHeading: string;
   accessIntro: string;
-  steps: string[];
   records: string[];
   providerQuestions: string[];
   pitfalls: string[];
@@ -13,7 +12,6 @@ export interface FundingEditorial {
 interface FundingGroupGuide {
   accessHeading: string;
   accessIntro: string;
-  steps: string[];
   records: string[];
   providerQuestions: string[];
   pitfalls: string[];
@@ -24,12 +22,6 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
   'NDIS Plans': {
     accessHeading: 'How to use this within an NDIS plan',
     accessIntro: 'Start with the participant’s current plan and the latest NDIA guidance. The same support can be handled differently depending on the plan, management arrangement and whether a provider must be registered.',
-    steps: [
-      'Read the plan and identify the relevant budget, stated supports, management type and plan dates.',
-      'Confirm with the NDIA, planner, plan manager or support coordinator how the proposed support fits the current plan.',
-      'Compare providers on service fit, registration where required, availability, rates and written terms.',
-      'Monitor invoices and budget use, and raise changed circumstances or likely budget pressure early.',
-    ],
     records: ['The current NDIS plan and implementation notes', 'Service agreements, quotes and cancellation terms', 'Invoices, budget statements and payment records', 'Assessments, reports and evidence relevant to plan decisions'],
     providerQuestions: [
       'Can you work with this plan-management arrangement, and must you be NDIS registered for this support?',
@@ -47,12 +39,6 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
   'Aged Care': {
     accessHeading: 'How to check the current aged care pathway',
     accessIntro: 'Australian aged care programs and contribution rules have changed over time. My Aged Care and the person’s current assessment or service agreement are the authoritative starting points.',
-    steps: [
-      'Contact My Aged Care or review the person’s current assessment, approval and support plan.',
-      'Confirm which current program applies, what services are approved and whether a waiting period applies.',
-      'Ask providers for current availability, inclusions, contributions, package management and exit terms in writing.',
-      'Review services and costs when needs, income, living arrangements or program rules change.',
-    ],
     records: ['My Aged Care reference number and assessment outcome', 'Support plan, approval notices and provider agreement', 'Current fee schedule, budget statements and invoices', 'Health, safety and communication information the provider needs with consent'],
     providerQuestions: [
       'Are you approved to deliver the current program and the specific services required?',
@@ -70,12 +56,6 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
   Veterans: {
     accessHeading: 'How to confirm a DVA pathway',
     accessIntro: 'DVA eligibility depends on the person, card type, accepted conditions, assessed needs and the rules of the particular program. Confirm the pathway before arranging services privately.',
-    steps: [
-      'Check the veteran’s Gold or White Card coverage and whether the need relates to an accepted condition.',
-      'Contact DVA or the treating practitioner to confirm assessment, referral and prior-approval requirements.',
-      'Use a DVA-contracted or otherwise eligible provider where the program requires one.',
-      'Confirm any contribution, service limit and review date before support begins.',
-    ],
     records: ['DVA card details and accepted-condition information', 'Referral, assessment or prior-approval documents', 'Treatment or support plan and relevant clinical instructions', 'Provider quotes, service records and correspondence with DVA'],
     providerQuestions: [
       'Are you authorised or contracted for this DVA program?',
@@ -93,12 +73,6 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
   'Other Funding': {
     accessHeading: 'How to confirm cover before booking',
     accessIntro: 'These arrangements are governed by different insurers, schemes, policies or private contracts. Written confirmation from the responsible payer is more reliable than a provider’s general statement that funding may be available.',
-    steps: [
-      'Identify the exact insurer, scheme, policy, claim or private-payment arrangement involved.',
-      'Confirm eligibility, referral, approval, provider and service requirements with the responsible payer.',
-      'Obtain a written quote showing the full fee, expected benefit or scheme payment and likely gap.',
-      'Keep invoices and outcome records, and recheck cover before services continue beyond an approval period.',
-    ],
     records: ['Policy, membership or claim details', 'Referral, approval or case-manager correspondence', 'Written quote and explanation of likely gaps', 'Invoices, receipts and benefit statements'],
     providerQuestions: [
       'Do you bill this scheme or insurer directly, or must I pay and claim?',
@@ -116,12 +90,6 @@ const GROUP_GUIDES: Record<string, FundingGroupGuide> = {
   'Help With Funding': {
     accessHeading: 'How to use funding support responsibly',
     accessIntro: 'Advice, administration and coordination can make funding easier to use, but responsibility and decision-making should remain clear. Ask what the service does, what it cannot decide, and how conflicts are managed.',
-    steps: [
-      'Define the funding question or administrative problem that needs to be solved.',
-      'Choose a person or service with the appropriate role, authority and scheme knowledge.',
-      'Agree access to records, consent boundaries, fees, deliverables and review points in writing.',
-      'Check decisions against the current plan, budget and official program guidance.',
-    ],
     records: ['Current plan, budget or funding approval', 'Service agreement and authority or consent settings', 'Invoices, statements and reconciliations', 'Written advice, decisions and follow-up actions'],
     providerQuestions: [
       'What is your role, and which decisions remain with me or the funding body?',
