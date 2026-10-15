@@ -277,8 +277,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     } catch { workersHtml = ''; }
   }
   const pager =
-    (page > 1 ? `<a rel="prev" href="${esc(page === 2 ? base : `${base}?page=${page - 1}`)}">Previous page</a> ` : '') +
-    (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page</a>` : '');
+    (page > 1 ? `<a rel="prev" href="${esc(page === 2 ? base : `${base}?page=${page - 1}`)}">Previous page of ${esc(kind.plain)} providers in ${esc(areaName)}</a> ` : '') +
+    (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page of ${esc(kind.plain)} providers in ${esc(areaName)}</a>` : '');
 
   return {
     status: 200,
