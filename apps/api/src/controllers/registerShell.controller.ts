@@ -565,7 +565,7 @@ function render(html: string, req: Request, page: Page, site: string): string {
   out = out.replace('</head>', () => `    ${head}${hubFaqTag}\n  </head>`);
   const style = '<style>main[data-seo-shell]{max-width:860px;margin:0 auto;padding:24px 16px;font-family:system-ui,sans-serif;line-height:1.5}main[data-seo-shell] li{margin:2px 0}main[data-seo-shell] nav[aria-label=Breadcrumb] ol{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap}main[data-seo-shell] nav[aria-label=Breadcrumb] li+li::before{content:"/";margin:0 8px}</style>';
   const related = page.canonical && !page.noindex ? relatedShellHtml(req.originalUrl) : '';
-  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${externalLinkRel(breadcrumbLists(page.body), site)}${hub.html}${related}</main></div>`);
+  return out.replace('<div id="root"></div>', () => `<div id="root">${style}<main data-seo-shell>${externalLinkRel(breadcrumbLists(page.body).replace(/<(ul|ol)>\s*<\/>/g, ''), site)}${hub.html}${related}</main></div>`);
 }
 
 // ---------------------------------------------------------------
@@ -969,7 +969,7 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
       specificsHtml +
       resourcesHtml +
       `<h2>Providers that list ${esc(topic.name)}</h2><p>${total > 0 ? `${fmt(total)} SolDirectory member ${total === 1 ? 'provider lists' : 'providers list'} ${esc(topic.name)}.` : `No SolDirectory member provider lists ${esc(topic.name)} at the moment.`} Providers supply their own language information, so confirm the specific worker, fluency, dialect, communication method and availability directly.</p>` +
-      `<ul>${(docs as any[]).map((provider) => li(`/directory/${provider.slug}`, provider.tradingName || provider.legalEntityName, (provider.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul><p>${pager}</p>` +
+      `${(docs as any[]).length ? `<ul>${(docs as any[]).map((provider) => li(`/directory/${provider.slug}`, provider.tradingName || provider.legalEntityName, (provider.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul>` : ''}${pager ? `<p>${pager}</p>` : ''}` +
       registerHtml +
       `<h2>Questions to ask before support begins</h2><ol>${editorial.checks.map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
       `<p>How bilingual support, interpreters, privacy and funding differ is explained on the <a href="/language">language support guide</a>.</p>` +
