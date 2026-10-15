@@ -16,8 +16,8 @@ interface AuthResponse {
   user: { id: string; name: string; role: Role };
 }
 
-export async function login(email: string, password: string): Promise<AuthResponse> {
-  const res = await api.post<AuthResponse>('/auth/login', { email, password });
+export async function login(email: string, password: string, code?: string): Promise<AuthResponse> {
+  const res = await api.post<AuthResponse>('/auth/login', { email, password, ...(code ? { code } : {}) });
   setToken(res.token);
   return res;
 }

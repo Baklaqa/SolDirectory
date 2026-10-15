@@ -7,6 +7,10 @@ interface ClearanceSub {
   referenceNumber?: string;
   expiry?: Date | null;
   status: ClearanceStatus;
+  /** The date staff saw the evidence (set when a document is marked verified). The profile shows "Checks sighted on" this date. */
+  sightedAt?: Date;
+  /** Set once the "your check expires" email has gone out for the current expiry date. */
+  reminderSentFor?: Date;
 }
 
 interface FeedbackSub {
@@ -70,6 +74,8 @@ const clearanceSchema = new Schema<ClearanceSub>(
     referenceNumber: String,
     expiry: Date,
     status: { type: String, enum: ['verified', 'flagged', 'unmarked'], default: 'unmarked' },
+    sightedAt: Date,
+    reminderSentFor: Date,
   },
   { _id: false }
 );

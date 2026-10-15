@@ -55,10 +55,10 @@ const SECTION_TOPICS: Record<string, string> = {
 
 /** Photos that already ship with the site — the fallback when a topic has none of its own yet. */
 export const GENERAL_BANNERS = {
-  default: '/images/banners/general-2.jpg',
+  default: '/images/banners/housing-2.jpg',
   locations: '/images/banners/locations-nsw-3.jpg',
   guides: '/images/banners/guides.jpg',
-  services: '/images/banners/support-coordination-2.jpg',
+  services: '/images/banners/housing.jpg',
 } as const;
 
 /**

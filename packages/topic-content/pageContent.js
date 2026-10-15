@@ -353,7 +353,7 @@ export const PROVIDER_UNDERSTAND = [
   },
   {
     title: 'Notifications and contact access',
-    body: 'Claiming a basic listing is free and you are notified when an enquiry matches your service area. Unlocking full contact details is part of the Growth plan. A notification is not the same as a person agreeing to work with you.',
+    body: 'Claiming a basic listing is free and you are notified when an enquiry matches your service area. Unlocking full contact details is part of the Connect plan. A notification is not the same as a person agreeing to work with you.',
   },
   {
     title: 'Judge a directory by what is included',
@@ -455,6 +455,6 @@ export const WORKER_SAFEGUARDS = [
 
 /** Plan inclusions on /providers. Mirrors the default rows seeded in apps/api/src/models/PlanConfig.ts: update both together. */
 export const PROVIDER_PLANS = {
-  starter: { name: 'Starter', price: '$0 per month', features: ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'] },
-  growth: { name: 'Growth', price: '$249 per month + GST', features: ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'] },
+  starter: { name: 'Listed', price: '$0 per month', features: ['Claimed and verified profile', 'Weekly capacity check', 'Email notification of matching requests (headline only)', 'Worker directory search'] },
+  growth: { name: 'Connect', price: '$249 per month + GST ($273.90 including GST)', features: ['Everything in Listed', '15 unlocks a month (unused unlocks do not roll over)', 'SMS alerts', '3 team seats', 'Response-time reporting', 'Profile photos'] },
 };

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import RequestProgress from '../../components/RequestProgress';
-import { attachRequest, closeTrackedRequest, deleteTrackedRequest, getTrackedRequest, type TrackedRequest } from '../../api/requestsApi';
+import { attachRequest, closeTrackedRequest, deleteTrackedRequest, getTrackedRequest, setRequestOutcome, type TrackedRequest } from '../../api/requestsApi';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useMatchModal } from '../../context/MatchModalContext';
@@ -21,6 +21,7 @@ export default function TrackRequest() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<'idle' | 'saving' | 'done' | 'taken'>('idle');
   const [choice, setChoice] = useState<'idle' | 'working' | 'confirm-delete' | 'closed' | 'erased' | 'failed'>('idle');
+  const [outcome, setOutcome] = useState<'' | 'started' | 'looking' | 'not_needed'>('');
 
   useEffect(() => {
     applySeoTags({ title: 'Follow your request | SolDirectory', description: 'See who has received and opened your request.', noindex: true });
@@ -28,7 +29,13 @@ export default function TrackRequest() {
     const load = () => getTrackedRequest(id, token)
       .then((r) => { if (alive) { setRequest(r); setError(''); } })
       .catch((err) => { if (alive && !request) setError(err instanceof ApiError ? err.message : 'We could not load this request.'); });
-    load();
+    // A one-tap answer from the "did you find support?" email arrives as ?outcome=…; record it once, then load.
+    const answer = params.get('outcome');
+    if (token && (answer === 'started' || answer === 'looking' || answer === 'not_needed')) {
+      setRequestOutcome(id, token, answer).then(() => { if (alive) { setOutcome(answer); setChoice(answer === 'not_needed' ? 'closed' : 'idle'); } }).catch(() => {}).finally(load);
+    } else {
+      load();
+    }
     // Keeps itself current while the page is open.
     const t = setInterval(() => { if (!document.hidden) load(); }, 60_000);
     return () => { alive = false; clearInterval(t); };
@@ -110,6 +117,13 @@ export default function TrackRequest() {
                   </>
                 )}
               </section>
+
+              {(outcome || request.outcome) && (
+                <section className="trk-card" aria-label="Outcome" role="status">
+                  <strong>Thank you for letting us know.</strong>{' '}
+                  {{ started: 'Great: your support has started.', looking: 'We’ll keep your request open while you look.', not_needed: 'We’ve closed your request.' }[(outcome || request.outcome) as 'started' | 'looking' | 'not_needed']}
+                </section>
+              )}
 
               <section className="trk-card trk-choices" aria-label="Your choices">
                 <div>

@@ -118,7 +118,7 @@ export default function Verification() {
                     className={`verify-toggle verify-toggle-verify ${doc.status === 'verified' ? 'verify-toggle-active' : ''}`}
                     onClick={() => toggleMark(i, 'verified')}
                   >
-                    Verified
+                    Sighted
                   </button>
                   <button
                     className={`verify-toggle verify-toggle-flag ${doc.status === 'flagged' ? 'verify-toggle-active' : ''}`}

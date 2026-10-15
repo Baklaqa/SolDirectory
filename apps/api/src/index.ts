@@ -29,6 +29,7 @@ import adminClaimsRoutes from './routes/admin.claims.routes.js';
 import adminRegisterRoutes from './routes/admin.register.routes.js';
 import adminReviewsRoutes from './routes/admin.reviews.routes.js';
 import { registerShell } from './controllers/registerShell.controller.js';
+import contactRoutes from './routes/contact.routes.js';
 import { getSitemapPart } from './controllers/sitemap.controller.js';
 import adminRoutes from './routes/admin.routes.js';
 import adminDashboardRoutes from './routes/admin.dashboard.routes.js';
@@ -37,6 +38,7 @@ import adminServicesRoutes from './routes/admin.services.routes.js';
 import adminConditionsRoutes from './routes/admin.conditions.routes.js';
 import adminDiagnosticsRoutes from './routes/admin.diagnostics.routes.js';
 import adminLeadsRoutes from './routes/admin.leads.routes.js';
+import adminReportsRoutes from './routes/admin.reports.routes.js';
 import adminContentRoutes from './routes/admin.content.routes.js';
 import adminEmailLogsRoutes from './routes/admin.emailLogs.routes.js';
 import capacityRoutes from './routes/capacity.routes.js';
@@ -44,6 +46,8 @@ import statsRoutes from './routes/stats.routes.js';
 import searchAlertsRoutes from './routes/searchAlerts.routes.js';
 
 const app = express();
+// Behind nginx: take the visitor's address from X-Forwarded-For so consent, unlock and view records log the real one.
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(securityHeaders);
 
@@ -69,6 +73,7 @@ app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/wp', wpRoutes);
 app.use('/api/match-requests', matchRequestsRoutes);
 app.use('/api/requests', requestsRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
@@ -80,6 +85,7 @@ app.use('/api/admin/conditions', adminConditionsRoutes);
 // against this file, not assumed.
 app.use('/api/admin/diagnostics', adminDiagnosticsRoutes);
 app.use('/api/admin/leads', adminLeadsRoutes);
+app.use('/api/admin/reports', adminReportsRoutes);
 app.use('/api/admin/content', adminContentRoutes);
 app.use('/api/admin/email-logs', adminEmailLogsRoutes);
 app.use('/api/admin/claims', adminClaimsRoutes);

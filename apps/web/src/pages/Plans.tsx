@@ -92,9 +92,13 @@ export default function Plans() {
         <div className="plans-notice plans-notice-warn">Online payments are being set up. Plan purchases will open shortly.</div>
       )}
       {error && <div className="plans-notice plans-notice-warn" role="alert">{error}</div>}
+      <p className="plans-footnote">
+        Paying buys contact access, never a higher position in results. Unused unlocks don’t roll over to the next month. You can cancel any time
+        from your dashboard and keep your plan to the end of the paid period. Read how <a href="/listing-and-ranking-policy">results are ordered</a>.
+      </p>
 
       <div className="plans-grid">
-        {plans.map((plan) => {
+        {plans.filter((plan) => plan.key !== 'pro' || current === 'pro').map((plan) => {
           const isCurrent = plan.key === current && (plan.key === 'starter' || billing?.planStatus === 'active');
           return (
             <div key={plan.key} className={`plan-card${isCurrent ? ' plan-card-current' : ''}`}>
@@ -105,7 +109,7 @@ export default function Plans() {
               </div>
               <div className="plan-price">
                 ${(plan.priceCents / 100).toFixed(0)}
-                <span className="plan-price-suffix">/month</span>
+                <span className="plan-price-suffix">/month{plan.priceCents > 0 ? ` + GST ($${((plan.priceCents * 1.1) / 100).toFixed(2)} including GST)` : ''}</span>
               </div>
               <ul className="plan-features">
                 {plan.features.map((f) => (

@@ -1,3 +1,4 @@
+import { siteConfig } from '../../../config/siteConfig';
 import { Link } from 'react-router-dom';
 import { useMatchModal } from '../../../context/MatchModalContext';
 import type { RegisterKind } from '../../../lib/registerMeta';
@@ -25,12 +26,18 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
  * It also says what a listing does NOT tell you (availability).
  */
 export function VerifyNote({ kind }: { kind: RegisterKind }) {
+  const source = kind.type === 'aged_care'
+    ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.'
+    : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.';
+  const where = typeof window !== 'undefined' ? window.location.pathname : '';
+  const report = `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent(`Register listing: error or removal request (${where})`)}`;
   return (
     <p className="reg-note">
       <strong>Check before you engage.</strong> Listings are based on {kind.register} data and may be out of date. To confirm a provider’s
       current status, search the official register at{' '}
       <a href={kind.officialUrl} target="_blank" rel="noopener noreferrer">{kind.officialName}</a>. A listing does not show whether a
-      provider has capacity to take on new people.
+      provider has capacity to take on new people. {source} See <a href="/data-sources">data sources and attribution</a>.{' '}
+      <a href={report}>Report an error or request removal</a>.
     </p>
   );
 }

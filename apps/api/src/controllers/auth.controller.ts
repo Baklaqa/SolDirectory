@@ -7,6 +7,8 @@ import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import Referral from '../models/Referral.js';
 import { EmailService } from '../services/email.service.js';
+import type { AuthedRequest } from '../middleware/auth.middleware.js';
+import { decryptSecret, encryptSecret, generateSecret, otpauthUrl, verifyTotp } from '../services/totp.js';
 
 function generateReferralCode(): string {
   // Short, URL-safe, human-shareable — not cryptographically
@@ -27,7 +29,9 @@ function signToken(user: UserDoc): string {
 // shows. 'participant' is retired for NEW registrations (families use
 // the free "Get matched" request instead); existing participant accounts
 // can still sign in, so the role itself remains valid elsewhere.
-const PUBLIC_SIGNUP_ROLES = ['worker', 'provider', 'coordinator'];
+// SolDirectory has four kinds of account: admin (invited only), independent worker, provider and participant. New
+// public signups are workers and providers; participants use the free "Get matched" request.
+const PUBLIC_SIGNUP_ROLES = ['worker', 'provider'];
 
 export async function signup(req: Request, res: Response) {
   const { name, email, mobile, password, role, referralCode } = req.body;
@@ -107,6 +111,18 @@ export async function login(req: Request, res: Response) {
   const ok = await bcrypt.compare(password || '', user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
 
+  // Second factor, for anyone who has switched it on (required for administrators once enrolled).
+  if (user.twoFactor?.enabled) {
+    const code = String((req.body as { code?: unknown })?.code ?? '').trim();
+    if (!code) {
+      return res.status(401).json({ error: 'Enter the 6-digit code from your authenticator app.', code: 'TWO_FACTOR_REQUIRED' });
+    }
+    const secret = decryptSecret(user.twoFactor.secret);
+    if (!secret || !verifyTotp(secret, code)) {
+      return res.status(401).json({ error: 'That code is not right. Check the code in your authenticator app and try again.', code: 'TWO_FACTOR_INVALID' });
+    }
+  }
+
   let providerPlan: string | undefined;
   if (user.role === 'provider' && user.providerId) {
     const provider = await Provider.findById(user.providerId).select('accountStatus plan').lean();
@@ -147,10 +163,49 @@ export async function me(req: Request, res: Response) {
       providerPlan = provider?.plan;
     }
 
-    res.json({ user: { id: user._id, name: user.name, role: user.role, plan: providerPlan } });
+    res.json({ user: { id: user._id, name: user.name, role: user.role, plan: providerPlan, twoFactorEnabled: !!user.twoFactor?.enabled } });
   } catch {
     res.status(401).json({ error: 'Invalid or expired session' });
   }
+}
+
+/** POST /api/auth/2fa/setup: starts enrolment. Returns the secret and an otpauth link for an authenticator app. */
+export async function setupTwoFactor(req: AuthedRequest, res: Response) {
+  const user = await User.findById(req.user!.id);
+  if (!user) return res.status(401).json({ error: 'User no longer exists' });
+  if (user.twoFactor?.enabled) return res.status(409).json({ error: 'Two-factor sign-in is already on. Turn it off first to set it up again.' });
+  const secret = generateSecret();
+  user.twoFactor = { secret: encryptSecret(secret), enabled: false };
+  await user.save();
+  res.json({ secret, otpauthUrl: otpauthUrl(user.email, secret) });
+}
+
+/** POST /api/auth/2fa/enable { code }: confirms the app is set up by checking one code, then switches the second factor on. */
+export async function enableTwoFactor(req: AuthedRequest, res: Response) {
+  const user = await User.findById(req.user!.id);
+  if (!user?.twoFactor) return res.status(400).json({ error: 'Start the setup first.' });
+  const secret = decryptSecret(user.twoFactor.secret);
+  if (!secret || !verifyTotp(secret, String((req.body as { code?: unknown })?.code ?? ''))) {
+    return res.status(400).json({ error: 'That code is not right. Check the code in your authenticator app and try again.' });
+  }
+  user.twoFactor = { secret: user.twoFactor.secret, enabled: true, enabledAt: new Date() };
+  await user.save();
+  res.json({ enabled: true });
+}
+
+/** POST /api/auth/2fa/disable { password, code }: needs both the password and a current code. */
+export async function disableTwoFactor(req: AuthedRequest, res: Response) {
+  const user = await User.findById(req.user!.id);
+  if (!user?.twoFactor?.enabled) return res.json({ enabled: false });
+  const { password, code } = (req.body ?? {}) as { password?: string; code?: string };
+  const okPassword = await bcrypt.compare(password || '', user.passwordHash);
+  const secret = decryptSecret(user.twoFactor.secret);
+  if (!okPassword || !secret || !verifyTotp(secret, String(code ?? ''))) {
+    return res.status(400).json({ error: 'Check your password and the current code, then try again.' });
+  }
+  user.twoFactor = undefined;
+  await user.save();
+  res.json({ enabled: false });
 }
 
 /**

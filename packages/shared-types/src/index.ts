@@ -80,6 +80,8 @@ export interface LeadMasked {
   planManagement?: string;
   status: 'matched' | 'unlocked' | 'closed';
   createdAt: string;
+  /** How many providers have unlocked this request, out of the 3 that can. */
+  unlocksUsed?: number;
 }
 
 export interface LeadUnlocked extends LeadMasked {

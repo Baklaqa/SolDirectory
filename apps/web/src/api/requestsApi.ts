@@ -23,6 +23,7 @@ export interface TrackedRequest {
   /** The person closed the request, or deleted their details. */
   closed?: boolean;
   erased?: boolean;
+  outcome?: 'started' | 'looking' | 'not_needed';
 }
 
 /** A request on the "my requests" page, with the one-line position the weekly email also uses. */
@@ -64,6 +65,12 @@ export const closeTrackedRequest = (id: string, token: string) =>
 export const deleteTrackedRequest = (id: string, token: string) =>
   request<{ erased: boolean }>(`/${encodeURIComponent(id)}/delete`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token }),
+  });
+
+/** One-tap answer from the "did you find support?" email. */
+export const setRequestOutcome = (id: string, token: string, outcome: 'started' | 'looking' | 'not_needed') =>
+  request<{ outcome: string }>(`/${encodeURIComponent(id)}/outcome`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, outcome }),
   });
 
 export const listMyRequests = () => request<{ items: TrackedRequest[] }>('/mine', { headers: authHeaders() });

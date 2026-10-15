@@ -4,6 +4,8 @@ export interface UnlockLedgerDoc extends Document {
   providerId: Types.ObjectId;
   leadId: Types.ObjectId;
   idempotencyKey: string;
+  /** Where the unlock came from, kept in the audit trail. */
+  ip?: string;
   createdAt: Date;
 }
 
@@ -12,6 +14,7 @@ const unlockLedgerSchema = new Schema<UnlockLedgerDoc>(
     providerId: { type: Schema.Types.ObjectId, ref: 'Provider', required: true },
     leadId: { type: Schema.Types.ObjectId, ref: 'Lead', required: true },
     idempotencyKey: { type: String, required: true, unique: true },
+    ip: String,
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

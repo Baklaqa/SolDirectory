@@ -76,7 +76,13 @@ export interface LeadDoc extends Document {
     /** Which version of the notice was shown, so a later change to the wording can be told apart. */
     noticeVersion: string;
     recordedAt: Date;
+    /** Address the request was sent from, kept with the consent record. */
+    ip?: string;
   };
+  /** What the person said happened, from the outcome check email or the tracker. */
+  outcome?: { value: 'started' | 'looking' | 'not_needed'; at: Date };
+  /** Set once the "did you find support?" email has gone out. */
+  outcomeCheckSentAt?: Date;
   /** Set once the first "a provider has looked at your request" email has gone out. */
   viewedNoticeAt?: Date;
   /** Set once the "a provider has taken up your request" email has gone out. */
@@ -125,6 +131,8 @@ const leadSchema = new Schema<LeadDoc>(
     preferredListing: { type: new Schema({ type: String, slug: String, name: String }, { _id: false }), default: undefined },
     emailOptOut: { type: Boolean, default: false },
     erasedAt: Date,
+    outcome: { type: new Schema({ value: { type: String, enum: ['started', 'looking', 'not_needed'], required: true }, at: { type: Date, required: true } }, { _id: false }), default: undefined },
+    outcomeCheckSentAt: Date,
     consent: {
       type: new Schema({
         collection: { type: Boolean, required: true },
@@ -132,6 +140,7 @@ const leadSchema = new Schema<LeadDoc>(
         marketing: { type: Boolean, default: false },
         noticeVersion: { type: String, required: true },
         recordedAt: { type: Date, required: true },
+        ip: String,
       }, { _id: false }),
       default: undefined,
     },

@@ -9,7 +9,7 @@ import WorkerReview from '../models/WorkerReview.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
 import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
-import { workersForService, workersInArea } from './workersPublic.controller.js';
+import { eligibleStates, workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
@@ -209,7 +209,7 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
       `<h2>Browse ${esc(kind.plain)} providers by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
       `<h2>Suburbs with the most listings</h2><ul>${hub.suburbs.slice(0, 40).map((s) => li(`${base}/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>` +
       `<h2>What “listed on the register” means</h2><p>Each provider here appears on the ${esc(kind.register)}. That tells you what the provider was listed for and where — it is not a recommendation, a quality rating or a statement about availability. SolDirectory separately asks providers to confirm each week whether they can take on new people; that is what “Get matched” uses.</p>` +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
       (hub.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hub.asOf))}">${esc(registerDateLabel(hub.asOf))}</time>.</p>` : ''),
   };
 }
@@ -308,7 +308,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
       supportsHtml +
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : '')).join('')}</ul>` +
       `<p>${pager}</p>${workersHtml}${extra}` +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>`,
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>`,
   };
 }
 
@@ -389,7 +389,7 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
       `<li>Confirm the provider’s current status on <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>.</li>` +
       `<li>Ask whether they have capacity to start, and when. This listing doesn’t say.</li>` +
       `<li>Ask how they screen and train their workers, and what they charge — see our <a href="/guides/choosing-a-provider">guide to choosing a provider</a>.</li></ul>` +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
       (related.length ? `<h2>Other providers listed in ${esc(where)}</h2><ul>${related.map((r) => li(`/${kindPath}/${r.slug}`, registerName(r))).join('')}</ul>` : '') +
       `<p><a href="/${kindPath}">Browse the full register</a> · <a href="/find-a-provider">Compare provider profiles</a> · <a href="/locations">Browse by location</a></p>`,
   };
@@ -622,7 +622,8 @@ async function workerProfilePage(site: string, slug: string): Promise<Page> {
   if (!SLUG_RE.test(slug)) return notFound();
   const w: any = await Worker.findOne({ ...workerVisible(), publicSlug: slug })
     .select('firstName lastName role suburb state services languages conditionExperience bio hasPhoto publicSlug updatedAt').lean();
-  if (!w) return notFound();
+  // The worker directory is hidden until a state has enough profiles (workersPublic.controller.ts).
+  if (!w || !(await eligibleStates()).includes(w.state)) return notFound();
 
   // Approved reviews only, same as the page itself.
   const reviews: any[] = await WorkerReview.find({ workerId: w._id, status: 'approved' }).sort({ createdAt: -1 }).limit(10).select('rating text reviewerName createdAt').lean();
@@ -660,7 +661,7 @@ async function workerProfilePage(site: string, slug: string): Promise<Page> {
 }
 
 async function workerListPage(site: string, page: number, filtered: boolean): Promise<Page> {
-  const filter = workerVisible();
+  const filter = { ...workerVisible(), state: { $in: await eligibleStates() } };
   const [docs, total] = await Promise.all([
     Worker.find(filter).select('firstName lastName role suburb state services publicSlug').sort({ firstName: 1, _id: 1 }).skip((page - 1) * LEVEL_PAGE).limit(LEVEL_PAGE).lean(),
     Worker.countDocuments(filter),

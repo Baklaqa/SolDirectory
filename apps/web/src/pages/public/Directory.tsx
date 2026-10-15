@@ -494,6 +494,10 @@ export default function Directory() {
                     ? `${total.toLocaleString('en-AU')} ${total === 1 ? 'provider' : 'providers'}${anyFilter ? ' match your search' : ' listed'}`
                     : `Showing ${((page - 1) * PAGE_SIZE + 1).toLocaleString('en-AU')}–${Math.min(page * PAGE_SIZE, total).toLocaleString('en-AU')} of ${total.toLocaleString('en-AU')} providers${anyFilter ? ' matching your search' : ''}`}
             </div>
+            <p className="dir-ranking-note">
+              Members taking new people appear first, then other members, each in alphabetical order. Paying never changes the order.{' '}
+              <Link to="/listing-and-ranking-policy">How results are ordered</Link>
+            </p>
 
             {error && (
               <div className="dir-empty" role="alert">

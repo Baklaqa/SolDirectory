@@ -29,7 +29,7 @@ async function notifyProvider(lead: any, provider: any): Promise<boolean> {
 
   await SmsService.sendToProvider(
     provider,
-    `SolDirectory: new ${lead.need} enquiry in ${lead.suburb}. View and respond: ${dashboardUrl}`
+    `SolDirectory: new request for ${lead.need} in ${lead.suburb}, ${lead.fundingType}. View: ${dashboardUrl}`
   );
   if (provider.userId) {
     await Notification.create({

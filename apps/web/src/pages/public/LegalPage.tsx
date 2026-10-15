@@ -2,7 +2,7 @@ import { Fragment, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LEGAL_PACK, legalDocBySlug, type ResolvedLegalBlock } from '@soldirectory/topic-content';
 import { PublicHeader, PublicFooter } from './PublicLayout';
-import { LEGAL_PAGE_ORDER, LEGAL_REVIEWED } from './legalContent';
+import { LEGAL_PAGE_ORDER } from './legalContent';
 import { siteConfig } from '../../config/siteConfig';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import './LegalPage.css';
@@ -49,13 +49,12 @@ export default function LegalPage({ slug }: { slug: string }) {
         title: `${doc.title} | SolDirectory`,
         description: `${doc.title} for SolDirectory, run by Sol Business Consultant Pty Ltd.`,
         canonicalUrl,
-        noindex: !LEGAL_REVIEWED,
       });
-      setJsonLd('legal-page', LEGAL_REVIEWED ? {
+      setJsonLd('legal-page', {
         '@type': 'WebPage',
         name: doc.title,
         url: canonicalUrl,
-      } : null);
+      });
     }
     // A link such as /terms#4-10-suspension-and-removal lands on its section; otherwise start at the top.
     const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
@@ -76,15 +75,6 @@ export default function LegalPage({ slug }: { slug: string }) {
         <h1>{doc.title}</h1>
         {doc.updated && <p className="legal-summary">Last updated: {doc.updated}</p>}
 
-        {!LEGAL_REVIEWED && (
-          <p className="legal-draft-banner" role="note">
-            <strong>Draft — pending legal review.</strong> This page sets out how SolDirectory is intended to operate. It has
-            not yet been reviewed by a lawyer and may change.
-          </p>
-        )}
-        {!LEGAL_REVIEWED && doc.meets && (
-          <p className="legal-meets"><strong>Written to meet:</strong> {doc.meets}</p>
-        )}
 
         {doc.sections.map((s, i) => (
           <section key={`${s.heading}-${i}`} id={s.heading ? sectionId(s.heading) : undefined} className="legal-section">

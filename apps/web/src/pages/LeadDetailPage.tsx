@@ -31,6 +31,14 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reported, setReported] = useState<'' | 'sent' | 'failed'>('');
+
+  async function reportProblem(reason: 'invalid_contact' | 'duplicate') {
+    try {
+      const res = await fetch(`${API_URL}/leads/${id}/report-problem`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ reason }) });
+      setReported(res.ok ? 'sent' : 'failed');
+    } catch { setReported('failed'); }
+  }
 
   useEffect(() => {
     getLeadDetail(id)
@@ -97,7 +105,20 @@ export default function LeadDetailPage() {
             <p style={{ fontSize: 14, margin: '0 0 6px' }}><strong>{lead.contactName}</strong></p>
             <p style={{ fontSize: 14, margin: '0 0 6px' }}>{lead.contactPhone}</p>
             {lead.budget && <p style={{ fontSize: 14, margin: '0 0 6px' }}>Budget: {lead.budget}</p>}
-            {lead.note && <p style={{ fontSize: 14, margin: '10px 0 0', color: 'var(--color-text-muted, #5A6B84)' }}>{lead.note}</p>}
+            {lead.note && <p style={{ fontSize: 14, margin: '10px 0 0', color: 'var(--color-text-muted, #5A6B84)', whiteSpace: 'pre-wrap' }}>{lead.note}</p>}
+            <p style={{ fontSize: 13, margin: '14px 0 0', color: 'var(--color-text-muted, #5A6B84)' }}>
+              Please contact the person within one business day, and only about this request.
+            </p>
+            {reported === 'sent' ? (
+              <p role="status" style={{ fontSize: 13, margin: '8px 0 0' }}>Thank you. We’ll review it and restore the unlock if it was unusable.</p>
+            ) : (
+              <p style={{ fontSize: 13, margin: '8px 0 0' }}>
+                Contact details not working, or a request you already had?{' '}
+                <button type="button" className="link-btn" onClick={() => reportProblem('invalid_contact')}>Details are invalid</button>{' · '}
+                <button type="button" className="link-btn" onClick={() => reportProblem('duplicate')}>It’s a duplicate</button>
+                {reported === 'failed' && <span role="alert"> Could not send the report. Please try again.</span>}
+              </p>
+            )}
           </>
         ) : (
           <>

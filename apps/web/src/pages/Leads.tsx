@@ -93,7 +93,7 @@ export default function Leads() {
       {tab === 'nearby' && nearbyState === 'loading' && <p>Loading nearby requests…</p>}
       {tab === 'nearby' && nearbyState === 'plan-required' && (
         <div className="leads-empty-state">
-          <p>Browsing nearby open requests is a Growth-plan feature — beyond the leads matched straight to you, you can find and claim other genuine matches yourself.</p>
+          <p>Browsing nearby open requests is a Connect-plan feature — beyond the leads matched straight to you, you can find and claim other genuine matches yourself.</p>
           <button className="lead-unlock-btn" onClick={() => navigate('/plans')}>View plans</button>
         </div>
       )}
@@ -141,7 +141,7 @@ export default function Leads() {
                   <div className="lead-veil">
                     {err ? (
                       <p className="lead-veil-error" role="alert">
-                        {err.message} {err.code === 'QUOTA_EXHAUSTED' && <a href="/plans">Upgrade to Scale</a>}
+                        {err.message} {err.code === 'QUOTA_EXHAUSTED' && <a href="/plans">See plans</a>}
                       </p>
                     ) : (
                       <button className="lead-unlock-btn" disabled={unlockingId === lead.id} onClick={() => handleUnlock(lead)}>

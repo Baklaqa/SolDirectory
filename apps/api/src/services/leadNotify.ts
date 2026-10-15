@@ -13,7 +13,7 @@ export async function notifyProviderOfLead(lead: any, provider: any): Promise<vo
     if (provider.intakeEmail) {
       await EmailService.sendProviderLeadTeaser(provider.intakeEmail, lead.need, lead.suburb, dashboardUrl);
     }
-    await SmsService.sendToProvider(provider, `SolDirectory: new ${lead.need} enquiry in ${lead.suburb}. View and respond: ${dashboardUrl}`);
+    await SmsService.sendToProvider(provider, `SolDirectory: new request for ${lead.need} in ${lead.suburb}, ${lead.fundingType}. View: ${dashboardUrl}`);
     if (provider.userId) {
       await Notification.create({ userId: provider.userId, type: 'new_lead', message: `New ${lead.need} request in ${lead.suburb}`, link: `/leads/${lead._id}` });
     }

@@ -3,14 +3,19 @@
 .legal-breadcrumb a { color: var(--color-primary, #1769E0); }
 .legal-page h1 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.02em; margin: 0 0 10px; color: var(--color-text, #10233F); }
 .legal-summary { margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--color-text-muted, #5A6B84); }
-.legal-meets { margin: -12px 0 28px; font-size: 13px; line-height: 1.55; color: var(--color-text-muted, #5A6B84); }
 .legal-note { padding: 12px 16px; border-left: 3px solid var(--color-border, #C9DBF0); background: #F8FBFF; border-radius: 4px; }
 .legal-table-wrap { margin: 0 0 14px; overflow-x: auto; }
 .legal-table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.6; }
 .legal-table th, .legal-table td { padding: 10px 12px; text-align: left; vertical-align: top; border: 1px solid var(--color-border, #E8EEF7); }
 .legal-table thead th { background: #F1F5F8; font-weight: 700; }
 .legal-table tbody th { font-weight: 600; background: #FAFCFE; }
-.legal-draft-banner {
+.contact-form { display: grid; gap: 14px; max-width: 520px; }
+.contact-form label { display: grid; gap: 6px; font-size: 14px; font-weight: 600; color: var(--color-text, #10233F); }
+.contact-form input, .contact-form select, .contact-form textarea {
+  font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid var(--color-border, #C9D5E6); border-radius: 8px; background: #fff;
+}
+.contact-error { color: #A12020; margin: 0; }
+.legal-info-banner {
   margin: 0 0 28px; padding: 12px 16px; border-radius: 10px; font-size: 13.5px; line-height: 1.55;
   background: #FFF6E5; border: 1px solid #F0D9A8; color: #6B4A05;
 }

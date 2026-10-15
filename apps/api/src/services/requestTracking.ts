@@ -37,6 +37,8 @@ export interface TrackedRequest {
   closed: boolean;
   /** The person's contact details were deleted at their request. */
   erased: boolean;
+  /** What the person reported: support started, still looking, or no longer needed. */
+  outcome?: 'started' | 'looking' | 'not_needed';
 }
 
 const PROGRESS: Record<string, ProviderProgress> = { notified: 'waiting', viewed: 'viewed', contacted: 'responded', declined: 'declined' };
@@ -98,5 +100,6 @@ export function buildTrackedRequest(
     searchUrl: `${siteOrigin()}/find-a-provider${params.toString() ? `?${params}` : ''}`,
     closed: lead.status === 'closed',
     erased: !!lead.erasedAt,
+    outcome: lead.outcome?.value,
   };
 }

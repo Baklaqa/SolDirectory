@@ -20,8 +20,24 @@ import SuburbGeo from '../models/SuburbGeo.js';
  */
 
 const PUBLIC_MAX_LIMIT = 30;
+
+/**
+ * The worker directory stays hidden from the public until a region has enough profiles to be useful: at least
+ * MIN_PUBLIC_WORKERS visible profiles in the state (default 20). Counted per state and cached for five minutes.
+ */
+const MIN_PUBLIC_WORKERS = Math.max(0, Number(process.env.MIN_PUBLIC_WORKERS ?? 20));
+let eligibleCache: { at: number; states: string[] } | null = null;
+export async function eligibleStates(): Promise<string[]> {
+  if (eligibleCache && Date.now() - eligibleCache.at < 5 * 60_000) return eligibleCache.states;
+  const rows = await Worker.aggregate<{ _id: string | null; n: number }>([
+    { $match: visible() }, { $group: { _id: '$state', n: { $sum: 1 } } },
+  ]);
+  const states = rows.filter((r) => r._id && r.n >= MIN_PUBLIC_WORKERS).map((r) => r._id as string);
+  eligibleCache = { at: Date.now(), states };
+  return states;
+}
 const PROJECTION =
-  'firstName lastName role yearsExperience suburb state hasCar hourlyRate rating reviewCount services languages conditionExperience availableDays availabilityNote bio hasPhoto publicSlug updatedAt';
+  'firstName lastName role yearsExperience suburb state hasCar hourlyRate rating reviewCount services languages conditionExperience availableDays availabilityNote bio hasPhoto publicSlug updatedAt clearances';
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
@@ -48,9 +64,22 @@ async function withLocations(docs: any[]): Promise<Map<string, { lat: number; ln
   return out;
 }
 
+/**
+ * "Checks sighted on [date]": the checks staff have seen evidence for that have not expired, with the latest date they
+ * were sighted. Never described as verified or approved; reference numbers and expiry dates are not shown.
+ */
+function sightedChecks(w: any): { checksSightedOn: string | null; checksSighted: string[] } {
+  const now = Date.now();
+  const live = (w.clearances ?? []).filter((c: any) => c.status === 'verified' && c.sightedAt && (!c.expiry || new Date(c.expiry).getTime() > now));
+  if (!live.length) return { checksSightedOn: null, checksSighted: [] };
+  const latest = live.reduce((a: any, c: any) => (new Date(c.sightedAt) > new Date(a.sightedAt) ? c : a));
+  return { checksSightedOn: new Date(latest.sightedAt).toISOString(), checksSighted: live.map((c: any) => c.name as string) };
+}
+
 function toPublic(w: any, rating?: { rating: number; count: number }, location: { lat: number; lng: number } | null = null) {
   return {
     location,
+    ...sightedChecks(w),
     slug: w.publicSlug as string,
     firstName: w.firstName as string,
     lastInitial: w.lastName ? String(w.lastName).charAt(0).toUpperCase() : '',
@@ -80,7 +109,7 @@ export async function listPublicWorkers(req: Request, res: Response) {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(PUBLIC_MAX_LIMIT, Math.max(1, Number(req.query.limit) || 12));
 
-  const filter: Record<string, unknown> = visible();
+  const filter: Record<string, unknown> = { ...visible(), state: { $in: await eligibleStates() } };
   const service = str(req.query.service).slice(0, 80);
   if (service) filter.services = service;
   const suburb = str(req.query.suburb).slice(0, 60);
@@ -88,7 +117,7 @@ export async function listPublicWorkers(req: Request, res: Response) {
   const state = str(req.query.state).toUpperCase();
   if (state) {
     if (!STATE_CODES.includes(state as never)) return res.status(400).json({ error: 'Unknown state.' });
-    filter.state = state;
+    filter.state = (await eligibleStates()).includes(state) ? state : '__hidden__';
   }
   const q = str(req.query.q).slice(0, 60);
   if (q) {
@@ -117,7 +146,7 @@ export async function workersForService(title: string, category: string | undefi
   const state = opts.state && STATE_CODES.includes(opts.state as never) ? opts.state : '';
 
   for (const cand of workerServiceCandidates(title, category)) {
-    const base = { ...visible(), services: { $in: cand.patterns } };
+    const base = { ...visible(), state: { $in: await eligibleStates() }, services: { $in: cand.patterns } };
     const total = await Worker.countDocuments(base);
     if (total === 0) continue;
     const filter = state ? { ...base, state } : base;
@@ -147,6 +176,7 @@ export async function workersForService(title: string, category: string | undefi
 
 /** Public workers in a state, or one suburb of it (used by the crawler HTML of location pages). */
 export async function workersInArea(state: string, suburb?: string, limit = 6) {
+  if (!(await eligibleStates()).includes(state)) return { total: 0, items: [] };
   const filter: Record<string, unknown> = { ...visible(), state };
   if (suburb) filter.suburb = new RegExp('^\\s*' + escapeRegex(suburb) + '\\s*$', 'i');
   const [docs, total] = await Promise.all([
@@ -175,7 +205,7 @@ export async function getPublicWorker(req: Request, res: Response) {
   const slug = str(req.params.slug).toLowerCase();
   if (!/^[a-z0-9][a-z0-9-]{0,120}$/.test(slug)) return res.status(404).json({ error: 'Not found.' });
   const w = await Worker.findOne({ ...visible(), publicSlug: slug }).select(PROJECTION).lean();
-  if (!w) return res.status(404).json({ error: 'Not found.' });
+  if (!w || !(await eligibleStates()).includes((w as any).state)) return res.status(404).json({ error: 'Not found.' });
   res.set('Cache-Control', 'public, max-age=60');
   const [rating, location] = await Promise.all([ratingsFor([(w as any)._id]), withLocations([w])]);
   res.json(toPublic(w, rating.get(String((w as any)._id)), location.get(String((w as any)._id)) ?? null));

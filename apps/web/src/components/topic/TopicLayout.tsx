@@ -31,7 +31,7 @@ interface Props {
  * top, then the "On this page" sidebar and content column beneath it — the same
  * structure as a service page (WordPressCPTPage) and a service-in-suburb page.
  */
-export default function TopicLayout({ crumbs, eyebrow, title, description, image = '/images/banners/general-2.jpg', panelTitle = 'Find the right support', toc, relatedService, relatedThemes, relatedHeading, children }: Props) {
+export default function TopicLayout({ crumbs, eyebrow, title, description, image = '/images/banners/housing-2.jpg', panelTitle = 'Find the right support', toc, relatedService, relatedThemes, relatedHeading, children }: Props) {
   const { openMatchModal } = useMatchModal();
 
   return (

@@ -26,6 +26,8 @@ export interface UserDoc extends Document {
   // reset someone's account.
   passwordResetTokenHash?: string;
   passwordResetExpiresAt?: Date;
+  /** Authenticator-app second factor. `secret` is encrypted (services/totp.ts). Required for sign-in once `enabled`. */
+  twoFactor?: { secret: string; enabled: boolean; enabledAt?: Date };
 }
 
 const userSchema = new Schema<UserDoc>(
@@ -38,6 +40,7 @@ const userSchema = new Schema<UserDoc>(
     providerId: { type: Schema.Types.ObjectId, ref: 'Provider' },
     workerId: { type: Schema.Types.ObjectId, ref: 'Worker' },
     accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active' },
+    twoFactor: { type: new Schema({ secret: { type: String, required: true }, enabled: { type: Boolean, default: false }, enabledAt: Date }, { _id: false }), default: undefined },
     lastNotificationsViewedAt: Date,
     passwordResetTokenHash: String,
     passwordResetExpiresAt: Date,

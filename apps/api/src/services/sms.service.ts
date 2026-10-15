@@ -50,7 +50,10 @@ export const SmsService = {
     if (!e164) return false;
 
     const form = new URLSearchParams({ To: e164, Body: body });
-    if (cfg.messagingServiceSid) form.set('MessagingServiceSid', cfg.messagingServiceSid);
+    // A registered alphanumeric sender ID (SMS_SENDER_ID, e.g. "SolDirectory") shows the name instead of a number.
+    const senderId = (process.env.SMS_SENDER_ID ?? '').trim();
+    if (senderId) form.set('From', senderId);
+    else if (cfg.messagingServiceSid) form.set('MessagingServiceSid', cfg.messagingServiceSid);
     else form.set('From', cfg.from!);
 
     const controller = new AbortController();

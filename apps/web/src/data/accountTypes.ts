@@ -73,7 +73,9 @@ export const ACCOUNT_TYPES: AccountType[] = [
     // directory.
     postSignupRoute: '/find-providers',
     showClearanceConsent: false,
-    availableForSignup: true,
+    // Retired for new sign-ups: SolDirectory has four kinds of account (admin, independent worker, provider, participant).
+    // Existing accounts still sign in.
+    availableForSignup: false,
   },
   {
     key: 'participant',

@@ -7,8 +7,7 @@
  * { t: 'table', head, rows } | { t: 'note', text }. A block or list item with `only: 'flag'` is shown when that flag
  * in LEGAL_PRACTICES is true, `unless: 'flag'` when it is false. Text uses **bold** for lead-ins.
  *
- * The pages are DRAFTS until a lawyer has reviewed them (LEGAL_REVIEWED in the web app). `meets` names the laws each
- * page is written to meet so the reviewer can check it.
+ * `meets` names the laws each page is written to meet, for whoever reviews it.
  */
 
 /**
@@ -16,7 +15,8 @@
  * until the owner has confirmed it; the pack's wording applies when true and a more cautious wording when false.
  *  - australiaOnly: personal information is stored and processed only in Australia and sent nowhere overseas.
  *    The code calls Mapbox (address search) and Twilio (SMS), so this is false unless those are replaced or confirmed.
- *  - adminTwoFactor: administrators must use two-factor sign-in. Not implemented.
+ *  - adminTwoFactor: administrators must use two-factor sign-in. Built (authenticator app, /security). It is only
+ *    required of administrators once ADMIN_REQUIRE_2FA=true is set on the server; set this true after that.
  */
 export const LEGAL_PRACTICES = {
   australiaOnly: false,

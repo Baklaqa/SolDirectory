@@ -46,7 +46,7 @@ export default function ForProviders() {
       title: 'List your provider business | SolDirectory',
       description: PROVIDER_PAGE_DESCRIPTION,
       canonicalUrl: `${window.location.origin}/providers`,
-      ogImage: `${window.location.origin}/images/banners/general-2.jpg`,
+      ogImage: `${window.location.origin}/images/banners/housing-2.jpg`,
     });
     setJsonLd('providers-page', {
       '@type': 'WebPage',
@@ -93,7 +93,7 @@ export default function ForProviders() {
           eyebrow="For providers"
           title="Receive relevant enquiries in your service area"
           description="People looking for NDIS and aged care support send a request. SolDirectory compares it with provider service areas, funding arrangements and confirmed capacity, and delivers relevant enquiries by email or SMS for your team to assess."
-          image="/images/banners/general.jpg"
+          image="/images/banners/housing-2.jpg"
           imageAlt=""
           panel={{
             title: 'List your business',
@@ -137,7 +137,7 @@ export default function ForProviders() {
 
           <section className="fp-reach" aria-labelledby="fp-reach-heading">
             <div className="fp-reach-photo">
-              <PhotoSlot src="/images/banners/general-2.jpg" alt="Two people talking across a table" variant="care" />
+              <PhotoSlot src="/images/banners/housing.jpg" alt="A man using a wheelchair in a kitchen, with another person washing up behind him" variant="care" />
             </div>
             <div className="fp-reach-body">
               <span className="eyebrow"><span className="eyebrow-rule" />How enquiries reach you</span>
@@ -171,25 +171,27 @@ export default function ForProviders() {
           <section className="fp-plans" aria-labelledby="fp-plans-heading">
             <div className="fp-plans-head">
               <span className="eyebrow"><span className="eyebrow-rule" />Plans</span>
-              <h2 id="fp-plans-heading" className="fp-h2">Free listing, or Growth</h2>
+              <h2 id="fp-plans-heading" className="fp-h2">Free listing, or Connect</h2>
               <p className="fp-lede">
-                A Starter listing provides directory visibility and limited enquiry information. Growth adds contact access and a monthly lead allowance.
+                A Listed profile provides directory visibility and the headline of matching requests. Connect adds contact access and a monthly
+                unlock allowance. Paying buys contact access, never a higher position in results: see how{' '}
+                <a href="/listing-and-ranking-policy">results are ordered</a>.
               </p>
             </div>
             <div className="fp-plan-grid">
               <article className="fp-plan">
                 <span className="fp-plan-tier">Free</span>
-                <h3>Starter</h3>
+                <h3>Listed</h3>
                 <p className="fp-plan-price">$0<span>/month</span></p>
                 <ul>{STARTER_FEATURES.map((f) => <li key={f}>{f}</li>)}</ul>
                 <button className="btn-tint btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Claim your profile</button>
               </article>
               <article className="fp-plan fp-plan-featured">
-                <span className="fp-plan-tier">Growth</span>
-                <h3>Growth</h3>
-                <p className="fp-plan-price">$249<span>/month + GST</span></p>
+                <span className="fp-plan-tier">Connect</span>
+                <h3>Connect</h3>
+                <p className="fp-plan-price">$249<span>/month + GST ($273.90 including GST)</span></p>
                 <ul>{GROWTH_FEATURES.map((f) => <li key={f}>{f}</li>)}</ul>
-                <button className="btn-white btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Start on Growth</button>
+                <button className="btn-white btn-lg" type="button" onClick={() => navigate('/signup?type=provider')}>Start on Connect</button>
               </article>
             </div>
           </section>

@@ -66,6 +66,9 @@ export interface PublicWorker {
   reviewCount: number;
   /** The worker's suburb centroid (never a street address) — null until that suburb has been geocoded. */
   location: { lat: number; lng: number } | null;
+  /** Latest date staff saw evidence of the worker's current checks, or null. Never "verified". */
+  checksSightedOn?: string | null;
+  checksSighted?: string[];
 }
 export interface PublicWorkerList { items: PublicWorker[]; page: number; limit: number; total: number; hasMore: boolean }
 

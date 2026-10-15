@@ -173,7 +173,8 @@ export function PublicFooter() {
           <Link to="/providers">List your business</Link>
           <Link to="/independent-workers">Independent Workers</Link>
           <Link to="/independent-workers/find">Find a worker</Link>
-          {siteConfig.contactEmail && <a href={`mailto:${siteConfig.contactEmail}`}>Contact</a>}
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
           <Link to="/photo-credits">Photo credits</Link>
           <Link to="/complaints">Make a complaint or report a concern</Link>
           <button type="button" className="public-footer-linkbtn" onClick={openConsentSettings}>Cookie settings</button>
@@ -195,10 +196,18 @@ export function PublicFooter() {
         </div>
       </div>
       <div className="public-footer-legal">
-        © {new Date().getFullYear()}{siteConfig.legalEntity ? ` ${siteConfig.legalEntity}.` : ' SolDirectory.'} Provider details are
-        supplied by providers. SolDirectory is a directory and referral
-        service; it does not provide care and does not recommend any provider.
-        It is independent and is not affiliated with or endorsed by the NDIA, the NDIS Commission, My Aged Care or Services Australia.
+        <p>
+          SolDirectory is operated by {siteConfig.legalEntity}
+          {siteConfig.contactAddress ? `, ${siteConfig.contactAddress}` : ''}.
+          {siteConfig.contactPhone ? ` Phone ${siteConfig.contactPhone}.` : ''}
+          {siteConfig.contactEmail ? ` Email ${siteConfig.contactEmail}.` : ''}
+        </p>
+        <p>
+          SolDirectory is an independent directory and referral service. It is not part of the NDIS, the NDIA, the NDIS Quality and
+          Safeguards Commission or My Aged Care, and it does not deliver care. A listing is not an endorsement.
+          Provider details are supplied by providers.
+        </p>
+        <p>© {new Date().getFullYear()} Sol Business Consultant Pty Ltd.</p>
       </div>
       <ScrollToTopButton />
     </footer>

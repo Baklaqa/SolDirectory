@@ -15,7 +15,7 @@ import './BlogPage.css';
 
 const SITE_ORIGIN = () => window.location.origin;
 const BLOG_PAGE_SIZE = 9;
-const EDITORIAL_COVER = '/images/banners/support-coordination-2.jpg';
+const EDITORIAL_COVER = '/images/banners/personal-care.jpg';
 const editorialCategoryNames = [...new Set(EDITORIAL_BLOG_POSTS.map((article) => article.category))];
 const EDITORIAL_CATEGORIES: WPTerm[] = editorialCategoryNames.map((name, index) => ({
   id: -(index + 1),

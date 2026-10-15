@@ -74,8 +74,8 @@ const SERVICE_NOT_SURE = 'Not sure yet';
 export const COLLECTION_NOTICE_VERSION = '2026-10-15';
 
 /** Validates the consent object the form sends. Required: agreement to the notice; and authority when asking for another person. */
-export function parseConsent(raw: unknown, careFor: string | undefined):
-  | { value: { collection: true; authorisedForOther?: boolean; marketing: boolean; noticeVersion: string; recordedAt: Date } }
+export function parseConsent(raw: unknown, careFor: string | undefined, ip?: string):
+  | { value: { collection: true; authorisedForOther?: boolean; marketing: boolean; noticeVersion: string; recordedAt: Date; ip?: string } }
   | { error: string } {
   const c = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   if (c.collection !== true) {
@@ -92,12 +92,13 @@ export function parseConsent(raw: unknown, careFor: string | undefined):
       marketing: c.marketing === true,
       noticeVersion: COLLECTION_NOTICE_VERSION,
       recordedAt: new Date(),
+      ...(ip ? { ip } : {}),
     },
   };
 }
 
 function mapFormToLeadFields(body: Record<string, unknown>) {
-  const { location, suburb, state, postcode, careFor, timeframe, funding, planManagement, service, serviceContext, email, phone, name, additionalDetails } = body as Record<string, string | undefined>;
+  const { location, suburb, state, postcode, careFor, timeframe, funding, planManagement, service, serviceContext, email, phone, name, additionalDetails, hoursPerWeek, language, workerGender, cultural } = body as Record<string, string | undefined>;
   return {
     need: service?.trim() || SERVICE_NOT_SURE,
     // The service page the visitor opened the form from, if any. Only used to decide who hears about the enquiry; matching ignores it.
@@ -113,11 +114,17 @@ function mapFormToLeadFields(body: Record<string, unknown>) {
     suburb: suburb?.trim() || location,
     state: state?.trim() || undefined,
     postcode: postcode?.trim() || undefined,
-    requesterEmail: email,
+    requesterEmail: typeof email === 'string' ? email.trim().toLowerCase() : email,
     requesterName: name,
     contactName: name,
     contactPhone: phone || '',
-    note: additionalDetails || '',
+    hoursPerWeek: hoursPerWeek?.trim().slice(0, 40) || '',
+    note: [
+      language?.trim() && `Language: ${language.trim().slice(0, 80)}`,
+      workerGender?.trim() && `Worker gender: ${workerGender.trim().slice(0, 20)}`,
+      cultural?.trim() && `Cultural needs: ${cultural.trim().slice(0, 160)}`,
+      additionalDetails?.trim(),
+    ].filter(Boolean).join('\n'),
   };
 }
 
@@ -196,8 +203,26 @@ export async function saveMatchRequestDraft(req: Request, res: Response) {
  * Public/unauthenticated — this is a lead-generation form for
  * anonymous site visitors, same as the wizard itself requires no login.
  */
+// A small per-address limit on submissions (in memory): stops a script without a CAPTCHA puzzle that would block disabled users.
+const submitHits = new Map<string, number[]>();
+function tooManySubmissions(key: string): boolean {
+  const now = Date.now();
+  const recent = (submitHits.get(key) ?? []).filter((t) => now - t < 60 * 60 * 1000);
+  if (recent.length >= 10) { submitHits.set(key, recent); return true; }
+  recent.push(now);
+  submitHits.set(key, recent);
+  return false;
+}
+
 export async function submitMatchRequest(req: Request, res: Response) {
   const { draftId, ...form } = req.body ?? {};
+  // A hidden field real people never fill in.
+  if (typeof (form as Record<string, unknown>).website === 'string' && (form as Record<string, string>).website.trim()) {
+    return res.status(201).json({ id: '', requestNumber: '', matchedProviderCount: 0, trackingUrl: '' });
+  }
+  if (tooManySubmissions(req.ip || 'unknown')) {
+    return res.status(429).json({ error: 'Too many requests from this connection. Please call us on 0460 003 494 and we will take your request over the phone.' });
+  }
   const { location, careFor, timeframe, funding, email, name } = form as Record<string, string | undefined>;
 
   if (!location?.trim()) return res.status(400).json({ error: 'Location is required.' });
@@ -209,8 +234,28 @@ export async function submitMatchRequest(req: Request, res: Response) {
 
   // The collection notice is shown before the contact details step; the request is not accepted without the
   // person's agreement to it (and, when sent for someone else, their confirmation of authority).
-  const consent = parseConsent((form as Record<string, unknown>).consent, careFor);
+  const consent = parseConsent((form as Record<string, unknown>).consent, careFor, req.ip);
   if ('error' in consent) return res.status(400).json({ error: consent.error });
+
+  // The same person sending the same request again within a day is told it is already with providers; it is not sent twice.
+  const dupSince = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const duplicate = await Lead.findOne({
+    requesterEmail: email.trim().toLowerCase(),
+    careFor,
+    fundingType: funding,
+    suburb: (form as Record<string, string | undefined>).suburb?.trim() || location,
+    status: { $in: ['matched', 'unlocked'] },
+    createdAt: { $gte: dupSince },
+  }).select('_id').lean();
+  if (duplicate) {
+    return res.status(200).json({
+      id: String(duplicate._id),
+      requestNumber: String(duplicate._id).slice(-8).toUpperCase(),
+      matchedProviderCount: 0,
+      duplicate: true,
+      trackingUrl: trackUrl(String(duplicate._id)),
+    });
+  }
 
   // Geocode once, at creation time — never repeatedly on every page
   // load, per the spec's own explicit instruction.
@@ -276,14 +321,14 @@ export async function submitMatchRequest(req: Request, res: Response) {
         const claimUrl = provider.claimed === false
           ? `${frontendOrigin}/forgot-password?claim=1&email=${encodeURIComponent(provider.intakeEmail)}`
           : undefined;
-        EmailService.sendProviderLeadTeaser(provider.intakeEmail, lead.need, lead.suburb, dashboardUrl, claimUrl).catch(() => {});
+        EmailService.sendProviderLeadTeaser(provider.intakeEmail, lead.need, lead.suburb, dashboardUrl, claimUrl, 3).catch(() => {});
       }
     }
     // Opt-in text alert (no-op unless Twilio is configured AND the
     // provider switched SMS on). Same fire-and-forget contract as email.
     SmsService.sendToProvider(
       provider as any,
-      `SolDirectory: new ${lead.need} enquiry in ${lead.suburb}. View and respond: ${frontendOrigin}/leads/${lead._id}`
+      `SolDirectory: new request for ${lead.need} in ${lead.suburb}, ${lead.fundingType}. 3 of 3 spots left. View: ${frontendOrigin}/leads/${lead._id}`
     ).catch(() => {});
     Notification.create({
       userId: provider.userId,
@@ -311,6 +356,15 @@ export async function submitMatchRequest(req: Request, res: Response) {
     },
     browseUrl: `${siteUrl}/find-a-provider${lead.suburb ? `?suburb=${encodeURIComponent(lead.suburb)}` : ''}`,
   }).catch(() => {});
+  // Nobody fits: tell the person straight away and point them at the register listings to contact directly.
+  if (!preferred && matchedProviders.length === 0) {
+    EmailService.sendNoMatch(email, {
+      need: lead.need,
+      suburb: lead.suburb,
+      registerUrl: `${siteUrl}/ndis-providers`,
+      trackingUrl: trackUrl(String(lead._id)),
+    }).catch(() => {});
+  }
   // Tell whoever runs the site about every new enquiry, and loudly when nobody could be matched.
   if (preferred) {
     // Tell the named business (when we can reach it) and let the site owner know what happened.

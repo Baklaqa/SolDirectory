@@ -28,6 +28,8 @@ export async function markDocument(req: AuthedRequest, res: Response) {
   if (!doc) return res.status(400).json({ error: 'No such document' });
 
   doc.status = doc.status === mark ? 'unmarked' : mark; // idempotent toggle
+  // "Verified" here means staff sighted the document: the profile shows the date, never the word "verified".
+  doc.sightedAt = doc.status === 'verified' ? new Date() : undefined;
   await worker.save();
 
   res.json(worker.clearances);

@@ -52,8 +52,8 @@ credited banner.
 
 ## Still needs a person
 
-- **Legal review.** The Terms, Privacy, Provider agreement and Enquiry disclaimer are drafts (`LEGAL_REVIEWED = false`
-  in `src/pages/public/legalContent.ts`). Have a lawyer review them, then flip the flag.
+- **Legal review.** Have a lawyer review the legal and policy pages (`packages/topic-content/legalPack.js`) and check
+  the statements listed in `apps/web/LEGAL_CLAIMS.md` against how the service is run.
 - **Contact and entity details.** Set `VITE_CONTACT_EMAIL`, `VITE_LEGAL_ENTITY` (and phone/address if wanted) in
   `apps/web/.env` before building. Until they are set the footer and legal pages show no contact route, so a rights
   holder has only the listing form.

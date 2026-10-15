@@ -41,33 +41,40 @@ export async function ensureDefaultPlans(): Promise<void> {
   const defaults: Omit<PlanConfigDoc, keyof Document>[] = [
     {
       key: 'starter',
-      name: 'Starter',
+      name: 'Listed',
       priceCents: 0,
       quota: 0,
-      features: ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'],
+      features: ['Claimed and verified profile', 'Weekly capacity check', 'Email notification of matching requests (headline only)', 'Worker directory search'],
     },
     {
       key: 'growth',
-      name: 'Growth',
+      name: 'Connect',
       priceCents: 24900,
       quota: 15,
       seats: 3,
       popular: true,
-      features: ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'],
+      features: ['Everything in Listed', '15 unlocks a month (unused unlocks do not roll over)', 'SMS alerts', '3 team seats', 'Response-time reporting', 'Profile photos'],
     },
     {
       key: 'pro',
-      name: 'Pro',
+      name: 'Connect Plus',
       priceCents: 64900,
       quota: null,
       seats: 10,
-      features: ['Unlimited lead unlocks', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'],
+      // Higher allowance and more seats for multi-site providers. It never buys a higher position in results.
+      features: ['Everything in Connect', 'Unlimited unlocks', 'Ten team seats', 'Named account manager'],
     },
   ];
 
   for (const plan of defaults) {
     await PlanConfig.updateOne({ key: plan.key }, { $setOnInsert: plan }, { upsert: true });
   }
+  // Plans were renamed (Starter, Growth, Pro -> Listed, Connect, Connect Plus). Only rows still on the old default name are
+  // renamed, so an administrator's own edits are kept. Leads are no longer exported, so that feature is not advertised.
+  await PlanConfig.updateOne({ key: 'starter', name: 'Starter' }, { $set: { name: 'Listed', features: ['Claimed and verified profile', 'Weekly capacity check', 'Email notification of matching requests (headline only)', 'Worker directory search'] } });
+  await PlanConfig.updateOne({ key: 'growth', name: 'Growth' }, { $set: { name: 'Connect', features: ['Everything in Listed', '15 unlocks a month (unused unlocks do not roll over)', 'SMS alerts', '3 team seats', 'Response-time reporting', 'Profile photos'] } });
+  await PlanConfig.updateOne({ key: 'pro', name: 'Pro' }, { $set: { name: 'Connect Plus', features: ['Everything in Connect', 'Unlimited unlocks', 'Ten team seats', 'Named account manager'] } });
+  await PlanConfig.updateMany({}, { $pull: { features: 'CSV export and webhook feed' } });
   // A paid plan does not change where a provider is listed (listing and ranking policy), so a stored plan row must not advertise it.
   await PlanConfig.updateMany({}, { $pull: { features: 'Priority placement in participant search' } });
 }

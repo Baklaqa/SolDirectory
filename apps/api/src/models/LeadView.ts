@@ -11,6 +11,8 @@ export interface LeadViewDoc extends Document {
   providerId: Types.ObjectId;
   firstViewedAt: Date;
   lastViewedAt: Date;
+  /** Address of the most recent view, kept in the audit trail. */
+  ip?: string;
 }
 
 const schema = new Schema<LeadViewDoc>(
@@ -19,6 +21,7 @@ const schema = new Schema<LeadViewDoc>(
     providerId: { type: Schema.Types.ObjectId, ref: 'Provider', required: true, index: true },
     firstViewedAt: { type: Date, default: Date.now },
     lastViewedAt: { type: Date, default: Date.now },
+    ip: String,
   }
 );
 

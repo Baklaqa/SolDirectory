@@ -43,6 +43,9 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Shown once the server says this account uses an authenticator app.
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const { login, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -63,11 +66,16 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const authedUser = await login(email, password);
+      const authedUser = await login(email, password, needsCode ? code : undefined);
       const returnTo = searchParams.get('returnTo');
       navigate(returnTo || ROLE_DESTINATION[authedUser.role]);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong logging in.');
+      if (err instanceof ApiError && err.code === 'TWO_FACTOR_REQUIRED') {
+        setNeedsCode(true);
+        setError('');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Something went wrong logging in.');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,7 +94,7 @@ export default function Login() {
           <div className="login-aside-content">
             <p className="login-eyebrow">Sol Directory</p>
             <div className="login-feature-image">
-              <PhotoSlot src="/images/banners/general.jpg" alt="Two women talking at a table by a window" variant="care" />
+              <PhotoSlot src="/images/banners/personal-care.jpg" alt="Older people and a carer chatting in a community room" variant="care" />
             </div>
             <h2 className="login-aside-heading">{content.asideHeading}</h2>
             <p className="login-aside-paragraph">{content.asideParagraph}</p>
@@ -133,6 +141,22 @@ export default function Login() {
                 placeholder="you@example.com.au"
                 className="login-input"
               />
+
+              {needsCode && (
+                <>
+                  <label htmlFor="login-code" className="login-field-label">6-digit code from your authenticator app</label>
+                  <input
+                    id="login-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={8}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="login-input"
+                    autoFocus
+                  />
+                </>
+              )}
 
               <label htmlFor="login-password" className="login-field-label">Password</label>
               <input

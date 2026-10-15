@@ -175,3 +175,7 @@
 .dir-register-hint a { color: #1769E0; font-weight: 600; text-decoration: none; }
 .dir-register-hint a:hover { text-decoration: underline; }
 .dir-register-hint-footer { margin: 28px 2px 0; font-size: 14px; line-height: 1.6; color: color-mix(in srgb, var(--color-text, #10233F) 70%, transparent); }
+.dir-ranking-note { margin: -6px 2px 16px; font-size: 13.5px; color: color-mix(in srgb, var(--color-text, #10233F) 70%, transparent); }
+.dir-ranking-note a { color: var(--color-primary, #1769E0); text-decoration: underline; }
+.dir-tag-capacity { color: #0B5C2E; background: #E4F5EA; }
+.dir-tag-related { color: #4B3A0B; background: #FFF3D1; }

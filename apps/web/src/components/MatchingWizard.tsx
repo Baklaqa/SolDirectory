@@ -44,6 +44,11 @@ interface MatchFormData {
   phone: string;
   name: string;
   additionalDetails: string;
+  // Optional preferences (the "Preferences" step).
+  hoursPerWeek: string;
+  language: string;
+  workerGender: string;
+  cultural: string;
 }
 
 // Matches the API's "neutral service" value (matching.service.ts).
@@ -52,29 +57,29 @@ const SERVICE_NOT_SURE = 'Not sure yet';
 const EMPTY_FORM: MatchFormData = {
   location: '', suburb: '', state: '', postcode: '', lat: '', lng: '',
   // Not asked as its own step for now — sent as-is so matching still gets a value.
-  service: SERVICE_NOT_SURE, careFor: '', timeframe: '', funding: '', planManagement: '',
+  service: '', careFor: '', timeframe: '', funding: '', planManagement: '',
   email: '', phone: '', name: '', additionalDetails: '',
+  hoursPerWeek: '', language: '', workerGender: '', cultural: '',
 };
 
 // v2: the step order changed, so an older saved draft's step index would
 // point at the wrong question. Old drafts are simply discarded.
-const DRAFT_STORAGE_KEY = 'mw_draft_v2';
+const DRAFT_STORAGE_KEY = 'mw_draft_v3';
 const LEGACY_DRAFT_KEY = 'mw_draft';
 
-type StepId = 'careFor' | 'location' | 'service' | 'timeframe' | 'funding' | 'planManagement' | 'notice' | 'email' | 'phone' | 'name' | 'additionalDetails';
+type StepId = 'careFor' | 'location' | 'service' | 'timeframe' | 'funding' | 'planManagement' | 'preferences' | 'notice' | 'email' | 'phone' | 'name' | 'additionalDetails';
 type Phase = 'wizard' | 'review' | 'success';
 
 const STEP_LABELS: Record<StepId, string> = {
   careFor: 'Who it’s for', location: 'Location', service: 'Support needed', timeframe: 'Timing', funding: 'Funding',
-  planManagement: 'Plan management', notice: 'How we use your details', email: 'Email', phone: 'Phone', name: 'Your name', additionalDetails: 'Anything else',
+  planManagement: 'Plan management', preferences: 'Preferences', notice: 'How we use your details', email: 'Email', phone: 'Phone', name: 'Your name', additionalDetails: 'Anything else',
 };
 
 function getSteps(funding: string): StepId[] {
-  // "service" is not asked as its own step for now (see EMPTY_FORM).
-  const base: StepId[] = ['careFor', 'location', 'timeframe', 'funding'];
+  const base: StepId[] = ['careFor', 'location', 'service', 'timeframe', 'funding'];
   if (funding === 'NDIS') base.push('planManagement');
   // The collection notice comes immediately before the contact details step (APP 5).
-  return [...base, 'notice', 'email', 'phone', 'name', 'additionalDetails'];
+  return [...base, 'preferences', 'notice', 'email', 'phone', 'name', 'additionalDetails'];
 }
 
 // `value` is what's stored and sent to the API (matching and existing
@@ -178,7 +183,7 @@ export default function MatchingWizard() {
         setForm({
           ...EMPTY_FORM,
           ...parsed.form,
-          service: parsed.form.service?.trim() || SERVICE_NOT_SURE,
+          service: parsed.form.service?.trim() || '',
         });
       }
       if (parsed.draftId) setDraftId(parsed.draftId);
@@ -293,6 +298,7 @@ export default function MatchingWizard() {
       }
       return '';
     }
+    if (id === 'service' && !form.service.trim()) return 'Choose a support, or “I’m not sure yet”.';
     const v = form[id as keyof MatchFormData] as string;
     if (id === 'location' && !v.trim()) return 'Enter a suburb or postcode so we know where to look.';
     if (id === 'careFor' && !v) return 'Choose who this is for.';
@@ -379,7 +385,7 @@ export default function MatchingWizard() {
     }
   }
 
-  const isOptionalStep = currentStepId === 'phone' || currentStepId === 'additionalDetails';
+  const isOptionalStep = currentStepId === 'phone' || currentStepId === 'additionalDetails' || currentStepId === 'preferences';
 
   return (
     <div className="mw-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) requestClose(); }}>
@@ -474,11 +480,17 @@ export default function MatchingWizard() {
                 <div className="mw-review-list">
                   <ReviewRow label="Who the support is for" value={labelFor(CARE_FOR_OPTIONS, form.careFor)} onEdit={() => editField('careFor')} />
                   <ReviewRow label="Location" value={form.location} onEdit={() => editField('location')} />
+                  <ReviewRow label="Support needed" value={form.service || '—'} onEdit={() => editField('service')} />
                   <ReviewRow label="Timeframe" value={labelFor(TIMEFRAME_OPTIONS, form.timeframe)} onEdit={() => editField('timeframe')} />
                   <ReviewRow label="Funding" value={labelFor(FUNDING_OPTIONS, form.funding)} onEdit={() => editField('funding')} />
                   {form.funding === 'NDIS' && (
                     <ReviewRow label="Plan management" value={labelFor(PLAN_OPTIONS, form.planManagement)} onEdit={() => editField('planManagement')} />
                   )}
+                  <ReviewRow
+                    label="Preferences"
+                    value={[form.hoursPerWeek && `${form.hoursPerWeek} hours a week`, form.language && `Language: ${form.language}`, form.workerGender && `Worker: ${form.workerGender}`, form.cultural && `Cultural needs: ${form.cultural}`].filter(Boolean).join(' · ') || '—'}
+                    onEdit={() => editField('preferences')}
+                  />
                   <ReviewRow label="Email" value={form.email} onEdit={() => editField('email')} />
                   <ReviewRow label="Phone" value={form.phone || '—'} onEdit={() => editField('phone')} />
                   <ReviewRow label="Name" value={form.name} onEdit={() => editField('name')} />
@@ -505,8 +517,17 @@ export default function MatchingWizard() {
             <div className="mw-success">
               <div className="mw-success-band"><span className="mw-success-icon"><IconCheckCircleBig /></span></div>
               <div className="mw-success-body">
-              <h2 id="mw-heading" ref={headingRef} tabIndex={-1} className="mw-question">{sentTo ? `Thank you. Your request for ${sentTo} has been sent.` : 'Thank you. Your request has been sent.'}</h2>
-              <p className="mw-supporting">{sentTo ? 'We are passing your request on and will email you a confirmation.' : 'We are processing your request and identifying relevant providers.'}</p>
+              <h2 id="mw-heading" ref={headingRef} tabIndex={-1} className="mw-question">{sentTo ? `Your request for ${sentTo} has been sent` : 'Your request has been sent'}</h2>
+              <p className="mw-supporting">
+                {sentTo
+                  ? 'We are passing your request on and have emailed you a link to track it.'
+                  : 'We’ve emailed you a link to track your request. Providers who match your needs and have confirmed they’re taking new people will see a summary. Up to 3 may contact you by phone or email.'}
+              </p>
+              <p className="mw-supporting">
+                Being contacted doesn’t mean you’ve agreed to anything. Ask each provider the same questions, compare them, and only sign a service
+                agreement when you’re ready.
+              </p>
+              <p className="mw-supporting">No word from anyone within a business day? Call us on 0460 003 494 or reply to your confirmation email and we’ll follow it up.</p>
               <div className="mw-next-steps mw-next-steps-center">
                 <p className="mw-next-steps-title">What happens next</p>
                 <ol>{(sentTo ? providerNextSteps(sentTo) : NEXT_STEPS).map((s) => <li key={s}>{s}</li>)}</ol>
@@ -850,6 +871,44 @@ function WizardStep({
 }) {
   const err = error ? <p className="mw-error" role="alert">{error}</p> : null;
 
+  if (stepId === 'service') {
+    return (
+      <>
+        <Heading headingRef={headingRef}>What support do you need?</Heading>
+        <p className="mw-supporting">Pick the closest match. You can add detail later.</p>
+        <ServiceStep value={form.service} onChange={(v) => set('service', v)} options={serviceOptions} />
+        {err}
+      </>
+    );
+  }
+
+  if (stepId === 'preferences') {
+    return (
+      <>
+        <Heading headingRef={headingRef}>Any preferences?</Heading>
+        <p className="mw-supporting">Optional. These help providers see whether they can be a good fit.</p>
+        <label htmlFor="mw-hours" className="mw-field-label">Hours of support a week</label>
+        <select id="mw-hours" className="mw-input" value={form.hoursPerWeek} onChange={(e) => set('hoursPerWeek', e.target.value)}>
+          <option value="">Not sure</option>
+          <option value="1 to 5">1 to 5</option>
+          <option value="6 to 15">6 to 15</option>
+          <option value="16 to 30">16 to 30</option>
+          <option value="More than 30">More than 30</option>
+        </select>
+        <label htmlFor="mw-language" className="mw-field-label">Language</label>
+        <input id="mw-language" className="mw-input" value={form.language} onChange={(e) => set('language', e.target.value)} placeholder="For example: Arabic, Auslan" maxLength={80} />
+        <label htmlFor="mw-gender" className="mw-field-label">Worker gender</label>
+        <select id="mw-gender" className="mw-input" value={form.workerGender} onChange={(e) => set('workerGender', e.target.value)}>
+          <option value="">No preference</option>
+          <option value="Woman">Woman</option>
+          <option value="Man">Man</option>
+        </select>
+        <label htmlFor="mw-cultural" className="mw-field-label">Cultural needs</label>
+        <input id="mw-cultural" className="mw-input" value={form.cultural} onChange={(e) => set('cultural', e.target.value)} placeholder="Anything that would help a provider support you well" maxLength={160} />
+      </>
+    );
+  }
+
   if (stepId === 'notice') {
     return (
       <>
@@ -999,14 +1058,17 @@ function WizardStep({
   return (
     <>
       <Heading headingRef={headingRef}>Anything else providers should know?</Heading>
-      <p className="mw-supporting">Optional. Add anything that would help a provider understand the support you are looking for.</p>
+      <p className="mw-supporting">
+        Optional. For example: best times to contact, language, or preferences for a worker. Please don’t include diagnoses or medical
+        details unless a provider needs them to know whether they can help.
+      </p>
       <label htmlFor="mw-details" className="mw-field-label">Additional details</label>
       <textarea
         id="mw-details"
         className="mw-textarea"
         value={form.additionalDetails}
         onChange={(e) => set('additionalDetails', e.target.value)}
-        placeholder="For example: preferred days and times, language spoken, or specific goals."
+        placeholder="For example: best times to contact, language, or preferences for a worker."
         rows={5}
         autoFocus
       />

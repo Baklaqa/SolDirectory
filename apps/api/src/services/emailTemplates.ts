@@ -5,6 +5,7 @@
 // own <html> document.
 
 import { siteOrigin } from './emailTokens.js';
+import { BUSINESS, BUSINESS_LINE } from '../config/business.js';
 
 const NAVY = '#0B2D5C';
 const PRIMARY = '#1769E0';
@@ -67,6 +68,7 @@ export function renderEmailLayout(opts: {
         <tr>
           <td style="padding:22px 32px 26px; background:#F8FAFD; border-top:1px solid #E8EEF7; font-size:12.5px; line-height:1.6; color:${TEXT_MUTED};">
             <strong style="color:${NAVY};">SolDirectory</strong> helps people find NDIS and aged care providers across Australia.<br />
+            ${BUSINESS_LINE}<br />
             <a href="${site}" style="color:${PRIMARY}; text-decoration:none;">Visit the website</a> &nbsp;·&nbsp; <a href="${site}/privacy" style="color:${PRIMARY}; text-decoration:none;">Privacy</a> &nbsp;·&nbsp; This is an automated message, so please don't reply to it.${footerHtml ? `<br /><br />${footerHtml}` : ''}
           </td>
         </tr>
@@ -132,12 +134,13 @@ export function leadConfirmationTemplate(input: {
           ? `${step(1, 'We pass your request on', `Your request goes to ${escapeHtml(d.provider)} only. They do not see your contact details unless they take it up.`)}
         ${step(2, 'They get in touch if they can help', 'Response times vary by provider, service and area. We will email you when your request is looked at.')}
         ${step(3, 'You choose', 'You are never obliged to use anyone. You can compare other providers at any time, ask about prices and availability, and pick the one that suits you.')}`
-          : `${step(1, 'Providers review your request', 'Matching providers see what you asked for. They do not see your contact details unless they take it up.')}
+          : `${step(1, 'Providers review your request', 'Providers that match and have confirmed they are taking new people see a summary, without your name or contact details. Up to 3 can choose to contact you.')}
         ${step(2, 'A provider gets in touch', 'Most people hear back within a few business days, though this varies by service and area. We will email you when a provider looks at your request.')}
         ${step(3, 'You choose', 'You are never obliged to use anyone. Compare providers, ask about prices and availability, and pick the one that suits you.')}`}
       </table>
       ${input.trackingUrl ? `<p style="margin:6px 0 12px;"><strong style="color:${NAVY};">Follow your request:</strong> <a href="${escapeHtml(input.trackingUrl)}" style="color:${PRIMARY}; font-weight:700;">see who has received and opened it</a>, any time.</p>` : ''}
-      <p style="margin:6px 0 0;">You do not have to wait: you can look at providers in your area now and contact them directly.</p>`,
+      <p style="margin:6px 0 12px;">Being contacted does not mean you have agreed to anything. Ask each provider the same questions, compare them, and only sign a service agreement when you are ready.</p>
+      <p style="margin:6px 0 0;">You do not have to wait: you can look at providers in your area now and contact them directly. Questions? Reply to this email or call ${escapeHtml(BUSINESS.phone)}.</p>`,
     ctaLabel: 'Browse providers near you',
     ctaUrl: input.browseUrl ?? input.trackingUrl,
   });
@@ -206,7 +209,7 @@ export function capacityConfirmationTemplate(input: { providerName: string; conf
   const html = renderEmailLayout({
     preheader: 'Confirm you can still take new referrals this week',
     heading: 'Weekly capacity check-in',
-    bodyHtml: `<p>Hi ${input.providerName},</p><p>Please confirm you're still able to take new referrals this week. If we don't hear from you within 7 days, your listing is paused and dropped from search results until you confirm again.</p>`,
+    bodyHtml: `<p>Hi ${input.providerName},</p><p>Please confirm you're still able to take new referrals this week. Only providers who answer receive new requests. If we don't hear from you within 7 days, your profile stays live but you won't be sent new requests, and it loses the “Taking new people” label, until you confirm again.</p>`,
     ctaLabel: 'Confirm capacity',
     ctaUrl: input.confirmUrl,
   });
@@ -224,15 +227,18 @@ export function providerLeadNotificationTemplate(input: { need: string; suburb: 
   return { subject: 'New care opportunity available', html };
 }
 
-export function providerLeadTeaserTemplate(input: { need: string; suburb: string; dashboardUrl?: string; claimUrl?: string }): { subject: string; html: string } {
+export function providerLeadTeaserTemplate(input: { need: string; suburb: string; dashboardUrl?: string; claimUrl?: string; unlocksLeft?: number }): { subject: string; html: string } {
+  const spots = typeof input.unlocksLeft === 'number'
+    ? `<p><strong>${input.unlocksLeft} of 3</strong> spots are left on this request.</p>`
+    : '<p>Up to 3 providers can unlock each request.</p>';
   const html = renderEmailLayout({
-    preheader: `A new ${escapeHtml(input.need)} lead is available in ${escapeHtml(input.suburb)}`,
-    heading: 'New lead in your service area',
-    bodyHtml: `<p>A new request for <strong>${escapeHtml(input.need)}</strong> in <strong>${escapeHtml(input.suburb)}</strong> may suit your organisation.</p><p>Upgrade your plan to unlock the full brief and contact details. The requester's email and phone number are hidden until the lead is unlocked.</p>${input.claimUrl ? `<p><strong>Your organisation has a free SolDirectory listing.</strong> <a href="${escapeHtml(input.claimUrl)}">Manage your listing</a> to update your details and respond to enquiries.</p>` : ''}`,
-    ctaLabel: input.dashboardUrl ? 'View lead opportunity' : undefined,
+    preheader: `New request: ${escapeHtml(input.need)} in ${escapeHtml(input.suburb)}`,
+    heading: 'A new request matches your profile',
+    bodyHtml: `<p>Support: <strong>${escapeHtml(input.need)}</strong><br />Suburb: <strong>${escapeHtml(input.suburb)}</strong></p>${spots}<p>The person’s name and contact details are shown when you unlock the request, which uses one of your monthly unlocks. Only unlock if you can realistically help, and please contact the person within one business day.</p>${input.claimUrl ? `<p><strong>Your organisation has a free SolDirectory listing.</strong> <a href="${escapeHtml(input.claimUrl)}">Manage your listing</a> to update your details and respond to requests.</p>` : ''}`,
+    ctaLabel: input.dashboardUrl ? 'View request' : undefined,
     ctaUrl: input.dashboardUrl,
   });
-  return { subject: `New ${input.need} lead in ${input.suburb}`, html };
+  return { subject: `New request: ${input.need} in ${input.suburb}`, html };
 }
 
 export function providerLeadFullTemplate(input: {
@@ -360,7 +366,7 @@ export function paymentFailedTemplate(input: { name: string; planName: string; b
     bodyHtml: `
       <p>Hi ${escapeHtml(input.name)},</p>
       <p>The latest payment for your <strong>${escapeHtml(input.planName)}</strong> plan didn't go through. This is usually an expired card or a bank decline.</p>
-      <p>Please update your payment method so your plan and lead unlocks aren't interrupted. We'll retry automatically over the next few days.</p>
+      <p>Please update your payment method so your plan and unlocks aren't interrupted. We'll try again in a few days. If the payment still doesn't go through, your profile stays live on the free Listed plan.</p>
     `,
     ctaLabel: input.billingUrl ? 'Update payment method' : undefined,
     ctaUrl: input.billingUrl,
@@ -374,11 +380,55 @@ export function subscriptionCancelledTemplate(input: { name: string; planName: s
     heading: `Your ${escapeHtml(input.planName)} plan has ended`,
     bodyHtml: `
       <p>Hi ${escapeHtml(input.name)},</p>
-      <p>Your <strong>${escapeHtml(input.planName)}</strong> subscription has ended and your account is back on the free Starter plan. Your listing stays public; lead details are hidden until you subscribe again.</p>
+      <p>Your <strong>${escapeHtml(input.planName)}</strong> subscription has ended and your account is back on the free Listed plan. Your listing stays public; lead details are hidden until you subscribe again.</p>
       <p>You can resubscribe at any time.</p>
     `,
     ctaLabel: input.plansUrl ? 'View plans' : undefined,
     ctaUrl: input.plansUrl,
   });
   return { subject: 'Your SolDirectory plan has ended', html };
+}
+
+export function checkExpiringTemplate(input: { firstName?: string; checkName: string; expiry: Date; link: string }): { subject: string; html: string } {
+  const when = input.expiry.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne' });
+  const html = renderEmailLayout({
+    preheader: `Your ${escapeHtml(input.checkName)} expires on ${when}`,
+    heading: `Your ${escapeHtml(input.checkName)} expires on ${when}`,
+    bodyHtml: `<p>Hi ${escapeHtml(input.firstName || 'there')},</p><p>Your ${escapeHtml(input.checkName)} on SolDirectory expires on <strong>${when}</strong>. Upload your renewed check before then to keep your profile visible.</p>`,
+    ctaLabel: 'Upload renewed check',
+    ctaUrl: input.link,
+  });
+  return { subject: `Your ${input.checkName} expires on ${when}`, html };
+}
+
+export function noMatchTemplate(input: { need?: string; suburb?: string; registerUrl: string; trackingUrl?: string }): { subject: string; html: string } {
+  const what = input.need && !/^not sure yet$/i.test(input.need) ? escapeHtml(input.need) : 'the support you asked for';
+  const where = input.suburb ? ` in ${escapeHtml(input.suburb)}` : '';
+  const html = renderEmailLayout({
+    preheader: 'No provider on SolDirectory has confirmed capacity for your request yet',
+    heading: 'We couldn’t find a match yet',
+    bodyHtml: `
+      <p>No provider on SolDirectory has confirmed capacity for ${what}${where} right now. We’ll keep your request open and let you know if one does.</p>
+      <p>In the meantime, registered providers list this support near you. You can contact them directly: <a href="${escapeHtml(input.registerUrl)}" style="color:${PRIMARY}; font-weight:700;">see registered providers</a>.</p>
+      ${input.trackingUrl ? `<p>You can close your request at any time: <a href="${escapeHtml(input.trackingUrl)}" style="color:${PRIMARY}; font-weight:700;">your request</a>.</p>` : ''}
+      <p>Questions? Reply to this email or call ${escapeHtml(BUSINESS.phone)}.</p>`,
+    ctaLabel: 'See registered providers',
+    ctaUrl: input.registerUrl,
+  });
+  return { subject: 'We couldn’t find a match yet', html };
+}
+
+export function outcomeCheckTemplate(input: { need?: string; started: string; looking: string; notNeeded: string }): { subject: string; html: string } {
+  const what = input.need && !/^not sure yet$/i.test(input.need) ? ` for ${escapeHtml(input.need)}` : '';
+  const btn = (href: string, label: string, primary = false) =>
+    `<a href="${escapeHtml(href)}" style="display:inline-block; margin:0 8px 10px 0; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:600; font-size:15px; ${primary ? `background:${PRIMARY}; color:#ffffff;` : `background:#EAF2FC; color:${NAVY};`}">${escapeHtml(label)}</a>`;
+  const html = renderEmailLayout({
+    preheader: 'One tap is enough: did you find the support you needed?',
+    heading: 'Did you find the support you needed?',
+    bodyHtml: `
+      <p>A quick check on your request${what}. Did you find support?</p>
+      <p>${btn(input.started, 'Yes, it’s started', true)}${btn(input.looking, 'Still looking')}${btn(input.notNeeded, 'I don’t need it any more')}</p>
+      <p>Your answer helps us show families which providers really follow through.</p>`,
+  });
+  return { subject: 'Did you find the support you needed?', html };
 }

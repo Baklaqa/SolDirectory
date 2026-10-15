@@ -19,6 +19,8 @@ const ConfirmCapacity = lazy(() => import('../pages/ConfirmCapacity'));
 const ForgotPassword = lazy(() => import('../pages/auth/AccountRecovery').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('../pages/auth/AccountRecovery').then((m) => ({ default: m.ResetPassword })));
 const LegalPage = lazy(() => import('../pages/public/LegalPage'));
+const ContactPage = lazy(() => import('../pages/public/ContactPage'));
+const AboutPage = lazy(() => import('../pages/public/AboutPage'));
 const PhotoCredits = lazy(() => import('../pages/public/PhotoCredits'));
 const GlossaryPage = lazy(() => import('../pages/public/GlossaryPage'));
 const EditorialStandards = lazy(() => import('../pages/public/EditorialStandards'));
@@ -31,6 +33,7 @@ const WorkerProfile = lazy(() => import('../pages/workers/WorkerProfile'));
 const Leads = lazy(() => import('../pages/Leads'));
 const LeadDetailPage = lazy(() => import('../pages/LeadDetailPage'));
 const Plans = lazy(() => import('../pages/Plans'));
+const Security = lazy(() => import('../pages/Security'));
 const Onboarding = lazy(() => import('../pages/Onboarding'));
 const Verification = lazy(() => import('../pages/Verification'));
 const AdminProviders = lazy(() => import('../pages/admin/AdminProviders'));
@@ -44,6 +47,7 @@ const AdminConditions = lazy(() => import('../pages/admin/AdminConditions'));
 const AdminDiagnostics = lazy(() => import('../pages/admin/AdminDiagnostics'));
 const AdminOperations = lazy(() => import('../pages/admin/AdminOperations'));
 const AdminEnquiries = lazy(() => import('../pages/admin/AdminEnquiries'));
+const AdminReports = lazy(() => import('../pages/admin/AdminReports'));
 const AdminContent = lazy(() => import('../pages/admin/AdminContent'));
 const TrackRequest = lazy(() => import('../pages/public/TrackRequest'));
 const PersonRequests = lazy(() => import('../pages/public/PersonRequests'));
@@ -224,6 +228,8 @@ export default function AppRoutes() {
       <Route path="/glossary" element={<GlossaryPage />} />
       <Route path="/editorial-standards" element={<EditorialStandards />} />
       <Route path="/provider-agreement" element={<LegalPage slug="provider-agreement" />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/collection-notice" element={<LegalPage slug="collection-notice" />} />
       <Route path="/cookies" element={<LegalPage slug="cookies" />} />
       <Route path="/worker-terms" element={<LegalPage slug="worker-terms" />} />
@@ -253,6 +259,7 @@ export default function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/security" element={<Security />} />
         <Route
           path="/workers"
           element={
@@ -276,6 +283,7 @@ export default function AppRoutes() {
         <Route path="/plans" element={<RequireRole roles={['provider']}><Plans /></RequireRole>} />
         <Route path="/onboarding" element={<RequireRole roles={['provider']}><Onboarding /></RequireRole>} />
         <Route path="/verification" element={<RequireRole roles={['admin']}><Verification /></RequireRole>} />
+        <Route path="/admin/reports" element={<RequireRole roles={['admin']}><AdminReports /></RequireRole>} />
         <Route path="/admin/providers" element={<RequireRole roles={['admin']}><AdminProviders /></RequireRole>} />
         <Route path="/admin/providers/:id" element={<RequireRole roles={['admin']}><AdminProviderDetail /></RequireRole>} />
         <Route path="/admin/workers" element={<RequireRole roles={['admin']}><AdminWorkers /></RequireRole>} />

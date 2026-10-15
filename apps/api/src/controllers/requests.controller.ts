@@ -6,6 +6,25 @@ import Provider from '../models/Provider.js';
 import type { AuthedRequest } from '../middleware/auth.middleware.js';
 import { buildTrackedRequest, verifyTrackToken, verifyPersonToken, trackUrl } from '../services/requestTracking.js';
 import { describeProgress } from '../services/requestSummary.service.js';
+import UnlockLedger from '../models/UnlockLedger.js';
+import Notification from '../models/Notification.js';
+
+/** Tells the providers that had this request (or unlocked it) that the person has withdrawn it. */
+async function notifyWithdrawn(leadId: unknown, need: string | undefined, suburb: string | undefined): Promise<void> {
+  const [matches, unlocks] = await Promise.all([
+    LeadMatch.find({ leadId }).select('providerId').lean(),
+    UnlockLedger.find({ leadId }).select('providerId').lean(),
+  ]);
+  const providerIds = [...new Set([...matches, ...unlocks].map((m: any) => String(m.providerId)))];
+  if (!providerIds.length) return;
+  const providers = await Provider.find({ _id: { $in: providerIds } }).select('userId').lean();
+  await Promise.all(providers.filter((p: any) => p.userId).map((p: any) => Notification.create({
+    userId: p.userId,
+    type: 'new_lead',
+    message: `A request for ${need && !/^not sure yet$/i.test(need) ? need : 'support'}${suburb ? ` in ${suburb}` : ''} was withdrawn by the person. Please do not contact them about it.`,
+    link: '/leads',
+  }).catch(() => {})));
+}
 
 async function loadTracked(leadId: string) {
   const lead = await Lead.findOne({ _id: leadId, status: { $ne: 'draft' } }).lean();
@@ -37,8 +56,9 @@ export async function closeRequest(req: Request, res: Response) {
   const id = req.params.id;
   const token = String((req.body as { t?: unknown })?.t ?? '');
   if (!mongoose.isValidObjectId(id) || !verifyTrackToken(id, token)) return res.status(404).json({ error: 'We could not find that request.' });
-  const lead = await Lead.findOneAndUpdate({ _id: id, status: { $ne: 'draft' } }, { $set: { status: 'closed' } }, { new: true }).select('_id');
+  const lead = await Lead.findOneAndUpdate({ _id: id, status: { $ne: 'draft' } }, { $set: { status: 'closed' } }, { new: true }).select('_id need suburb');
   if (!lead) return res.status(404).json({ error: 'We could not find that request.' });
+  void notifyWithdrawn(lead._id, (lead as any).need, (lead as any).suburb).catch(() => {});
   res.json({ closed: true });
 }
 
@@ -60,10 +80,29 @@ export async function deleteRequest(req: Request, res: Response) {
       },
       $unset: { location: '' },
     },
-    { new: true },
-  ).select('_id');
+    { new: false },
+  ).select('_id need suburb');
   if (!lead) return res.status(404).json({ error: 'We could not find that request.' });
+  void notifyWithdrawn(lead._id, (lead as any).need, (lead as any).suburb).catch(() => {});
   res.json({ erased: true });
+}
+
+/**
+ * POST /api/requests/:id/outcome { t, outcome } — the person says whether support started, they are still looking, or they
+ * no longer need it. Feeds the provider "started" figures; a request that is no longer needed is closed.
+ */
+export async function setRequestOutcome(req: Request, res: Response) {
+  const id = req.params.id;
+  const body = (req.body ?? {}) as { t?: unknown; outcome?: unknown };
+  const token = String(body.t ?? '');
+  const outcome = String(body.outcome ?? '');
+  if (!mongoose.isValidObjectId(id) || !verifyTrackToken(id, token)) return res.status(404).json({ error: 'We could not find that request.' });
+  if (!['started', 'looking', 'not_needed'].includes(outcome)) return res.status(400).json({ error: 'Choose one of the three answers.' });
+  const set: Record<string, unknown> = { outcome: { value: outcome, at: new Date() } };
+  if (outcome === 'not_needed') set.status = 'closed';
+  const lead = await Lead.findOneAndUpdate({ _id: id, status: { $ne: 'draft' } }, { $set: set }, { new: true }).select('_id');
+  if (!lead) return res.status(404).json({ error: 'We could not find that request.' });
+  res.json({ outcome });
 }
 
 /** POST /api/requests/:id/attach { t } — a signed-in person adds a request they opened by link to their own account. */

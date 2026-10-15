@@ -116,6 +116,13 @@ export default function WorkerPublicProfile() {
               {w.availableDays.length > 0 && <div><dt>Available</dt><dd>{w.availableDays.join(', ')}</dd></div>}
             </dl>
             {w.availabilityNote && <p className="pp-lede" style={{ marginTop: 14 }}>{w.availabilityNote}</p>}
+            {w.checksSightedOn && (
+              <p className="reg-note" style={{ marginTop: 14 }}>
+                <strong>Checks sighted on {new Date(w.checksSightedOn).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}.</strong>{' '}
+                Our staff saw evidence of: {(w.checksSighted ?? []).join(', ')}. This is not verification with the body that issued a
+                check, an endorsement or a guarantee of suitability. Organisations should do their own checks.
+              </p>
+            )}
 
             <h2 className="reg-h2" id="reviews">Reviews</h2>
             <ReviewList load={(page) => getPublicWorkerReviews(w.slug, page)} />

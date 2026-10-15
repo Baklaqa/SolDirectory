@@ -5,6 +5,7 @@ import RegisterListing from '../models/RegisterListing.js';
 import { CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS } from '@soldirectory/topic-content';
 import { computeHub, computeServiceSuburbs } from './register.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, areaRows } from './providersPublic.controller.js';
+import { eligibleStates } from './workersPublic.controller.js';
 import { REAL_SERVICES, REGISTER_TYPES, STATE_CODES, type RegisterType, MIN_INDEXABLE_SERVICE_LOCATION } from '../services/registerNormalise.js';
 
 // Real sitemap — every URL here is either a genuinely static public
@@ -25,10 +26,14 @@ const GUIDE_ROUTES = ['/guides', ...Object.values(GUIDE_DOCS).map((guide) => `/g
 const FUNDING_ROUTES = ['/funding', ...FUNDING_TOPICS.map((topic) => `/funding/${topic.slug}`)];
 const CONDITION_ROUTES = ['/condition', ...CONDITION_TOPICS.map((topic) => `/condition/${topic.slug}`)];
 const LANGUAGE_ROUTES = ['/language', ...LANGUAGE_TOPICS.map((topic) => `/language/${topic.slug}`)];
+const LEGAL_ROUTES = [
+  '/privacy', '/collection-notice', '/cookies', '/terms', '/provider-agreement', '/worker-terms', '/complaints', '/statement-of-rights',
+  '/listing-and-ranking-policy', '/editorial-policy', '/accessibility', '/data-sources',
+];
 const STATIC_PUBLIC_ROUTES = [
   '/', '/find-a-provider', '/services', '/locations', '/providers',
   '/independent-workers', '/ndis-providers',
-  '/aged-care-providers', '/support-coordinators', '/glossary', '/editorial-standards', ...GUIDE_ROUTES, ...FUNDING_ROUTES, ...CONDITION_ROUTES, ...LANGUAGE_ROUTES,
+  '/aged-care-providers', '/support-coordinators', '/glossary', '/editorial-standards', '/about', '/contact', ...LEGAL_ROUTES, ...GUIDE_ROUTES, ...FUNDING_ROUTES, ...CONDITION_ROUTES, ...LANGUAGE_ROUTES,
 ];
 function editorialBlogRoutes(): string[] {
   const active = EDITORIAL_BLOG_POSTS.filter((post) => !post.expiresAt || new Date(post.expiresAt).getTime() > Date.now());
@@ -101,7 +106,7 @@ async function buildPageUrls(): Promise<UrlEntry[]> {
   for (const a of areas) if (a.count >= MIN_INDEXABLE_PROVIDERS) paths.push(`/directory/in/${a.slug}`);
 
   // Independent workers who opted in to a public profile and were approved.
-  const workers = await Worker.find({ publicProfile: true, published: true, accountStatus: 'active', publicSlug: { $exists: true, $ne: null } }).select('publicSlug').lean();
+  const workers = await Worker.find({ publicProfile: true, published: true, accountStatus: 'active', publicSlug: { $exists: true, $ne: null }, state: { $in: await eligibleStates() } }).select('publicSlug').lean();
   for (const w of workers) paths.push(`/independent-workers/${(w as any).publicSlug}`);
   // The finder page is noindex while nobody is published (registerShell's workerFinderPage), so it only belongs in the sitemap once someone is.
   if (workers.length) paths.push('/independent-workers/find');

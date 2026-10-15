@@ -50,7 +50,7 @@ export default function GuidePage({ slug }: { slug: keyof typeof GUIDE_DOCS | st
         <h1>{doc.title}</h1>
         <p className="legal-summary">{doc.summary}</p>
 
-        <p className="legal-draft-banner" role="note">
+        <p className="legal-info-banner" role="note">
           This guide explains general NDIS and aged care concepts and is not personal advice. Support names, price
           limits and eligibility rules are set by the NDIA and the Australian Government and can change — always
           confirm current details with the official source linked below before making a decision.

@@ -3,6 +3,7 @@ import type { AuthedRequest } from '../middleware/auth.middleware.js';
 import Lead, { MASKED_PROJECTION, toMaskedShape, toUnlockedShape } from '../models/Lead.js';
 import Provider from '../models/Provider.js';
 import UnlockLedger from '../models/UnlockLedger.js';
+import UnlockReport from '../models/UnlockReport.js';
 import PlanConfig from '../models/PlanConfig.js';
 import { geocodeAddress } from '../services/geocoding.service.js';
 import { scoreMatch, isGenuineMatch } from '../services/matching.service.js';
@@ -41,9 +42,12 @@ export async function listLeads(req: AuthedRequest, res: Response) {
   const matchedIds = myMatches.map((m) => String(m.leadId));
   const reasonByLead = new Map(myMatches.map((m) => [String(m.leadId), m.matchReason ?? '']));
   const visibleIds = [...new Set([...matchedIds, ...unlockedIds])];
-  const leads = visibleIds.length
+  const allLeads = visibleIds.length
     ? await Lead.find({ _id: { $in: visibleIds }, status: { $ne: 'draft' } }).select(MASKED_PROJECTION).sort({ createdAt: -1 }).lean()
     : [];
+  // A request that 3 providers have unlocked is full: it disappears for everyone who has not unlocked it themselves.
+  const unlockCounts = await unlockCountsFor(allLeads.map((l) => l._id));
+  const leads = allLeads.filter((l) => unlockedIds.has(String(l._id)) || (unlockCounts.get(String(l._id)) ?? 0) < MAX_UNLOCKS_PER_LEAD);
   const unlockedFull = unlockedIds.size
     ? await Lead.find({ _id: { $in: [...unlockedIds] } }).lean()
     : [];
@@ -62,6 +66,7 @@ export async function listLeads(req: AuthedRequest, res: Response) {
       const reason = reasonByLead.get(String(l._id)) ?? '';
       return {
         ...shaped,
+        unlocksUsed: unlockCounts.get(String(l._id)) ?? 0,
         viewed: viewedIds.has(String(l._id)),
         // How this enquiry reached the provider, so the dashboard can say so.
         origin: /^Asked for you by name/i.test(reason) ? 'named' : /^Shared by SolDirectory/i.test(reason) ? 'shared' : 'matched',
@@ -105,12 +110,14 @@ export async function listNearbyLeads(req: AuthedRequest, res: Response) {
   ]);
   const alreadySeen = [...ownMatches, ...ownUnlocks].map((m) => m.leadId);
   const openLeads = await Lead.find({ status: 'matched', _id: { $nin: alreadySeen } }).lean();
+  const openCounts = await unlockCountsFor(openLeads.map((l) => l._id));
 
   const nearby = openLeads
+    .filter((l) => (openCounts.get(String(l._id)) ?? 0) < MAX_UNLOCKS_PER_LEAD)
     .map((l) => ({ lead: l, result: scoreMatch(l as any, provider as any) }))
     .filter(({ result }) => isGenuineMatch(result))
     .sort((a, b) => b.result.score - a.result.score)
-    .map(({ lead }) => toMaskedShape(lead));
+    .map(({ lead }) => ({ ...toMaskedShape(lead), unlocksUsed: openCounts.get(String(lead._id)) ?? 0 }));
 
   res.json(nearby);
 }
@@ -128,7 +135,7 @@ export async function markLeadViewed(req: AuthedRequest, res: Response) {
 
   await LeadView.findOneAndUpdate(
     { leadId: lead._id, providerId: provider._id },
-    { $set: { lastViewedAt: new Date() }, $setOnInsert: { firstViewedAt: new Date() } },
+    { $set: { lastViewedAt: new Date(), ip: req.ip }, $setOnInsert: { firstViewedAt: new Date() } },
     { upsert: true }
   );
 
@@ -147,8 +154,42 @@ export async function markLeadViewed(req: AuthedRequest, res: Response) {
   res.json({ viewed: true });
 }
 
+/**
+ * POST /api/leads/:id/report-problem { reason, note } — a provider that unlocked a request tells us its contact details
+ * were invalid or that it duplicated one they already had. An administrator restores the unlock or dismisses the report.
+ */
+export async function reportLeadProblem(req: AuthedRequest, res: Response) {
+  const provider = await getActiveProviderForUser(req.user!.id);
+  if (!provider) return res.status(403).json({ error: 'No active provider profile for this account' });
+  const unlocked = await UnlockLedger.findOne({ providerId: provider._id, leadId: req.params.id }).select('createdAt').lean();
+  if (!unlocked) return res.status(404).json({ error: 'You have not unlocked this request.' });
+  // 14 days from the unlock, as the provider agreement says.
+  if (Date.now() - new Date((unlocked as any).createdAt).getTime() > 14 * 86_400_000) {
+    return res.status(400).json({ error: 'Problems with an unlock need to be reported within 14 days.' });
+  }
+  const body = (req.body ?? {}) as { reason?: string; note?: string };
+  const reason = ['invalid_contact', 'duplicate', 'other'].includes(String(body.reason)) ? (body.reason as 'invalid_contact' | 'duplicate' | 'other') : 'other';
+  try {
+    await UnlockReport.create({ leadId: req.params.id, providerId: provider._id, reason, note: typeof body.note === 'string' ? body.note.slice(0, 1000) : undefined });
+  } catch (err: any) {
+    if (err.code === 11000) return res.json({ reported: true, alreadyReported: true });
+    throw err;
+  }
+  res.status(201).json({ reported: true });
+}
+
 /** Providers that can unlock one request. Stated in the collection notice and the privacy policy. */
 export const MAX_UNLOCKS_PER_LEAD = 3;
+
+/** How many providers have unlocked each of the given requests. */
+async function unlockCountsFor(leadIds: unknown[]): Promise<Map<string, number>> {
+  if (!leadIds.length) return new Map();
+  const rows = await UnlockLedger.aggregate<{ _id: unknown; n: number }>([
+    { $match: { leadId: { $in: leadIds } } },
+    { $group: { _id: '$leadId', n: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((r) => [String(r._id), r.n]));
+}
 
 export async function unlockLead(req: AuthedRequest, res: Response) {
   const provider = await getActiveProviderForUser(req.user!.id);
@@ -188,7 +229,7 @@ export async function unlockLead(req: AuthedRequest, res: Response) {
 
   let ledgerEntry;
   try {
-    ledgerEntry = await UnlockLedger.create({ providerId: provider._id, leadId: lead._id, idempotencyKey });
+    ledgerEntry = await UnlockLedger.create({ providerId: provider._id, leadId: lead._id, idempotencyKey, ip: req.ip });
   } catch (err: any) {
     if (err.code === 11000) {
       return res.json(toUnlockedShape(lead)); // race: already unlocked under a different key

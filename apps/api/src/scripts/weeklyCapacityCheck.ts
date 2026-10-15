@@ -60,7 +60,7 @@ async function main(): Promise<string> {
     await EmailService.sendCapacityConfirmation(provider.intakeEmail, providerName, confirmUrl);
     // Brief: "SMS/email every Monday" — opted-in providers also get a text
     // with the same one-tap link (no-op unless Twilio is configured).
-    await SmsService.sendToProvider(provider, `SolDirectory: still taking referrals this week? Confirm in one tap: ${confirmUrl}`);
+    await SmsService.sendToProvider(provider, `SolDirectory: taking new people this week? Confirm in one tap: ${confirmUrl}`);
     sent++;
   }
 

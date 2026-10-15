@@ -6,7 +6,7 @@ import {
   passwordResetTemplate, passwordChangedTemplate, verificationResultTemplate, welcomeTemplate,
   capacityConfirmationTemplate,
   subscriptionStartedTemplate, paymentReceivedTemplate, paymentFailedTemplate, subscriptionCancelledTemplate,
-  searchAlertVerificationTemplate, searchAlertDigestTemplate,
+  searchAlertVerificationTemplate, searchAlertDigestTemplate, noMatchTemplate, outcomeCheckTemplate, checkExpiringTemplate,
 } from './emailTemplates.js';
 import EmailLog from '../models/EmailLog.js';
 
@@ -127,13 +127,28 @@ export const EmailService = {
     return sendMail(to, subject, html);
   },
 
-  async sendProviderLeadTeaser(to: string, need: string, suburb: string, dashboardUrl?: string, claimUrl?: string) {
-    const { subject, html } = providerLeadTeaserTemplate({ need, suburb, dashboardUrl, claimUrl });
+  async sendProviderLeadTeaser(to: string, need: string, suburb: string, dashboardUrl?: string, claimUrl?: string, unlocksLeft?: number) {
+    const { subject, html } = providerLeadTeaserTemplate({ need, suburb, dashboardUrl, claimUrl, unlocksLeft });
     return sendMail(to, subject, html);
   },
 
   async sendProviderLeadFull(to: string, input: Parameters<typeof providerLeadFullTemplate>[0]) {
     const { subject, html } = providerLeadFullTemplate(input);
+    return sendMail(to, subject, html);
+  },
+
+  async sendCheckExpiring(to: string, input: Parameters<typeof checkExpiringTemplate>[0]) {
+    const { subject, html } = checkExpiringTemplate(input);
+    return sendMail(to, subject, html);
+  },
+
+  async sendNoMatch(to: string, input: Parameters<typeof noMatchTemplate>[0]) {
+    const { subject, html } = noMatchTemplate(input);
+    return sendMail(to, subject, html);
+  },
+
+  async sendOutcomeCheck(to: string, input: Parameters<typeof outcomeCheckTemplate>[0]) {
+    const { subject, html } = outcomeCheckTemplate(input);
     return sendMail(to, subject, html);
   },
 

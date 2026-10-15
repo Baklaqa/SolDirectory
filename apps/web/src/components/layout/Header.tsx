@@ -28,6 +28,7 @@ const TABS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/find-providers', label: 'Find providers', roles: ['coordinator', 'participant', 'admin'] },
   { to: '/saved-providers', label: 'Saved providers', roles: ['coordinator', 'participant'] },
   { to: '/admin/enquiries', label: 'Enquiries', roles: ['admin'] },
+  { to: '/admin/reports', label: 'Reports and messages', roles: ['admin'] },
   { to: '/admin/operations', label: 'Operations', roles: ['admin'] },
   { to: '/admin/content', label: 'Content', roles: ['admin'] },
   { to: '/verification', label: 'Verification', roles: ['admin'] },
@@ -43,6 +44,7 @@ const TABS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/admin/diagnostics', label: 'Diagnostics', roles: ['admin'] },
   { to: '/onboarding', label: 'Onboarding', roles: ['provider'] },
   { to: '/plans', label: 'Plans', roles: ['provider'] },
+  { to: '/security', label: 'Security', roles: ['admin', 'provider', 'worker', 'participant', 'coordinator'] },
 ];
 
 function timeAgo(iso: string): string {
