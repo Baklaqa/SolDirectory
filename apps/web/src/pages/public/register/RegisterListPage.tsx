@@ -213,10 +213,12 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
               : total > 0 && !filtered
                 ? `${formatCount(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}.`
                 : `Providers listed on the ${kind.register} for ${areaName}.`}
-            {topFacets.length > 0 && !filtered && (
-              <> The supports listed most often here are {topFacets.map((f) => `${f.category.toLowerCase()} (${formatCount(f.count)})`).join(', ')}.</>
-            )}
           </p>
+          {topFacets.length > 0 && !filtered && (
+            <p className="directory-page-subtitle">
+              The supports listed most often here are {topFacets.map((f) => `${f.category.toLowerCase()} (${formatCount(f.count)})`).join(', ')}.
+            </p>
+          )}
         </div>
       </div>
 

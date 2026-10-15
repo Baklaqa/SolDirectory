@@ -305,8 +305,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     body:
       `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
       `<h1>${esc(kind.label)} providers in ${esc(areaName)}</h1>` +
-      `<p>${fmt(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.` +
-      `${topFacets.length && !filtered ? ` The supports listed most often here are ${topFacets.map((f) => `${esc(f._id.toLowerCase())} (${fmt(f.n)})`).join(', ')}.` : ''}</p>` +
+      `<p>${fmt(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.</p>` +
+      (topFacets.length && !filtered ? `<p>The supports listed most often here are ${topFacets.map((f) => `${esc(f._id.toLowerCase())} (${fmt(f.n)})`).join(', ')}.</p>` : '') +
       supportsHtml +
       (kind.type === 'ndis' && !filtered && facets.some((f) => f._id === 'Housing (SDA & SIL)') ? `<p>SDA is Specialist Disability Accommodation: purpose-built homes for people with very high support needs. SIL is Supported Independent Living: help with daily tasks in a shared or own home. Both are funded through an NDIS plan, and a listing here does not mean a provider has a vacancy.</p>` : '') +
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : '')).join('')}</ul>` +
