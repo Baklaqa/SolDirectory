@@ -181,7 +181,7 @@ export default function Home() {
       <section id="about" className="about-section">
         <div className="about-photo-wrap" data-reveal data-pointer>
           <div className="about-photo">
-            <PhotoSlot src="/images/banners/personal-care.jpg" alt="Older people and a carer chatting in a community room" variant="care" />
+            <PhotoSlot src="/images/banners/condition-mobility.jpg" alt="An older man resting in the sun on his walker outside a house" variant="care" position="57% 50%" />
           </div>
           {/* The headline figure is the live count of organisations on the public NDIS register, labelled as that.
               The "accepting enquiries" count (real members) stays in the figures row below, under its own label. */}

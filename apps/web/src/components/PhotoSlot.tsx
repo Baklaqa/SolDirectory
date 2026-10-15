@@ -7,6 +7,8 @@ interface PhotoSlotProps {
   alt: string;
   variant?: Variant;
   className?: string;
+  /** CSS object-position, to keep the subject in frame when the slot is cropped (e.g. '58% 50%'). */
+  position?: string;
 }
 
 /**
@@ -14,7 +16,7 @@ interface PhotoSlotProps {
  * apps/web/IMAGE_RIGHTS.md). If the file cannot load, it shows a finished-looking
  * illustration instead of an empty box. Never point it at a photo with no recorded source.
  */
-export default function PhotoSlot({ src, alt, variant = 'care', className = '' }: PhotoSlotProps) {
+export default function PhotoSlot({ src, alt, variant = 'care', className = '', position }: PhotoSlotProps) {
   const [failed, setFailed] = useState(false);
 
   if (!failed) {
@@ -23,7 +25,7 @@ export default function PhotoSlot({ src, alt, variant = 'care', className = '' }
         src={src}
         alt={alt}
         className={className}
-        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+        style={{ objectFit: 'cover', objectPosition: position, width: '100%', height: '100%' }}
         onError={() => setFailed(true)}
       />
     );
