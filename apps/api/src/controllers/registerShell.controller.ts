@@ -13,7 +13,7 @@ import { eligibleStates, workersForService, workersInArea } from './workersPubli
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -1253,7 +1253,7 @@ async function servicePage(site: string, slug: string): Promise<Page> {
   const title = plain(item.title?.rendered ?? '');
   const excerpt = plain(item.excerpt?.rendered ?? '');
   const seoTitle = s('seo_title') || title;
-  const description = trimTo(s('seo_description') || excerpt || `${title} on SolDirectory.`, 160);
+  const description = metaDescription(s('seo_description') || excerpt || `${title} on SolDirectory.`, 160);
   const path = `/services/${item.slug}`;
   const faqs = jsonArr(meta.faq_json).filter((f: any) => f?.question && f?.answer);
   const related = (Array.isArray(meta.related_services) ? meta.related_services : []).filter((r: any) => r?.slug && r?.title);
@@ -1329,7 +1329,7 @@ async function servicePage(site: string, slug: string): Promise<Page> {
     (related.length ? `<h2>Related services</h2><ul>${related.map((r: any) => li(`/services/${r.slug}`, plain(r.title))).join('')}</ul>` : '') +
     (faqs.length ? `<h2>Frequently asked questions</h2>${faqs.map((f: any) => `<h3>${esc(plain(f.question))}</h3><p>${esc(plain(f.answer))}</p>`).join('')}` : '') +
     (sources.length ? `<h2>Sources and further reading</h2><ul>${sources.map((x: any) => `<li><a href="${esc(String(x.url))}" rel="noopener noreferrer">${esc(plain(x.title))}</a></li>`).join('')}</ul>` : '') +
-    `<p><a href="/find-a-provider">Browse the provider directory</a></p>`;
+    `<p><a href="/find-a-provider">Browse the NDIS and aged care provider directory</a></p>`;
 
   return {
     status: 200,

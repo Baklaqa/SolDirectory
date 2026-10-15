@@ -243,6 +243,32 @@ export function fundingFaqs(topic) {
   ];
 }
 
+/**
+ * A meta description that ends on a finished sentence and fits a search snippet (about 110 to 160 characters).
+ *  - Short enough: used as written (a very short one gets a plain closing sentence so it is not a fragment of a snippet).
+ *  - Too long: the first whole sentence if it fits, otherwise cut at the last comma, colon or semicolon that leaves a
+ *    sensible length, drop a dangling connector ("for example", "such as", "and"), and close with a full stop.
+ *  - Nothing suitable: cut at a word and add an ellipsis, as a last resort.
+ * It only shortens what the page's own text already says; it never adds claims.
+ */
+export function metaDescription(text, max = 160, min = 110) {
+  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
+  if (!clean) return '';
+  const closing = ' Compare providers and questions to ask on SolDirectory.';
+  // A short but finished sentence gets one plain closing sentence so the snippet is not a bare fragment.
+  const finish = (sentence) => (sentence.length < min && sentence.length + closing.length <= max ? `${sentence}${closing}` : sentence);
+  if (clean.length <= max) return finish(/[.!?]$/.test(clean) ? clean : `${clean}.`);
+  const firstSentence = /^(.{40,}?[.!?])(\s|$)/.exec(clean);
+  if (firstSentence && firstSentence[1].length <= max) return finish(firstSentence[1]);
+  const window = clean.slice(0, max - 1);
+  const cut = Math.max(window.lastIndexOf(','), window.lastIndexOf(';'), window.lastIndexOf(':'));
+  if (cut >= 40) {
+    const head = window.slice(0, cut).replace(/\s+(for example|such as|including|and|or|but|where|which|that|so|to|with|as|by|in|of)$/i, '').replace(/[\s,;:]+$/, '');
+    if (head.length >= 40) return finish(`${head}.`);
+  }
+  return `${window.replace(/\s+\S*$/, '').replace(/[\s,;:.]+$/, '')}…`;
+}
+
 export function fundingShellEditorial(topic) {
   // "Help With Funding" topics (plan managers, price guide, eligibility, budget categories, bookkeeping) explain how
   // funding works; they are not a scheme a person is approved under, so the scheme-style questions would read as nonsense.

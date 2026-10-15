@@ -6,6 +6,7 @@
 // browser-enforced restriction — this removes the cross-origin
 // request from existing in the first place, which is a more durable
 // fix than any WordPress-side CORS header configuration.
+import { metaDescription } from '@soldirectory/topic-content';
 const API_URL = ((import.meta as any).env?.VITE_API_URL ?? '/api').replace(/\/$/, '');
 
 export interface ServiceAreaPage {
@@ -139,7 +140,7 @@ function mapServiceAreaPage(raw: any): ServiceAreaPage {
       // service_area_page has no 'excerpt' support, so the real,
       // editor-written intro paragraph is the honest fallback here,
       // not a generic/invented line.
-      description: s(meta.seo_description) || raw.yoast_head_json?.description || s(meta.intro_paragraph).slice(0, 160),
+      description: metaDescription(s(meta.seo_description) || raw.yoast_head_json?.description || s(meta.intro_paragraph), 160),
       ogImage: s(meta.seo_og_image) || raw.yoast_head_json?.og_image?.[0]?.url || null,
       noindex: bool(meta.seo_noindex, false),
     },
@@ -277,7 +278,7 @@ function mapSeo(raw: any): WPContentBase['seo'] {
   const plainExcerpt = (raw.excerpt?.rendered ?? '').replace(/<[^>]+>/g, '').trim();
   return {
     title: meta.seo_title || raw.yoast_head_json?.title || raw.title?.rendered || '',
-    description: meta.seo_description || raw.yoast_head_json?.description || plainExcerpt,
+    description: metaDescription(meta.seo_description || raw.yoast_head_json?.description || plainExcerpt, 160),
     ogImage: meta.seo_og_image || raw.yoast_head_json?.og_image?.[0]?.url || extractFeaturedImage(raw)?.url || null,
     noindex: meta.seo_noindex === true || meta.seo_noindex === '1' || raw.yoast_head_json?.robots?.index === 'noindex',
   };

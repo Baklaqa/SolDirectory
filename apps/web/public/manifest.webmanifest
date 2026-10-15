@@ -1,0 +1,15 @@
+{
+  "name": "SolDirectory",
+  "short_name": "SolDirectory",
+  "description": "Find NDIS and aged care providers across Australia.",
+  "lang": "en-AU",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#F5F8FC",
+  "theme_color": "#0B2D5C",
+  "icons": [
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
