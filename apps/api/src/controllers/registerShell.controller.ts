@@ -13,7 +13,7 @@ import { workersForService, workersInArea } from './workersPublic.controller.js'
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_SPECIFICS, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -921,6 +921,12 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     (page > 1 ? `<a rel="prev" href="${esc(page === 2 ? base : `${base}?page=${page - 1}`)}">Previous page</a> ` : '') +
     (page < totalPages ? `<a rel="next" href="${esc(`${base}?page=${page + 1}`)}">Next page</a>` : '');
   const specifics = LANGUAGE_SPECIFICS[topic.slug];
+  const resources = LANGUAGE_RESOURCES[topic.slug] ?? [];
+  const resourceAgencies = languageResourceAgencies(topic.slug).replace(/^the /, 'The ');
+  const resourcesHtml = resources.length
+    ? `<h2>Official information in ${esc(topic.name)}</h2><p>${esc(resourceAgencies)} publish${resourceAgencies.includes(' and ') ? '' : 'es'} the pages below in ${esc(topic.name)}. SolDirectory links to them and does not translate or check them. Links last confirmed ${esc(LANGUAGE_RESOURCES_CHECKED)}.</p>` +
+      `<ul>${resources.map((item) => li(item.href, item.label, item.native)).join('')}</ul>`
+    : '';
   const heading = specifics ? specifics.heading : `${topic.name} speaking support providers`;
   const specificsHtml = specifics
     ? `<h2>${esc(specifics.heading)}</h2>${specifics.about.map((p) => `<p>${esc(p)}</p>`).join('')}` +
@@ -951,7 +957,7 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     canonical: page > 1 ? `${base}?page=${page}` : `${base}/`,
     // A language page with no member provider and no register listing that mentions it has only the shared guidance,
     // so it is reachable but kept out of search results until it has something specific to say.
-    noindex: snapshot !== null && total === 0 && registerTotal === 0 && !specifics,
+    noindex: snapshot !== null && total === 0 && registerTotal === 0 && !specifics && resources.length === 0,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Language', path: '/language' }, { name: topic.name, path: base }]),
       ...topicJsonLd(site, `${base}/`, heading, editorial),
@@ -960,16 +966,16 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/language">Language</a> / ${esc(topic.name)}</nav>` +
       `<h1>${esc(heading)}</h1><p>${esc(specifics ? specifics.about[0] : editorial.overview)}</p>` +
       specificsHtml +
+      resourcesHtml +
       `<h2>Providers that list ${esc(topic.name)}</h2><p>${total > 0 ? `${fmt(total)} SolDirectory member ${total === 1 ? 'provider lists' : 'providers list'} ${esc(topic.name)}.` : `No SolDirectory member provider lists ${esc(topic.name)} at the moment.`} Providers supply their own language information, so confirm the specific worker, fluency, dialect, communication method and availability directly.</p>` +
       `<ul>${(docs as any[]).map((provider) => li(`/directory/${provider.slug}`, provider.tradingName || provider.legalEntityName, (provider.registrationGroups ?? []).slice(0, 3).join(', '))).join('')}</ul><p>${pager}</p>` +
       registerHtml +
-      topicBody(topic, editorial, 'Planning clear communication', 'Questions to ask before support begins') +
-      `<h2>Bilingual support and qualified interpreters</h2><p>A bilingual support worker and an interpreter have different roles. Direct language-matched support may help everyday communication and relationships. A qualified independent interpreter may still be important for assessment, consent, complaints, complex decisions or technical information.</p>` +
-      `<h2>Privacy, consent and cultural safety</h2><p>Do not assume a family member should interpret, receive private information or make decisions. Confirm consent and decision-making arrangements directly. Cultural safety cannot be inferred from shared language alone; ask how the provider responds to community connections, gender preferences, faith, food, family roles and experiences of discrimination without stereotyping the person.</p>` +
-      `<h2>Funding and written service terms</h2><p>Interpreter and translation costs depend on the program, purpose and current rules. Confirm approval, booking responsibility and fees before support begins. Request important terms in an accessible format and check rates, travel, cancellations, reports, interpreter arrangements and exit terms.</p>` +
+      `<h2>Questions to ask before support begins</h2><ol>${editorial.checks.map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
+      `<p>How bilingual support, interpreters, privacy and funding differ is explained on the <a href="/language">language support guide</a>.</p>` +
+      `<h2>Frequently asked questions about ${esc(topic.name)}</h2>${editorial.faq.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join('')}` +
       `<h2>Official sources</h2><ul>` +
       li('https://www.ndis.gov.au/languages', 'NDIS information in other languages') +
-      li('https://www.tisnational.gov.au/', 'TIS National') +
+      li('https://www.tisnational.gov.au/', 'TIS National: interpreting services (call 131 450)') +
       li('https://directory.naati.com.au/', 'NAATI practitioner directory') +
       li('https://www.ndiscommission.gov.au/', 'NDIS Quality and Safeguards Commission') +
       `</ul><p><a href="/language">Browse other language and communication guides</a></p>`,
@@ -991,7 +997,9 @@ function languageHubPage(site: string): Page {
       `<h2>Check cultural safety without making assumptions</h2><p>Shared language can support rapport, but people who use the same language may have different cultures, faiths, genders, family roles and migration experiences. Ask the person what matters to them instead of expecting a provider to infer preferences from language or background. Discuss name pronunciation, gender preferences, food, personal care, community connections, significant dates and any past experiences that affect trust. A culturally safe provider should listen, avoid stereotypes, respond to feedback and respect the person’s control over private information.</p>` +
       `<h2>Confirm funding, privacy and service terms</h2><p>Interpreter, translation and accessible-information costs depend on the purpose, program and current funding rules. Confirm eligibility and prior approval with the responsible body before booking. Ask the provider for complete rates, minimum shifts, travel, cancellations, reports, interpreter charges and exit terms in writing and in an accessible format. Agree on who may receive information, what can be shared with family or coordinators and how translated records are stored. Recheck arrangements if the worker, interpreter, support needs or funding changes.</p>` +
       `<h2>Plan accessible information and backup communication</h2><p>Ask for service agreements, schedules, consent information and complaint pathways in a format the person can understand and use. Check that translated or Easy Read material is current and that the person has enough time to ask questions. Agree on a backup method for emergencies, technology failure or an unavailable interpreter, and record how staff should confirm understanding without speaking over the person or relying on unapproved family interpretation.</p>` +
-      groups.map((group) => `<h2>${esc(group)}</h2><ul>${LANGUAGE_TOPICS.filter((topic) => topic.categoryGroup === group).map((topic) => li(`/language/${topic.slug}`, topic.name)).join('')}</ul>`).join(''),
+      groups.map((group) => `<h2>${esc(group)}</h2><ul>${LANGUAGE_TOPICS.filter((topic) => topic.categoryGroup === group).map((topic) => li(`/language/${topic.slug}`, topic.name)).join('')}</ul>`).join('') +
+      `<h2>Official information in other languages</h2><p>The NDIS and My Aged Care publish pages in these languages. Each links to the language page on this site, which has the agency links. Last confirmed ${esc(LANGUAGE_RESOURCES_CHECKED)}.</p>` +
+      `<ul>${LANGUAGE_TOPICS.filter((topic) => LANGUAGE_RESOURCES[topic.slug]).map((topic) => li(`/language/${topic.slug}`, topic.name, `(${[...new Set(LANGUAGE_RESOURCES[topic.slug].map((item) => item.agency))].join(' and ')})`)).join('')}</ul>`,
   };
 }
 

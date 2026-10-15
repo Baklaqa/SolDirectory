@@ -1,4 +1,5 @@
 import { CONDITION_CONTENT_GROUPS } from './conditionContent.js';
+import { LANGUAGE_RESOURCES, languageResourceAgencies } from './languageResources.js';
 import { FUNDING_CONTENT_GROUPS } from './fundingContent.js';
 export { GUIDE_DOCS } from './guides.js';
 export { EDITORIAL_BLOG_POSTS } from './blog.js';
@@ -11,6 +12,7 @@ export { FUNDING_SEO_DESCRIPTIONS } from './fundingSeoDescriptions.js';
 export { CONDITION_CONTENT_GROUPS } from './conditionContent.js';
 export { FUNDING_CONTENT_GROUPS } from './fundingContent.js';
 export { LANGUAGE_SPECIFICS } from './languageSpecifics.js';
+export { LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, languageResourceAgencies } from './languageResources.js';
 export { LINK_TERMS, MAX_LINKS_PER_ARTICLE, newLinkState, linkParagraph, linkScopeFor, faqHtml } from './blogLinks.js';
 export { DIRECTORY_PAGE_TITLE, DIRECTORY_PAGE_HEADING, DIRECTORY_PAGE_DESCRIPTION, DIRECTORY_PAGE_UPDATED, DIRECTORY_PAGE_SUBTITLE, DIRECTORY_SUPPORTS, DIRECTORY_GUIDANCE, WORKER_PAGE_TITLE, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_UPDATED, WORKER_HERO_CHECKS, PROVIDER_PAGE_UPDATED, PROVIDER_PAGE_DESCRIPTION, INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS, DIRECTORY_STEPS, DIRECTORY_FAQS, STATE_CENTRES, LOCATION_FAQS, PROVIDER_UNDERSTAND, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_PATHS, PROVIDER_SAFEGUARDS, WORKER_PROFILE_DETAILS, WORKER_HOW_IT_WORKS, WORKER_SAFEGUARDS, PROVIDER_PLANS } from './pageContent.js';
 
@@ -266,11 +268,19 @@ export function fundingShellEditorial(topic) {
 }
 
 export function languageShellEditorial(topic) {
+  const agencies = languageResourceAgencies(topic.slug);
+  // Only the languages the NDIS and My Aged Care themselves publish in have this; see languageResources.js.
+  const official = LANGUAGE_RESOURCES[topic.slug]
+    ? [{
+      question: `Is there official information in ${topic.name}?`,
+      answer: `Yes. ${agencies.replace(/^the /, 'The ')} ${agencies.includes(' and ') ? 'publish' : 'publishes'} information in ${topic.name}. The links are on this page, and they are written by the agencies themselves, not by SolDirectory.`,
+    }]
+    : [];
   // "Access & Interpreting" topics (TIS National bookings, Easy Read, translated documents, Deafblind interpreters) are
   // services and formats, not a language a worker speaks, so they get their own questions.
   if (topic.categoryGroup === 'Access & Interpreting') {
     return {
-      overview: `${topic.name} is about how information and interpreting are arranged around support, rather than a language a worker speaks. A provider listing is only a starting point: confirm who arranges the service, how it is booked and paid for, and how it will work for the person in practice.`,
+      overview: `${topic.name} is about how information and interpreting are arranged around support. It is not a language a worker speaks. A provider listing is only a starting point. Confirm who arranges the service, how it is booked and paid for, and how it will work for the person.`,
       checks: [
         `Ask who arranges and books ${topic.name} for the person, and who pays for it.`,
         'Confirm which information needs to be accessible (spoken, signed, written, Easy Read) and by when.',
@@ -278,14 +288,14 @@ export function languageShellEditorial(topic) {
         'Check current availability, funding, privacy and the written service agreement.',
       ],
       faq: [
+        ...official,
         { question: `Does a listing prove that a provider can arrange ${topic.name}?`, answer: 'No. Providers supply their own information. Confirm what they can arrange, how it is booked and who pays before support begins.' },
         { question: 'Is a bilingual worker the same as an accredited interpreter?', answer: 'No. A bilingual worker may communicate directly during support, while an accredited interpreter has a separate interpreting role. Ask what is appropriate for important, technical or consent-related discussions.' },
-        { question: 'Does SolDirectory assess cultural safety?', answer: 'No. Ask the provider how it works with the person’s culture, community, family relationships, privacy and decision-making preferences.' },
       ],
     };
   }
   return {
-    overview: `Finding support connected with ${topic.name} can make it easier to explain preferences, understand choices and take part in decisions. A provider listing is only a starting point: confirm who communicates in the requested language, their level of fluency, whether an accredited interpreter is needed and how communication will work in practice.`,
+    overview: `Support connected with ${topic.name} can make it easier to explain preferences, understand choices and take part in decisions. A provider listing is only a starting point. Confirm who communicates in ${topic.name}, how fluent they are and whether an accredited interpreter is needed.`,
     checks: [
       `Ask whether the allocated worker communicates in ${topic.name}, rather than relying on the organisation having one multilingual staff member.`,
       'Confirm spoken, signed, written and Easy Read needs separately, including preferred dialect, terminology and communication aids.',
@@ -293,9 +303,9 @@ export function languageShellEditorial(topic) {
       'Check current availability, qualifications, worker screening, fees, funding, privacy and the written service agreement.',
     ],
     faq: [
+      ...official,
       { question: `Does a listing prove that every worker speaks or uses ${topic.name}?`, answer: 'No. Providers supply their own language information. Confirm the specific worker, fluency, dialect and communication method before support begins.' },
       { question: 'Is a bilingual worker the same as an accredited interpreter?', answer: 'No. A bilingual worker may communicate directly during support, while an accredited interpreter has a separate interpreting role. Ask what is appropriate for important, technical or consent-related discussions.' },
-      { question: 'Does SolDirectory assess cultural safety?', answer: 'No. Ask the provider how it works with the person’s culture, community, family relationships, privacy and decision-making preferences.' },
     ],
   };
 }

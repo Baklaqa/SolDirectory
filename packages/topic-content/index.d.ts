@@ -193,6 +193,19 @@ export interface LanguageSpecifics {
 }
 /** What is specific to the language and access topics that have no register data of their own (keyed by topic slug). */
 export const LANGUAGE_SPECIFICS: Record<string, LanguageSpecifics>;
+export interface LanguageResource {
+  agency: 'NDIS' | 'My Aged Care';
+  label: string;
+  href: string;
+  /** The language's name as the agency writes it, where it gives one. */
+  native?: string;
+}
+/** Official translated information, by language topic slug. Only languages the NDIS or My Aged Care name are present. */
+export const LANGUAGE_RESOURCES: Record<string, LanguageResource[]>;
+/** The date those links were last opened and confirmed. */
+export const LANGUAGE_RESOURCES_CHECKED: string;
+/** e.g. "the NDIS and My Aged Care" for a slug in LANGUAGE_RESOURCES, '' otherwise. */
+export function languageResourceAgencies(slug: string): string;
 export const LINK_TERMS: readonly { re: RegExp; slug: string; scopes: readonly string[] }[];
 export const MAX_LINKS_PER_ARTICLE: number;
 export interface LinkState { used: Set<string>; count: number }

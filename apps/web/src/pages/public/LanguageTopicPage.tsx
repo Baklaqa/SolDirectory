@@ -1,7 +1,7 @@
 import { bannerFor, hubHeaderStyle } from '../../data/bannerImages';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { LANGUAGE_SPECIFICS, LANGUAGE_TOPICS, languageShellEditorial, type Topic } from '@soldirectory/topic-content';
+import { LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, LANGUAGE_TOPICS, languageResourceAgencies, languageShellEditorial, type Topic } from '@soldirectory/topic-content';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import { ProviderCardItem } from './ProviderListingPage';
 import Pagination from '../../components/ui/Pagination';
@@ -26,7 +26,7 @@ const groups = [...new Set(LANGUAGE_TOPICS.map((topic) => topic.categoryGroup))]
 
 const sources = [
   { label: 'NDIS: information in other languages', href: 'https://www.ndis.gov.au/languages' },
-  { label: 'TIS National: interpreting services', href: 'https://www.tisnational.gov.au/' },
+  { label: 'TIS National: interpreting services (call 131 450)', href: 'https://www.tisnational.gov.au/' },
   { label: 'NAATI: find a credentialed practitioner', href: 'https://directory.naati.com.au/' },
   { label: 'NDIS Quality and Safeguards Commission', href: 'https://www.ndiscommission.gov.au/' },
 ];
@@ -36,6 +36,9 @@ export default function LanguageTopicPage() {
   const topic = topicFor(slug.toLowerCase());
   // Written, sourced content for the topics with no register data of their own (packages/topic-content/languageSpecifics.js).
   const specifics = topic ? LANGUAGE_SPECIFICS[topic.slug] : undefined;
+  // Pages the NDIS and My Aged Care publish in this language (packages/topic-content/languageResources.js).
+  const resources = topic ? LANGUAGE_RESOURCES[topic.slug] ?? [] : [];
+  const resourceAgencies = topic ? languageResourceAgencies(topic.slug).replace(/^the /, 'The ') : '';
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get('page')) || 1);
   const [items, setItems] = useState<PublicProviderCard[]>([]);
@@ -73,7 +76,7 @@ export default function LanguageTopicPage() {
         ? specifics.about[0].slice(0, 155).replace(/\s+\S*$/, '').replace(/[,;:\s]+$/, '') + (specifics.about[0].length > 155 ? '…' : '')
         : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`,
       canonicalUrl: page > 1 ? `${canonical}?page=${page}` : canonical,
-      noindex: !loading && !error && total === 0 && registerTotal === 0 && !specifics,
+      noindex: !loading && !error && total === 0 && registerTotal === 0 && !specifics && resources.length === 0,
     });
     setJsonLd('language-page', { '@type': 'WebPage', name: `${topic.name} speaking support providers`, url: canonical, isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin } });
     setJsonLd('language-breadcrumbs', { '@type': 'BreadcrumbList', itemListElement: [
@@ -83,7 +86,7 @@ export default function LanguageTopicPage() {
     ] });
     setJsonLd('language-faq', { '@type': 'FAQPage', mainEntity: editorial.faq.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) });
     return () => { setJsonLd('language-page', null); setJsonLd('language-breadcrumbs', null); setJsonLd('language-faq', null); };
-  }, [topic, page, loading, error, total, registerTotal, specifics]);
+  }, [topic, page, loading, error, total, registerTotal, specifics, resources.length]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
@@ -95,12 +98,11 @@ export default function LanguageTopicPage() {
   const toc: TopicTocItem[] = [
     { id: 'about', label: 'Overview' },
     ...(specifics ? [{ id: 'specifics', label: 'What to know' }] : []),
+    ...(resources.length > 0 ? [{ id: 'official-information', label: `Official information in ${topic.name}` }] : []),
     { id: 'providers', label: 'Providers' },
     ...((registerTotal ?? 0) > 0 ? [{ id: 'register-providers', label: 'On the register' }] : []),
-    { id: 'communication', label: 'Communication planning' }, { id: 'interpreters', label: 'Interpreters' },
     ...(interpretingTotal > 0 ? [{ id: 'interpreting-providers', label: 'Interpreting providers' }] : []),
-    { id: 'questions', label: 'Questions to ask' }, { id: 'privacy', label: 'Privacy and consent' },
-    { id: 'funding', label: 'Funding and fees' }, { id: 'related-languages', label: 'Related options' },
+    { id: 'questions', label: 'Questions to ask' }, { id: 'related-languages', label: 'Related options' },
     { id: 'faq', label: 'FAQ' }, { id: 'sources', label: 'Official sources' }, { id: 'wp-cpt-cta', label: 'Get matched' },
   ];
 
@@ -135,6 +137,24 @@ export default function LanguageTopicPage() {
         </section>
       )}
 
+      {resources.length > 0 && (
+        <section id="official-information" className="wp-cpt-section">
+          <h2>Official information in {topic.name}</h2>
+          <p>
+            {resourceAgencies} publish{resourceAgencies.includes(' and ') ? '' : 'es'} the pages below in {topic.name}. SolDirectory links to
+            them and does not translate or check them. Links last confirmed {LANGUAGE_RESOURCES_CHECKED}.
+          </p>
+          <ul className="wp-cpt-plain-list">
+            {resources.map((item) => (
+              <li key={item.href}>
+                <a href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>
+                {item.native ? <> <span>{item.native}</span></> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section id="providers" className="wp-cpt-section">
         <h2>Providers that list {topic.name}</h2>
         <p ref={topRef}>{loading ? 'Loading…' : `${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${topic.name}. Confirm the specific worker, communication method and availability directly.`}</p>
@@ -146,23 +166,6 @@ export default function LanguageTopicPage() {
       </section>
 
       <LanguageRegisterProviders key={topic.slug} language={topic.name} onLoaded={setRegisterTotal} />
-
-      <section id="communication" className="wp-cpt-section">
-        <h2>Plan communication before support begins</h2>
-        <p>Language preference is part of informed choice, but it is not the whole communication plan. Record how the person prefers to receive information, express decisions, ask for help and communicate when distressed, tired or unwell.</p>
-        <ul className="wp-cpt-plain-list">
-          <li>Confirm the preferred language, dialect, name and pronouns rather than making assumptions from country of birth or family background.</li>
-          <li>Separate conversational fluency from the ability to explain health, funding, rights, risks or service agreements accurately.</li>
-          <li>Discuss speech, signing, writing, pictures, communication devices, Easy Read and extra processing time as separate needs.</li>
-          <li>Document who may receive information and when family, advocates or interpreters should be involved.</li>
-        </ul>
-      </section>
-
-      <section id="interpreters" className="wp-cpt-section">
-        <h2>When to use a qualified interpreter</h2>
-        <p>A bilingual support worker and an interpreter have different roles. Direct language-matched support may help with daily communication and relationships. A qualified independent interpreter may still be important for assessment, consent, complaints, complex decisions or technical information.</p>
-        <p>Ask who will book the interpreter, whether the person can request a preferred gender or practitioner, how confidentiality is handled, what happens if an interpreter is unavailable and whether the funding arrangement covers the cost.</p>
-      </section>
 
       <TopicRegisterProviders
         id="interpreting-providers"
@@ -180,19 +183,7 @@ export default function LanguageTopicPage() {
       <section id="questions" className="wp-cpt-section">
         <h2>Questions to ask providers</h2>
         <ol className="wp-cpt-plain-list">{editorial.checks.map((check) => <li key={check}>{check}</li>)}</ol>
-        <p>Also ask how the provider checks understanding, records communication preferences, supervises multilingual staff and maintains continuity if the usual worker is unavailable.</p>
-      </section>
-
-      <section id="privacy" className="wp-cpt-section">
-        <h2>Privacy, consent and cultural safety</h2>
-        <p>The person should remain at the centre of the conversation. Do not assume a family member should interpret, receive private information or make decisions. Confirm consent, decision-making arrangements and privacy preferences directly wherever possible.</p>
-        <p>Cultural safety cannot be inferred from a shared language. Ask how the provider responds to the person’s community connections, gender preferences, faith, food, family roles, trauma history and experiences of discrimination without stereotyping them.</p>
-      </section>
-
-      <section id="funding" className="wp-cpt-section">
-        <h2>Funding, service agreements and extra fees</h2>
-        <p>Interpreter and translation costs depend on the program, purpose and current rules. Before booking, confirm whether an interpreter is funded, whether prior approval is needed, who can provide it and whether the provider adds administration, travel or cancellation fees.</p>
-        <p>Request important terms in an accessible format. Check rates, minimum shifts, travel, cancellations, report fees, interpreter arrangements and exit terms in the written service agreement.</p>
+        <p>How bilingual support, interpreters, privacy and funding differ is explained on the <Link to="/language">language support guide</Link>.</p>
       </section>
 
       {siblings.length > 0 && <section id="related-languages" className="wp-cpt-section"><h2>Other options in {topic.categoryGroup}</h2><ul className="reg-linkgrid">{siblings.map((item) => <li key={item.slug}><Link to={`/language/${item.slug}/`}><span>{item.name}</span></Link></li>)}</ul></section>}
@@ -214,5 +205,5 @@ export function LanguageHubPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  return <><PublicHeader /><div className="directory-page-header directory-page-header--conditions" style={hubHeaderStyle('multicultural')}><div className="directory-page-header-inner"><span className="eyebrow eyebrow-light"><span className="eyebrow-rule" />Communication preferences</span><h1 className="section-heading section-heading-light">Find support by language</h1><p className="directory-page-subtitle">Browse provider-supplied language information, then confirm the worker, fluency, dialect and communication method directly.</p></div></div><main className="reg-page category-hub-page"><Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Language' }]} /><section className="directory-intro"><span className="directory-section-label">Language is one part of fit</span><h2>Plan for clear, respectful communication</h2><p>A shared language may improve everyday communication, but it does not prove interpreting credentials, cultural safety, specialist experience or current availability. Each guide explains what to check before support begins.</p><h2>Start with the person’s preference</h2><p>Ask which language or dialect the person uses in different settings and whether they prefer spoken, signed, written, visual or augmentative communication. Do not assume a family member should interpret or make decisions. Preferences may differ for everyday support, health appointments, consent and complaints. Confirm that the specific worker can meet the need before the first appointment.</p><h2>Bilingual support and qualified interpreting</h2><p>A bilingual worker can support everyday communication, but being bilingual does not by itself make someone a qualified interpreter. Independent interpreting may be important for assessments, informed consent, complaints, clinical discussions and legal or financial information. Confirm credentials, confidentiality, booking responsibility, remote or in-person delivery and backup arrangements.</p><h2>Cultural safety, privacy and costs</h2><p>Shared language does not mean shared culture, faith, gender preferences or life experience. Ask what matters to the person and avoid stereotypes. Agree on who may receive private information and how translated records are stored. Interpreter and translation funding depends on the program and purpose, so confirm approval, rates, travel, cancellations and other charges in writing before support begins.</p><h2>Accessible information and backup communication</h2><p>Ask for service agreements, schedules, consent information and complaint pathways in a format the person can understand and use. Check that translated or Easy Read material is current and allow enough time for questions. Agree on a backup method for emergencies, technology failure or an unavailable interpreter, and record how staff should confirm understanding without speaking over the person.</p></section>{groups.map((group) => <section className="category-hub-group" key={group}><h2 className="reg-h2">{group}</h2><ul className="reg-linkgrid">{LANGUAGE_TOPICS.filter((topic) => topic.categoryGroup === group).map((topic) => <li key={topic.slug}><Link to={`/language/${topic.slug}/`}><span>{topic.name}</span></Link></li>)}</ul></section>)}<TopicRegisterProviders id="interpreting-providers" heading="Interpreting and translation providers on the register" intro="These providers are listed on the public NDIS register for “Interpreting and translation”. The register does not record which languages they work in, so ask each one whether it can support the language or communication method you need." defaultType="ndis" categories={["Interpreting & translation"]} disclaimer="A register listing shows that a provider is registered for interpreting and translation. It does not confirm languages, interpreter credentials or availability." hideWhenEmpty /><RelatedArticles themes={['choosing', 'registration']} heading="Reading before you choose" /></main><PublicFooter /></>;
+  return <><PublicHeader /><div className="directory-page-header directory-page-header--conditions" style={hubHeaderStyle('multicultural')}><div className="directory-page-header-inner"><span className="eyebrow eyebrow-light"><span className="eyebrow-rule" />Communication preferences</span><h1 className="section-heading section-heading-light">Find support by language</h1><p className="directory-page-subtitle">Browse provider-supplied language information, then confirm the worker, fluency, dialect and communication method directly.</p></div></div><main className="reg-page category-hub-page"><Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Language' }]} /><section className="directory-intro"><span className="directory-section-label">Language is one part of fit</span><h2>Plan for clear, respectful communication</h2><p>A shared language may improve everyday communication, but it does not prove interpreting credentials, cultural safety, specialist experience or current availability. Each guide explains what to check before support begins.</p><h2>Start with the person’s preference</h2><p>Ask which language or dialect the person uses in different settings and whether they prefer spoken, signed, written, visual or augmentative communication. Do not assume a family member should interpret or make decisions. Preferences may differ for everyday support, health appointments, consent and complaints. Confirm that the specific worker can meet the need before the first appointment.</p><h2>Bilingual support and qualified interpreting</h2><p>A bilingual worker can support everyday communication, but being bilingual does not by itself make someone a qualified interpreter. Independent interpreting may be important for assessments, informed consent, complaints, clinical discussions and legal or financial information. Confirm credentials, confidentiality, booking responsibility, remote or in-person delivery and backup arrangements.</p><h2>Cultural safety, privacy and costs</h2><p>Shared language does not mean shared culture, faith, gender preferences or life experience. Ask what matters to the person and avoid stereotypes. Agree on who may receive private information and how translated records are stored. Interpreter and translation funding depends on the program and purpose, so confirm approval, rates, travel, cancellations and other charges in writing before support begins.</p><h2>Accessible information and backup communication</h2><p>Ask for service agreements, schedules, consent information and complaint pathways in a format the person can understand and use. Check that translated or Easy Read material is current and allow enough time for questions. Agree on a backup method for emergencies, technology failure or an unavailable interpreter, and record how staff should confirm understanding without speaking over the person.</p></section>{groups.map((group) => <section className="category-hub-group" key={group}><h2 className="reg-h2">{group}</h2><ul className="reg-linkgrid">{LANGUAGE_TOPICS.filter((topic) => topic.categoryGroup === group).map((topic) => <li key={topic.slug}><Link to={`/language/${topic.slug}/`}><span>{topic.name}</span></Link></li>)}</ul></section>)}<section className="category-hub-group"><h2 className="reg-h2">Official information in other languages</h2><p>The NDIS and My Aged Care publish pages in these languages. Each links to the language page on this site, which has the agency links. Last confirmed {LANGUAGE_RESOURCES_CHECKED}.</p><ul className="reg-linkgrid">{LANGUAGE_TOPICS.filter((topic) => LANGUAGE_RESOURCES[topic.slug]).map((topic) => <li key={topic.slug}><Link to={`/language/${topic.slug}/`}><span>{topic.name}</span></Link></li>)}</ul></section><TopicRegisterProviders id="interpreting-providers" heading="Interpreting and translation providers on the register" intro="These providers are listed on the public NDIS register for “Interpreting and translation”. The register does not record which languages they work in, so ask each one whether it can support the language or communication method you need." defaultType="ndis" categories={["Interpreting & translation"]} disclaimer="A register listing shows that a provider is registered for interpreting and translation. It does not confirm languages, interpreter credentials or availability." hideWhenEmpty /><RelatedArticles themes={['choosing', 'registration']} heading="Reading before you choose" /></main><PublicFooter /></>;
 }
