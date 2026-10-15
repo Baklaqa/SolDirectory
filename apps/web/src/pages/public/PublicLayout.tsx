@@ -174,13 +174,24 @@ export function PublicFooter() {
           <Link to="/independent-workers">Independent Workers</Link>
           <Link to="/independent-workers/find">Find a worker</Link>
           {siteConfig.contactEmail && <a href={`mailto:${siteConfig.contactEmail}`}>Contact</a>}
+          <Link to="/photo-credits">Photo credits</Link>
+          <Link to="/complaints">Make a complaint or report a concern</Link>
+          <button type="button" className="public-footer-linkbtn" onClick={openConsentSettings}>Cookie settings</button>
+        </div>
+        <div className="public-footer-col">
+          <span className="public-footer-heading">Legal and policies</span>
           <Link to="/privacy">Privacy policy</Link>
+          <Link to="/collection-notice">Collection notice</Link>
+          <Link to="/cookies">Cookie notice</Link>
           <Link to="/terms">Terms of use</Link>
           <Link to="/provider-agreement">Provider agreement</Link>
-          <Link to="/lead-disclaimer">Enquiry disclaimer</Link>
-          <Link to="/photo-credits">Photo credits</Link>
-          <Link to="/terms#corrections-removals-and-copyright-concerns">Report a concern</Link>
-          <button type="button" className="public-footer-linkbtn" onClick={openConsentSettings}>Cookie settings</button>
+          <Link to="/worker-terms">Worker terms</Link>
+          <Link to="/complaints">Complaints policy</Link>
+          <Link to="/statement-of-rights">Statement of rights</Link>
+          <Link to="/listing-and-ranking-policy">Listing and ranking policy</Link>
+          <Link to="/editorial-policy">Editorial policy</Link>
+          <Link to="/accessibility">Accessibility</Link>
+          <Link to="/data-sources">Data sources and attribution</Link>
         </div>
       </div>
       <div className="public-footer-legal">

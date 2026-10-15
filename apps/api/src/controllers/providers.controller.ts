@@ -6,7 +6,7 @@ import ContactRequest from '../models/ContactRequest.js';
 import { logActivity } from '../models/AdminActivity.js';
 import { EmailService } from '../services/email.service.js';
 import { publicLogoUrl } from './providersPublic.controller.js';
-import { findProvidersPaidFirst } from '../services/providerPriority.js';
+import { findProvidersOrdered } from '../services/providerOrdering.js';
 
 const MAX_LIMIT = 50;
 
@@ -14,7 +14,7 @@ const MAX_LIMIT = 50;
 // billing/subscription internals (stripe ids, lead quota usage),
 // onboarding progress, and account-status (an admin concern, not a
 // search-result concern).
-const PUBLIC_PROJECTION = 'legalEntityName tradingName slug abn registrationGroups serviceSuburbs travelRadiusKm weeklyCapacityHours intakeStatus location logoUrl';
+const PUBLIC_PROJECTION = 'legalEntityName tradingName slug abn registrationGroups serviceSuburbs travelRadiusKm weeklyCapacityHours intakeStatus location logoUrl relatedBusiness';
 
 // User input must never be compiled into a RegExp raw: a crafted `q` like
 // "(a+)+$" is a ReDoS, and "." / "*" silently change what matches.
@@ -24,11 +24,11 @@ function escapeRegex(s: string): string {
 
 /**
  * Shared search filter for the authenticated and public provider lists.
- * Only ever matches providers who'd actually appear in search: active and
- * not paused for an unconfirmed weekly capacity check.
+ * Matches active providers. A provider that has not confirmed capacity this week stays listed, after those that have
+ * (services/providerOrdering.ts); it just receives no new requests.
  */
 export function buildProviderFilter(query: Request['query']): Record<string, unknown> {
-  const filter: Record<string, unknown> = { accountStatus: 'active', listingPaused: { $ne: true } };
+  const filter: Record<string, unknown> = { accountStatus: 'active' };
   const and: Record<string, unknown>[] = [];
 
   const suburb = typeof query.suburb === 'string' ? query.suburb.trim() : '';
@@ -80,16 +80,14 @@ export async function listProviders(req: AuthedRequest, res: Response) {
 
   // Suspended providers never appear in search results — this is
   // the same accountStatus gate the admin suspend/reactivate action
-  // relies on actually meaning something. listingPaused is the
-  // weekly-capacity-confirmation gate (scripts/weeklyCapacityCheck.ts)
-  // — an unconfirmed provider drops from results the same way, per
-  // the developer brief's "checked, not scraped" requirement.
+  // relies on actually meaning something. listingPaused (the weekly capacity check,
+  // scripts/weeklyCapacityCheck.ts) stops matching and the "Taking new people" label, not the listing.
   // Suburb / service / name / radius filtering is shared with the public
   // list — see buildProviderFilter above.
   const filter = buildProviderFilter(req.query);
 
   const [docs, total] = await Promise.all([
-    findProvidersPaidFirst<any>(filter, PUBLIC_PROJECTION, { skip: (page - 1) * limit, limit }),
+    findProvidersOrdered<any>(filter, PUBLIC_PROJECTION, { skip: (page - 1) * limit, limit }),
     Provider.countDocuments(filter),
   ]);
 
@@ -105,6 +103,8 @@ export async function listProviders(req: AuthedRequest, res: Response) {
       travelRadiusKm: p.travelRadiusKm,
       weeklyCapacityHours: p.weeklyCapacityHours,
       intakeStatus: p.intakeStatus,
+      takingNewPeople: p._taking === 1,
+      relatedBusiness: p.relatedBusiness === true,
       location: p.location?.coordinates ? { lat: p.location.coordinates[1], lng: p.location.coordinates[0] } : null,
       logoUrl: p.logoUrl ?? null,
     })),
@@ -191,7 +191,7 @@ export async function getProviderBySlug(req: AuthedRequest, res: Response) {
   // Real related providers — same primary registration group, not
   // the provider itself, active accounts only. Not fabricated.
   const related = provider.registrationGroups?.length
-    ? await findProvidersPaidFirst<any>({
+    ? await findProvidersOrdered<any>({
         _id: { $ne: provider._id },
         accountStatus: 'active',
         slug: { $exists: true },
@@ -243,7 +243,7 @@ export async function getProviderBySlug(req: AuthedRequest, res: Response) {
 // everything else. Map positions are rounded to ~1 km so a sole trader
 // working from home isn't pinpointed.
 // ---------------------------------------------------------------
-const PUBLIC_LIST_PROJECTION = 'legalEntityName tradingName slug registrationGroups serviceSuburbs intakeStatus location logoUrl hasLogoUpload updatedAt';
+const PUBLIC_LIST_PROJECTION = 'legalEntityName tradingName slug registrationGroups serviceSuburbs intakeStatus location logoUrl hasLogoUpload updatedAt relatedBusiness';
 const PUBLIC_MAX_LIMIT = 30;
 const MAX_SUBURBS_SHOWN = 6;
 
@@ -265,7 +265,7 @@ export async function listPublicProviders(req: Request, res: Response) {
   filter.$and = [...existingAnd, namedProvider];
 
   const [docs, total] = await Promise.all([
-    findProvidersPaidFirst<any>(filter, PUBLIC_LIST_PROJECTION, { skip: (page - 1) * limit, limit }),
+    findProvidersOrdered<any>(filter, PUBLIC_LIST_PROJECTION, { skip: (page - 1) * limit, limit }),
     Provider.countDocuments(filter),
   ]);
 
@@ -280,6 +280,8 @@ export async function listPublicProviders(req: Request, res: Response) {
       serviceSuburbs: (p.serviceSuburbs ?? []).slice(0, MAX_SUBURBS_SHOWN),
       serviceSuburbCount: (p.serviceSuburbs ?? []).length,
       intakeStatus: p.intakeStatus,
+      takingNewPeople: p._taking === 1,
+      relatedBusiness: p.relatedBusiness === true,
       location: p.location?.coordinates
         ? { lat: roundCoord(p.location.coordinates[1]), lng: roundCoord(p.location.coordinates[0]) }
         : null,

@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { runJob } from '../services/jobRunner.js';
 import SearchAlert from '../models/SearchAlert.js';
 import { buildProviderFilter } from '../controllers/providers.controller.js';
-import { findProvidersPaidFirst } from '../services/providerPriority.js';
+import { findProvidersOrdered } from '../services/providerOrdering.js';
 import { EmailService } from '../services/email.service.js';
 
 async function main(): Promise<string> {
@@ -15,7 +15,7 @@ async function main(): Promise<string> {
     const checkedAt = new Date();
     const filter = buildProviderFilter({ service: alert.service, suburb: alert.suburb, q: alert.query });
     (filter as any).updatedAt = { $gt: alert.lastCheckedAt ?? alert.verifiedAt ?? alert.createdAt };
-    const providers = await findProvidersPaidFirst<any>(filter, 'tradingName legalEntityName slug registrationGroups', { limit: 10 });
+    const providers = await findProvidersOrdered<any>(filter, 'tradingName legalEntityName slug registrationGroups', { limit: 10 });
     if (providers.length > 0) {
       const searchParams = new URLSearchParams();
       if (alert.service) searchParams.set('service', alert.service);

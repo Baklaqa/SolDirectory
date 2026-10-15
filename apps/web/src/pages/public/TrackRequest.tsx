@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { PublicFooter, PublicHeader } from './PublicLayout';
 import RequestProgress from '../../components/RequestProgress';
-import { attachRequest, getTrackedRequest, type TrackedRequest } from '../../api/requestsApi';
+import { attachRequest, closeTrackedRequest, deleteTrackedRequest, getTrackedRequest, type TrackedRequest } from '../../api/requestsApi';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useMatchModal } from '../../context/MatchModalContext';
@@ -19,6 +19,7 @@ export default function TrackRequest() {
   const [request, setRequest] = useState<TrackedRequest | null>(null);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<'idle' | 'saving' | 'done' | 'taken'>('idle');
+  const [choice, setChoice] = useState<'idle' | 'working' | 'confirm-delete' | 'closed' | 'erased' | 'failed'>('idle');
 
   useEffect(() => {
     applySeoTags({ title: 'Follow your request | SolDirectory', description: 'See who has received and opened your request.', noindex: true });
@@ -32,6 +33,16 @@ export default function TrackRequest() {
     return () => { alive = false; clearInterval(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, token]);
+
+  async function closeIt() {
+    setChoice('working');
+    try { await closeTrackedRequest(id, token); setChoice('closed'); } catch { setChoice('failed'); }
+  }
+
+  async function deleteIt() {
+    setChoice('working');
+    try { await deleteTrackedRequest(id, token); setChoice('erased'); } catch { setChoice('failed'); }
+  }
 
   async function saveToAccount() {
     setSaved('saving');
@@ -95,6 +106,36 @@ export default function TrackRequest() {
                   <>
                     <div><strong>Want to follow it from a dashboard?</strong><span>Create a free account or log in, then open this link again to save it.</span></div>
                     <Link className="sd-btn sd-btn-outline" to={`/login?returnTo=${encodeURIComponent(`/track/${id}?t=${token}`)}`}>Log in</Link>
+                  </>
+                )}
+              </section>
+
+              <section className="trk-card trk-choices" aria-label="Your choices">
+                <div>
+                  <strong>Your choices</strong>
+                  <span>
+                    You can close this request at any time, and providers who have not yet opened it will not be able to. You can also ask us to
+                    delete your details. Our <Link to="/privacy">privacy policy</Link> explains what we keep and for how long.
+                  </span>
+                </div>
+                {request.erased || choice === 'erased' ? (
+                  <p role="status"><strong>Your details have been deleted.</strong> Your request is closed.</p>
+                ) : request.closed || choice === 'closed' ? (
+                  <>
+                    <p role="status"><strong>This request is closed.</strong> No other provider can open it.</p>
+                    <button type="button" className="sd-btn sd-btn-outline" onClick={() => setChoice('confirm-delete')}>Delete my details</button>
+                  </>
+                ) : choice === 'confirm-delete' ? (
+                  <>
+                    <p role="alert">This clears your name, email address, phone number and notes from the request, and closes it. It cannot be undone.</p>
+                    <button type="button" className="sd-btn sd-btn-primary" onClick={deleteIt}>Yes, delete my details</button>{' '}
+                    <button type="button" className="sd-btn sd-btn-outline" onClick={() => setChoice('idle')}>Keep my request</button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="sd-btn sd-btn-outline" onClick={closeIt} disabled={choice === 'working'}>Close this request</button>{' '}
+                    <button type="button" className="sd-btn sd-btn-outline" onClick={() => setChoice('confirm-delete')} disabled={choice === 'working'}>Delete my details</button>
+                    {choice === 'failed' && <p role="alert">Something went wrong. Please try again, or contact us.</p>}
                   </>
                 )}
               </section>

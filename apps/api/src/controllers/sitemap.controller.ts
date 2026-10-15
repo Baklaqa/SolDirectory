@@ -91,7 +91,7 @@ async function buildPageUrls(): Promise<UrlEntry[]> {
   // These are the PUBLIC profile pages (/directory/:slug); /providers/:slug
   // is login-gated, so it never belongs in a sitemap. Same visibility
   // rule as the public directory: active and not paused.
-  const providers = await Provider.find({ accountStatus: 'active', listingPaused: { $ne: true }, slug: { $exists: true, $ne: null }, 'registrationGroups.0': { $exists: true } }).select('slug').lean();
+  const providers = await Provider.find({ accountStatus: 'active', slug: { $exists: true, $ne: null }, 'registrationGroups.0': { $exists: true } }).select('slug').lean();
   for (const p of providers) paths.push(`/directory/${(p as any).slug}`);
 
   // Location pages only exist when enough real providers list the area.

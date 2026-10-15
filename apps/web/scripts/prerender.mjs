@@ -162,7 +162,7 @@ pages.push({
   jsonLd: [faqLd(PROVIDER_FAQS)],
   body: (c) => `${c}<h1>List your business on SolDirectory</h1>` +
     '<p>SolDirectory is a directory and enquiry service. Providers create an account, describe the supports they deliver and the areas they cover, confirm their availability, and respond to enquiries from people looking for support.</p>' +
-    ul([a('/signup', 'Create a provider account'), a('/login', 'Log in'), a('/guides/choosing-a-provider', 'How people choose a provider'), a('/lead-disclaimer', 'Enquiry disclaimer'), a('/provider-agreement', 'Provider agreement')]) +
+    ul([a('/signup', 'Create a provider account'), a('/login', 'Log in'), a('/guides/choosing-a-provider', 'How people choose a provider'), a('/terms', 'Terms of use'), a('/provider-agreement', 'Provider agreement'), a('/privacy', 'Privacy policy')]) +
     '<h2>What a strong listing includes</h2>' + ul(PROVIDER_LISTING_CHECKS.map((c2) => `<strong>${esc(c2.title)}.</strong> ${esc(c2.body)}`)) +
     '<h2>Guides for running a provider business</h2>' + articleList(PROVIDER_PAGE_GUIDES) +
     '<h2>The public NDIS register by state</h2>' + ul(STATES.map(([slug, name]) => a(`/ndis-providers/${slug}`, `NDIS providers in ${name}`))) +

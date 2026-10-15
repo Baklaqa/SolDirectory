@@ -193,6 +193,33 @@ export interface LanguageSpecifics {
 }
 /** What is specific to the language and access topics that have no register data of their own (keyed by topic slug). */
 export const LANGUAGE_SPECIFICS: Record<string, LanguageSpecifics>;
+export type LegalBlock =
+  | { t: 'p'; text: string; only?: string; unless?: string }
+  | { t: 'note'; text: string; only?: string; unless?: string }
+  | { t: 'ul'; items: (string | { text: string; only?: string; unless?: string })[] }
+  | { t: 'table'; head: string[]; rows: string[][] };
+export interface LegalSection { heading: string; blocks: LegalBlock[] }
+export interface LegalPackDoc {
+  slug: string;
+  n: number;
+  title: string;
+  /** The laws the page is written to meet, for the reviewer. */
+  meets: string;
+  updated: string;
+  sections: LegalSection[];
+}
+/** A doc after conditional blocks are resolved: list items are plain strings. */
+export type ResolvedLegalBlock =
+  | { t: 'p' | 'note'; text: string }
+  | { t: 'ul'; items: string[] }
+  | { t: 'table'; head: string[]; rows: string[][] };
+export interface ResolvedLegalDoc extends Omit<LegalPackDoc, 'sections'> {
+  sections: { heading: string; blocks: ResolvedLegalBlock[] }[];
+}
+export const LEGAL_PACK: LegalPackDoc[];
+export const LEGAL_PRACTICES: Record<string, boolean>;
+export function resolveLegalDoc(doc: LegalPackDoc, practices?: Record<string, boolean>): ResolvedLegalDoc;
+export function legalDocBySlug(slug: string, practices?: Record<string, boolean>): ResolvedLegalDoc | undefined;
 export interface LanguageResource {
   agency: 'NDIS' | 'My Aged Care';
   label: string;

@@ -123,6 +123,8 @@ export interface ProviderDoc extends Document {
   // resetPassword). Defaults true so self-registered and pre-existing
   // providers are unaffected.
   claimed?: boolean;
+  /** Owned by a related party of SolDirectory (the director's other business). Shown as "Related business"; follows every other rule. Set by an administrator. */
+  relatedBusiness?: boolean;
   capacityConfirmTokenHash?: string;
   capacityConfirmExpiresAt?: Date;
 }
@@ -195,6 +197,7 @@ const providerSchema = new Schema<ProviderDoc>(
     listingPaused: { type: Boolean, default: false },
     smsNotifications: { type: Boolean, default: false },
     claimed: { type: Boolean, default: true },
+    relatedBusiness: { type: Boolean, default: false },
     capacityConfirmTokenHash: { type: String, index: true },
     capacityConfirmExpiresAt: Date,
   },

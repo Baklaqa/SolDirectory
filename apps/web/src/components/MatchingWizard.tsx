@@ -5,6 +5,7 @@ import { ApiError } from '../api/client';
 import { searchPlaces, lookupPostcode, formatPlace, placeSearchEnabled, type PlaceSuggestion } from '../lib/places';
 import { serviceContextFromPath } from '../lib/serviceContext';
 import { hasConsent, openConsentSettings, useConsent } from '../lib/consent';
+import { legalDocBySlug } from '@soldirectory/topic-content';
 import './MatchingWizard.css';
 
 /**
@@ -60,19 +61,20 @@ const EMPTY_FORM: MatchFormData = {
 const DRAFT_STORAGE_KEY = 'mw_draft_v2';
 const LEGACY_DRAFT_KEY = 'mw_draft';
 
-type StepId = 'careFor' | 'location' | 'service' | 'timeframe' | 'funding' | 'planManagement' | 'email' | 'phone' | 'name' | 'additionalDetails';
+type StepId = 'careFor' | 'location' | 'service' | 'timeframe' | 'funding' | 'planManagement' | 'notice' | 'email' | 'phone' | 'name' | 'additionalDetails';
 type Phase = 'wizard' | 'review' | 'success';
 
 const STEP_LABELS: Record<StepId, string> = {
   careFor: 'Who it’s for', location: 'Location', service: 'Support needed', timeframe: 'Timing', funding: 'Funding',
-  planManagement: 'Plan management', email: 'Email', phone: 'Phone', name: 'Your name', additionalDetails: 'Anything else',
+  planManagement: 'Plan management', notice: 'How we use your details', email: 'Email', phone: 'Phone', name: 'Your name', additionalDetails: 'Anything else',
 };
 
 function getSteps(funding: string): StepId[] {
   // "service" is not asked as its own step for now (see EMPTY_FORM).
   const base: StepId[] = ['careFor', 'location', 'timeframe', 'funding'];
   if (funding === 'NDIS') base.push('planManagement');
-  return [...base, 'email', 'phone', 'name', 'additionalDetails'];
+  // The collection notice comes immediately before the contact details step (APP 5).
+  return [...base, 'notice', 'email', 'phone', 'name', 'additionalDetails'];
 }
 
 // `value` is what's stored and sent to the API (matching and existing
@@ -123,13 +125,16 @@ const NEXT_STEPS = [
 export default function MatchingWizard() {
   const { isOpen, closeMatchModal, openMatchModal, provider } = useMatchModal();
   const preferredProvider = provider ? { type: provider.type, slug: provider.slug } : undefined;
-  const consent = useConsent();
-  const canSaveProgress = consent?.saveProgress === true;
+  const cookieConsent = useConsent();
+  const canSaveProgress = cookieConsent?.saveProgress === true;
   const authHeader = (): Record<string, string> => {
     const token = localStorage.getItem('sd_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
   const [form, setForm] = useState<MatchFormData>(EMPTY_FORM);
+  // Agreement to the collection notice. Deliberately NOT part of `form`, so it is never saved to a draft or restored:
+  // each request needs its own fresh, unticked-by-default agreement.
+  const [consent, setConsent] = useState<ConsentState>(NO_CONSENT);
   const [stepIndex, setStepIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('wizard');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
@@ -264,6 +269,7 @@ export default function MatchingWizard() {
   // be resumed later, matching the confirm dialog's own copy below.
   function reset() {
     setForm(EMPTY_FORM);
+    setConsent(NO_CONSENT);
     setStepIndex(0);
     setPhase('wizard');
     setError('');
@@ -280,7 +286,14 @@ export default function MatchingWizard() {
   }
 
   function validateStep(id: StepId): string {
-    const v = form[id];
+    if (id === 'notice') {
+      if (!consent.collection) return 'Please tick the box to agree to us collecting and sharing your details, so we can send your request.';
+      if (form.careFor && form.careFor !== 'Myself' && !consent.authorisedForOther) {
+        return 'Please confirm you have the permission of the person this request is for, or are their nominee, guardian or authorised representative.';
+      }
+      return '';
+    }
+    const v = form[id as keyof MatchFormData] as string;
     if (id === 'location' && !v.trim()) return 'Enter a suburb or postcode so we know where to look.';
     if (id === 'careFor' && !v) return 'Choose who this is for.';
     if (id === 'timeframe' && !v) return 'Choose a timeframe.';
@@ -345,6 +358,11 @@ export default function MatchingWizard() {
           service: form.service.trim() || SERVICE_NOT_SURE,
           serviceContext: serviceContextFromPath(window.location.pathname),
           preferredProvider,
+          consent: {
+            collection: consent.collection,
+            authorisedForOther: form.careFor !== 'Myself' ? consent.authorisedForOther : undefined,
+            marketing: consent.marketing,
+          },
         }),
       });
       if (!res.ok) {
@@ -427,6 +445,8 @@ export default function MatchingWizard() {
                     headingRef={headingRef}
                     error={error}
                     serviceOptions={serviceOptions}
+                    consent={consent}
+                    setConsent={setConsent}
                   />
                 </div>
               </div>
@@ -764,8 +784,59 @@ function Heading({ headingRef, children }: { headingRef: React.RefObject<HTMLHea
   return <h2 id="mw-heading" ref={headingRef} tabIndex={-1} className="mw-question">{children}</h2>;
 }
 
+interface ConsentState { collection: boolean; authorisedForOther: boolean; marketing: boolean }
+const NO_CONSENT: ConsentState = { collection: false, authorisedForOther: false, marketing: false };
+
+/** "**Lead-in.** rest" → bold lead-in (the legal pack marks bold with double asterisks). */
+function boldInline(text: string) {
+  return text.split('**').map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+}
+
+/**
+ * The collection notice (APP 5), read from the same legal pack the /collection-notice page shows, so the form and the
+ * page can never differ. Everything before the "Consent checkboxes" line is the notice; the three checkboxes are real
+ * inputs, all unticked by default.
+ */
+function CollectionNotice({ forSomeoneElse, consent, setConsent }: {
+  forSomeoneElse: boolean;
+  consent: ConsentState;
+  setConsent: (next: ConsentState) => void;
+}) {
+  const doc = legalDocBySlug('collection-notice');
+  const blocks = doc?.sections[0]?.blocks ?? [];
+  const cut = blocks.findIndex((b) => b.t === 'p' && b.text.startsWith('**Consent checkboxes'));
+  const notice = (cut === -1 ? blocks : blocks.slice(0, cut)).filter((b) => !(b.t === 'p' && b.text === '**How we use your details**'));
+  const checkItems = cut === -1 ? [] : (blocks.slice(cut + 1).find((b) => b.t === 'ul') as { items: string[] } | undefined)?.items ?? [];
+  // Pack order: required agreement, required if sending for someone else, optional updates. Strip the leading ☐.
+  const label = (i: number) => (checkItems[i] ?? '').replace(/^☐\s*/, '').replace(/^\*\*(Required|Required if sending for someone else|Optional):\*\*\s*/, '');
+  return (
+    <div className="mw-notice">
+      {notice.map((b, i) => (b.t === 'ul'
+        ? <ul key={i} className="mw-notice-list">{b.items.map((item) => <li key={item}>{boldInline(item)}</li>)}</ul>
+        : <p key={i} className="mw-notice-p">{b.t === 'p' || b.t === 'note' ? boldInline(b.text) : null}</p>))}
+      <p className="mw-notice-p">Full details are in our <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.</p>
+      <div className="mw-consents">
+        <label className="mw-consent">
+          <input type="checkbox" checked={consent.collection} onChange={(e) => setConsent({ ...consent, collection: e.target.checked })} />
+          <span><strong>Required:</strong> {label(0)}</span>
+        </label>
+        {forSomeoneElse && (
+          <label className="mw-consent">
+            <input type="checkbox" checked={consent.authorisedForOther} onChange={(e) => setConsent({ ...consent, authorisedForOther: e.target.checked })} />
+            <span><strong>Required, because this request is for someone else:</strong> {label(1)}</span>
+          </label>
+        )}
+        <label className="mw-consent">
+          <input type="checkbox" checked={consent.marketing} onChange={(e) => setConsent({ ...consent, marketing: e.target.checked })} />
+          <span><strong>Optional:</strong> {label(2)}</span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function WizardStep({
-  stepId, form, set, patch, headingRef, error, serviceOptions,
+  stepId, form, set, patch, headingRef, error, serviceOptions, consent, setConsent,
 }: {
   stepId: StepId;
   form: MatchFormData;
@@ -774,8 +845,20 @@ function WizardStep({
   headingRef: React.RefObject<HTMLHeadingElement>;
   error: string;
   serviceOptions: ActiveService[];
+  consent: ConsentState;
+  setConsent: (next: ConsentState) => void;
 }) {
   const err = error ? <p className="mw-error" role="alert">{error}</p> : null;
+
+  if (stepId === 'notice') {
+    return (
+      <>
+        <Heading headingRef={headingRef}>How we use your details</Heading>
+        <CollectionNotice forSomeoneElse={!!form.careFor && form.careFor !== 'Myself'} consent={consent} setConsent={setConsent} />
+        {err}
+      </>
+    );
+  }
 
   if (stepId === 'careFor') {
     return (
@@ -865,7 +948,8 @@ function WizardStep({
         />
         {err}
         <p className="mw-fine-print">
-          By continuing, you agree to our <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+          Read our <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a> and{' '}
+          <a href="/collection-notice" target="_blank" rel="noopener noreferrer">collection notice</a>.
         </p>
       </>
     );

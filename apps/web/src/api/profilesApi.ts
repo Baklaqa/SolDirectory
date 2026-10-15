@@ -147,6 +147,10 @@ export interface PublicProviderCard {
   id: string; slug: string | null; legalEntityName: string; tradingName: string;
   registrationGroups: string[]; serviceSuburbs: string[]; serviceSuburbCount: number;
   intakeStatus: string; logoUrl: string | null;
+  /** Confirmed capacity in the weekly check and not closed or waitlist-only. Never changed by a paid plan. */
+  takingNewPeople?: boolean;
+  /** Owned by a related party of SolDirectory. */
+  relatedBusiness?: boolean;
 }
 export const listProvidersBy = (p: { suburb?: string; condition?: string; funding?: string; language?: string; page?: number; limit?: number }) =>
   publicGet<{ items: PublicProviderCard[]; page: number; limit: number; total: number; hasMore: boolean }>(`/providers/public${qs(p)}`);

@@ -60,6 +60,23 @@ export interface LeadDoc extends Document {
   // --- Follow-up emails to the person who made the request (see leadFollowUp.service.ts) ---
   /** The requester clicked "stop these emails". Nothing optional is sent after this. */
   emailOptOut?: boolean;
+  /** The person asked us to delete their details (requests.controller.ts deleteRequest): name, email, phone and notes are cleared. */
+  erasedAt?: Date;
+  /**
+   * What the person agreed to on the "Get matched" form (collection notice, docs in packages/topic-content/legalPack.js).
+   * Kept as the record of consent; the privacy policy keeps consent records for 7 years.
+   */
+  consent?: {
+    /** Agreed to the collection of the form's details, including sensitive information, and sharing with matched providers. */
+    collection: boolean;
+    /** For a request sent for someone else: confirmed they have that person's permission or are their nominee/guardian/representative. */
+    authorisedForOther?: boolean;
+    /** Opted in to occasional updates and guides by email. Unticked by default; nothing is sent on the strength of it yet. */
+    marketing: boolean;
+    /** Which version of the notice was shown, so a later change to the wording can be told apart. */
+    noticeVersion: string;
+    recordedAt: Date;
+  };
   /** Set once the first "a provider has looked at your request" email has gone out. */
   viewedNoticeAt?: Date;
   /** Set once the "a provider has taken up your request" email has gone out. */
@@ -107,6 +124,17 @@ const leadSchema = new Schema<LeadDoc>(
     requesterUserId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     preferredListing: { type: new Schema({ type: String, slug: String, name: String }, { _id: false }), default: undefined },
     emailOptOut: { type: Boolean, default: false },
+    erasedAt: Date,
+    consent: {
+      type: new Schema({
+        collection: { type: Boolean, required: true },
+        authorisedForOther: Boolean,
+        marketing: { type: Boolean, default: false },
+        noticeVersion: { type: String, required: true },
+        recordedAt: { type: Date, required: true },
+      }, { _id: false }),
+      default: undefined,
+    },
     viewedNoticeAt: Date,
     respondedNoticeAt: Date,
     digestCount: { type: Number, default: 0 },

@@ -36,6 +36,12 @@ export function ProviderCardItem({ p }: { p: PublicProviderCard }) {
           <h3>{p.slug ? <Link to={`/directory/${p.slug}`}>{name}</Link> : name}</h3>
         </div>
       </div>
+      {(p.takingNewPeople || p.relatedBusiness) && (
+        <div className="dir-tags" aria-label="Labels">
+          {p.takingNewPeople && <span className="dir-tag dir-tag-capacity">Taking new people</span>}
+          {p.relatedBusiness && <span className="dir-tag dir-tag-related">Related business</span>}
+        </div>
+      )}
       {p.registrationGroups.length > 0 && (
         <div className="dir-tags" aria-label="Supports offered">
           {p.registrationGroups.slice(0, 4).map((g) => <span key={g} className="dir-tag">{g}</span>)}

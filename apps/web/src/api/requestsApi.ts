@@ -20,6 +20,9 @@ export interface TrackedRequest {
   note?: string;
   searchUrl: string;
   trackingUrl?: string;
+  /** The person closed the request, or deleted their details. */
+  closed?: boolean;
+  erased?: boolean;
 }
 
 /** A request on the "my requests" page, with the one-line position the weekly email also uses. */
@@ -49,6 +52,18 @@ export const attachRequest = (id: string, token: string) =>
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ t: token }),
+  });
+
+/** Closes the request so no further provider can open it. The link's signed token is the credential. */
+export const closeTrackedRequest = (id: string, token: string) =>
+  request<{ closed: boolean }>(`/${encodeURIComponent(id)}/close`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token }),
+  });
+
+/** Clears the person's name, email, phone and notes from the request and closes it. */
+export const deleteTrackedRequest = (id: string, token: string) =>
+  request<{ erased: boolean }>(`/${encodeURIComponent(id)}/delete`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token }),
   });
 
 export const listMyRequests = () => request<{ items: TrackedRequest[] }>('/mine', { headers: authHeaders() });

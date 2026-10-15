@@ -224,7 +224,17 @@ export default function AppRoutes() {
       <Route path="/glossary" element={<GlossaryPage />} />
       <Route path="/editorial-standards" element={<EditorialStandards />} />
       <Route path="/provider-agreement" element={<LegalPage slug="provider-agreement" />} />
-      <Route path="/lead-disclaimer" element={<LegalPage slug="lead-disclaimer" />} />
+      <Route path="/collection-notice" element={<LegalPage slug="collection-notice" />} />
+      <Route path="/cookies" element={<LegalPage slug="cookies" />} />
+      <Route path="/worker-terms" element={<LegalPage slug="worker-terms" />} />
+      <Route path="/complaints" element={<LegalPage slug="complaints" />} />
+      <Route path="/statement-of-rights" element={<LegalPage slug="statement-of-rights" />} />
+      <Route path="/listing-and-ranking-policy" element={<LegalPage slug="listing-and-ranking-policy" />} />
+      <Route path="/editorial-policy" element={<LegalPage slug="editorial-policy" />} />
+      <Route path="/accessibility" element={<LegalPage slug="accessibility" />} />
+      <Route path="/data-sources" element={<LegalPage slug="data-sources" />} />
+      {/* The old enquiry disclaimer is now part of the terms of use (what SolDirectory is, and isn't). */}
+      <Route path="/lead-disclaimer" element={<Navigate to="/terms" replace />} />
       <Route path="/guides" element={<GuidesHubPage />} />
       <Route path="/guides/ndis-price-guide" element={<GuidePage slug="ndis-price-guide" />} />
       <Route path="/guides/choosing-a-provider" element={<GuidePage slug="choosing-a-provider" />} />

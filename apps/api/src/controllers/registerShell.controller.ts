@@ -7,7 +7,7 @@ import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import WorkerReview from '../models/WorkerReview.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
-import { findProvidersPaidFirst } from '../services/providerPriority.js';
+import { findProvidersOrdered } from '../services/providerOrdering.js';
 import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
@@ -575,7 +575,7 @@ const LEVEL_PAGE = 12;
 
 async function providerProfilePage(site: string, slug: string): Promise<Page> {
   if (!SLUG_RE.test(slug)) return notFound();
-  const p: any = await Provider.findOne({ slug, accountStatus: 'active', listingPaused: { $ne: true } })
+  const p: any = await Provider.findOne({ slug, accountStatus: 'active' })
     .select('legalEntityName tradingName slug registrationGroups acceptedFunding conditionExperience languages ageGroups serviceSuburbs businessAddress.suburb businessAddress.state logoUrl hasLogoUpload updatedAt')
     .lean();
   if (!p) return notFound();
@@ -696,7 +696,7 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
   const field = mode === 'area' ? 'serviceSuburbs' : 'conditionExperience';
   const filter = { ...VISIBLE_PROVIDER, slug: { $exists: true, $ne: null }, [field]: new RegExp(`^\\s*${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i') };
   const [docs, total] = await Promise.all([
-    findProvidersPaidFirst<any>(filter, 'legalEntityName tradingName slug registrationGroups', { skip: (page - 1) * LEVEL_PAGE, limit: LEVEL_PAGE }),
+    findProvidersOrdered<any>(filter, 'legalEntityName tradingName slug registrationGroups', { skip: (page - 1) * LEVEL_PAGE, limit: LEVEL_PAGE }),
     Provider.countDocuments(filter),
   ]);
 
@@ -911,7 +911,7 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     languages: new RegExp(`^\\s*${topic.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'),
   };
   const [docs, total, snapshot] = await Promise.all([
-    findProvidersPaidFirst<any>(filter, 'legalEntityName tradingName slug registrationGroups', { skip: (page - 1) * LEVEL_PAGE, limit: LEVEL_PAGE }),
+    findProvidersOrdered<any>(filter, 'legalEntityName tradingName slug registrationGroups', { skip: (page - 1) * LEVEL_PAGE, limit: LEVEL_PAGE }),
     Provider.countDocuments(filter),
     // null when the lookup failed: an error must never read as "no listings" and hide the page.
     computeLanguageSnapshot(topic.name).catch(() => null),
@@ -1686,13 +1686,13 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
   const editorial = serviceEditorialFor(service);
 
   const providerFilter = {
-    accountStatus: 'active', listingPaused: { $ne: true },
+    accountStatus: 'active',
     registrationGroups: new RegExp(`^${escapeRegex(service)}$`, 'i'),
     serviceSuburbs: new RegExp(`^\\s*${escapeRegex(suburbName)}\\s*$`, 'i'),
   };
   const [providerTotal, providerDocs, ndisListings, agedListings, ndisTotal, agedTotal] = await Promise.all([
     Provider.countDocuments(providerFilter),
-    findProvidersPaidFirst<any>(providerFilter, 'legalEntityName tradingName slug registrationGroups', { limit: 12 }),
+    findProvidersOrdered<any>(providerFilter, 'legalEntityName tradingName slug registrationGroups', { limit: 12 }),
     RegisterListing.find({ type: 'ndis', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(6).lean(),
     RegisterListing.find({ type: 'aged_care', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }).select('slug name supportCategories areaCount').limit(6).lean(),
     RegisterListing.countDocuments({ type: 'ndis', supportCategories: service, areas: { $elemMatch: { state: code, suburbSlug } } }),

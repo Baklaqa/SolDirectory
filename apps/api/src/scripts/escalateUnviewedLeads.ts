@@ -13,32 +13,13 @@ const PROVIDERS_PER_RUN = Math.max(1, Number(process.env.LEAD_ESCALATION_BATCH_S
 const MAX_TOTAL_PROVIDERS = Math.max(PROVIDERS_PER_RUN, Number(process.env.MAX_TOTAL_PROVIDERS_PER_LEAD) || 10);
 const LEADS_PER_RUN = Math.max(1, Number(process.env.LEAD_ESCALATION_LEADS_PER_RUN) || 100);
 
-function hasPaidLeadAccess(provider: any): boolean {
-  return ['growth', 'pro'].includes(provider.plan)
-    && provider.planStatus === 'active'
-    && (!provider.planExpiresAt || new Date(provider.planExpiresAt) > new Date());
-}
-
 async function notifyProvider(lead: any, provider: any): Promise<boolean> {
   const frontendOrigin = (process.env.CLIENT_ORIGIN ?? 'http://localhost:5173').replace(/\/$/, '');
   const dashboardUrl = `${frontendOrigin}/leads/${lead._id}`;
 
   if (provider.intakeEmail) {
-    if (hasPaidLeadAccess(provider)) {
-      await EmailService.sendProviderLeadFull(provider.intakeEmail, {
-        need: lead.need,
-        suburb: lead.suburb,
-        requesterName: lead.requesterName,
-        requesterEmail: lead.requesterEmail,
-        requesterPhone: lead.contactPhone,
-        careFor: lead.careFor,
-        timeframe: lead.timeframe,
-        fundingType: lead.fundingType,
-        planManagement: lead.planManagement,
-        additionalDetails: lead.note,
-        dashboardUrl,
-      });
-    } else {
+    // Brief only. The requester's name and contact details are visible to the providers that unlock the request.
+    {
       const claimUrl = provider.claimed === false
         ? `${frontendOrigin}/forgot-password?claim=1&email=${encodeURIComponent(provider.intakeEmail)}`
         : undefined;

@@ -59,6 +59,8 @@ const PLAN_MANAGEMENT_TO_FUNDING: Record<string, 'Plan-managed' | 'Self-managed'
 // with nothing — they can still find and claim the lead themselves via
 // the "browse nearby requests" endpoint (listNearbyLeads), which uses
 // the same isGenuineMatch rule without the cap.
+// First batch only: leads nobody opens are escalated to further providers (scripts/escalateUnviewedLeads.ts) up to
+// MAX_TOTAL_PROVIDERS_PER_LEAD (10), which is the "up to 10 matched providers" the collection notice describes.
 const MAX_NOTIFIED_PER_LEAD = Number(process.env.MAX_PROVIDERS_PER_LEAD) || 5;
 const SERVICE_NOT_SURE = 'Not sure yet';
 
@@ -68,6 +70,32 @@ const SERVICE_NOT_SURE = 'Not sure yet';
 // (it costs a real API call, and a half-typed suburb on step 1 isn't
 // worth spending it on every autosave — only the final submit, and
 // the browse/matching paths, ever need real coordinates).
+/** Version of the collection notice the form shows. Bump when the wording changes in a way that matters. */
+export const COLLECTION_NOTICE_VERSION = '2026-10-15';
+
+/** Validates the consent object the form sends. Required: agreement to the notice; and authority when asking for another person. */
+export function parseConsent(raw: unknown, careFor: string | undefined):
+  | { value: { collection: true; authorisedForOther?: boolean; marketing: boolean; noticeVersion: string; recordedAt: Date } }
+  | { error: string } {
+  const c = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  if (c.collection !== true) {
+    return { error: 'Please confirm you agree to us collecting and sharing the details in this form, using the collection notice.' };
+  }
+  const forSomeoneElse = !!careFor && careFor.trim() !== 'Myself';
+  if (forSomeoneElse && c.authorisedForOther !== true) {
+    return { error: 'Please confirm you have the permission of the person this request is for, or are their nominee, guardian or authorised representative.' };
+  }
+  return {
+    value: {
+      collection: true,
+      ...(forSomeoneElse ? { authorisedForOther: true } : {}),
+      marketing: c.marketing === true,
+      noticeVersion: COLLECTION_NOTICE_VERSION,
+      recordedAt: new Date(),
+    },
+  };
+}
+
 function mapFormToLeadFields(body: Record<string, unknown>) {
   const { location, suburb, state, postcode, careFor, timeframe, funding, planManagement, service, serviceContext, email, phone, name, additionalDetails } = body as Record<string, string | undefined>;
   return {
@@ -179,6 +207,11 @@ export async function submitMatchRequest(req: Request, res: Response) {
   if (!email || !/.+@.+\..+/.test(email)) return res.status(400).json({ error: 'A valid email address is required.' });
   if (!name?.trim()) return res.status(400).json({ error: 'Please enter your name.' });
 
+  // The collection notice is shown before the contact details step; the request is not accepted without the
+  // person's agreement to it (and, when sent for someone else, their confirmation of authority).
+  const consent = parseConsent((form as Record<string, unknown>).consent, careFor);
+  if ('error' in consent) return res.status(400).json({ error: consent.error });
+
   // Geocode once, at creation time — never repeatedly on every page
   // load, per the spec's own explicit instruction.
   // The wizard already resolved the suburb to coordinates when the family
@@ -194,6 +227,7 @@ export async function submitMatchRequest(req: Request, res: Response) {
     ...(optionalUserId(req) ? { requesterUserId: optionalUserId(req) } : {}),
     location: point ? { type: 'Point' as const, coordinates: point } : undefined,
     status: 'matched' as const,
+    consent: consent.value,
     draftExpiresAt: undefined, // no longer a draft — stop it from ever being TTL-deleted
   };
 
@@ -227,32 +261,15 @@ export async function submitMatchRequest(req: Request, res: Response) {
   const requestNumber = String(lead._id).slice(-8).toUpperCase();
 
   // Fire-and-forget — email failure must never fail lead submission.
-  // Starter providers receive only a privacy-safe teaser. Active paid
-  // providers receive the full contact brief because their subscription
-  // includes lead access.
+  // Every provider receives only a privacy-safe teaser; contact details come with an unlock.
   const frontendOrigin = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
   for (const { provider, result } of matchedProviders) {
     if (provider.intakeEmail) {
       const dashboardUrl = `${frontendOrigin}/leads/${lead._id}`;
-      const hasPaidAccess = ['growth', 'pro'].includes(provider.plan)
-        && provider.planStatus === 'active'
-        && (!provider.planExpiresAt || new Date(provider.planExpiresAt) > new Date());
-
-      if (hasPaidAccess) {
-        EmailService.sendProviderLeadFull(provider.intakeEmail, {
-          need: lead.need,
-          suburb: lead.suburb,
-          requesterName: lead.requesterName,
-          requesterEmail: lead.requesterEmail,
-          requesterPhone: lead.contactPhone,
-          careFor: lead.careFor,
-          timeframe: lead.timeframe,
-          fundingType: lead.fundingType,
-          planManagement: lead.planManagement,
-          additionalDetails: lead.note,
-          dashboardUrl,
-        }).catch(() => {});
-      } else {
+      // Every matched provider receives the brief only: the support, suburb, funding type and timing. The requester's
+      // name and contact details are visible only to the providers (up to 3) that unlock the request, as the collection
+      // notice tells the requester. Paid plans differ in how many unlocks they have, not in what the email contains.
+      {
         // An unclaimed (imported) listing also gets a claim link: it opens the
         // forgot-password page pre-filled with this address, which emails a
         // secure reset link — nothing here grants access by itself.

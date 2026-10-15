@@ -15,7 +15,9 @@ import { slugify } from '../utils/slugify.js';
  * suburb + state only — no street address, no coordinates.
  */
 
-export const VISIBLE_PROVIDER = { accountStatus: 'active', listingPaused: { $ne: true } } as const;
+// A profile stays live when the weekly capacity check goes unanswered: it only stops receiving requests and loses
+// the "Taking new people" label (see services/providerOrdering.ts and the provider agreement, 5.5).
+export const VISIBLE_PROVIDER = { accountStatus: 'active' } as const;
 
 /** A WordPress-managed logo wins; otherwise the provider's own upload; otherwise null (initials are shown). */
 export function publicLogoUrl(p: { slug?: string | null; logoUrl?: string | null; hasLogoUpload?: boolean; updatedAt?: Date }): string | null {

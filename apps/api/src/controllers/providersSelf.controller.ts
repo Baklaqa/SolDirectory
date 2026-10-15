@@ -25,12 +25,12 @@ function shape(p: any) {
   const issues: string[] = [];
   if (p.accountStatus !== 'active') issues.push('Your account is suspended.');
   if (!p.slug) issues.push('Add your business name in onboarding to get a public page.');
-  if (p.listingPaused) issues.push('Your listing is paused because your weekly capacity check wasn’t confirmed. Use the link in the latest capacity email to bring it back.');
+  if (p.listingPaused) issues.push('You are not receiving new requests because your weekly capacity check wasn’t confirmed. Your profile stays live, without the “Taking new people” label. Use the link in the latest capacity email to start receiving requests again.');
   if (p.slug && groups.length === 0) issues.push('Add the supports you offer in onboarding — a page with none isn’t shown to search engines.');
   return {
     name: p.tradingName || p.legalEntityName || '',
     slug: p.slug ?? null,
-    live: p.accountStatus === 'active' && !p.listingPaused && !!p.slug,
+    live: p.accountStatus === 'active' && !!p.slug,
     issues,
     supportCount: groups.length,
     areaCount: suburbs.length,

@@ -147,6 +147,9 @@ export async function markLeadViewed(req: AuthedRequest, res: Response) {
   res.json({ viewed: true });
 }
 
+/** Providers that can unlock one request. Stated in the collection notice and the privacy policy. */
+export const MAX_UNLOCKS_PER_LEAD = 3;
+
 export async function unlockLead(req: AuthedRequest, res: Response) {
   const provider = await getActiveProviderForUser(req.user!.id);
   if (!provider) return res.status(403).json({ error: 'No active provider profile for this account' });
@@ -162,6 +165,10 @@ export async function unlockLead(req: AuthedRequest, res: Response) {
   if (existing) {
     return res.json(toUnlockedShape(lead));
   }
+  // The person closed their request (or deleted their details): providers that have not unlocked it can no longer do so.
+  if (lead.status === 'closed') {
+    return res.status(410).json({ error: 'The person closed this request, so it can no longer be unlocked.', code: 'LEAD_CLOSED' });
+  }
 
   const planDoc = await PlanConfig.findOne({ key: provider.plan }).lean();
   const quota = planDoc?.quota ?? 0; // null in DB means unlimited — see below
@@ -174,13 +181,26 @@ export async function unlockLead(req: AuthedRequest, res: Response) {
     return res.status(402).json({ error: `You have used all ${quota} unlocks this month`, code: 'QUOTA_EXHAUSTED' });
   }
 
+  // The collection notice tells the requester that up to 3 providers can see their contact details.
+  if ((await UnlockLedger.countDocuments({ leadId: lead._id })) >= MAX_UNLOCKS_PER_LEAD) {
+    return res.status(409).json({ error: `This request has already been unlocked by ${MAX_UNLOCKS_PER_LEAD} providers.`, code: 'LEAD_FULL' });
+  }
+
+  let ledgerEntry;
   try {
-    await UnlockLedger.create({ providerId: provider._id, leadId: lead._id, idempotencyKey });
+    ledgerEntry = await UnlockLedger.create({ providerId: provider._id, leadId: lead._id, idempotencyKey });
   } catch (err: any) {
     if (err.code === 11000) {
       return res.json(toUnlockedShape(lead)); // race: already unlocked under a different key
     }
     throw err;
+  }
+  // Two providers can pass the count above together. Only the first MAX_UNLOCKS_PER_LEAD entries (by time, then id)
+  // keep their unlock, so the cap holds under a race; the loser's entry is removed before any quota is used.
+  const keepers = await UnlockLedger.find({ leadId: lead._id }).sort({ createdAt: 1, _id: 1 }).limit(MAX_UNLOCKS_PER_LEAD).select('_id').lean();
+  if (!keepers.some((entry) => String(entry._id) === String(ledgerEntry._id))) {
+    await UnlockLedger.deleteOne({ _id: ledgerEntry._id });
+    return res.status(409).json({ error: `This request has already been unlocked by ${MAX_UNLOCKS_PER_LEAD} providers.`, code: 'LEAD_FULL' });
   }
 
   provider.leadUnlocksUsedThisPeriod += 1;

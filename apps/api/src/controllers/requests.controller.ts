@@ -29,6 +29,43 @@ export async function getTrackedRequest(req: Request, res: Response) {
   res.json(tracked);
 }
 
+/**
+ * POST /api/requests/:id/close { t } — the person closes their own request. No further provider can unlock it; providers
+ * that already unlocked it keep what they were given. Reversible only by sending a new request.
+ */
+export async function closeRequest(req: Request, res: Response) {
+  const id = req.params.id;
+  const token = String((req.body as { t?: unknown })?.t ?? '');
+  if (!mongoose.isValidObjectId(id) || !verifyTrackToken(id, token)) return res.status(404).json({ error: 'We could not find that request.' });
+  const lead = await Lead.findOneAndUpdate({ _id: id, status: { $ne: 'draft' } }, { $set: { status: 'closed' } }, { new: true }).select('_id');
+  if (!lead) return res.status(404).json({ error: 'We could not find that request.' });
+  res.json({ closed: true });
+}
+
+/**
+ * POST /api/requests/:id/delete { t } — the person asks us to delete their details. Name, email, phone, free-text notes
+ * and the map point are cleared and the request is closed, so no provider can unlock it. What stays is what the privacy
+ * policy says is kept: the record that consent was given, and the log of who viewed the request.
+ */
+export async function deleteRequest(req: Request, res: Response) {
+  const id = req.params.id;
+  const token = String((req.body as { t?: unknown })?.t ?? '');
+  if (!mongoose.isValidObjectId(id) || !verifyTrackToken(id, token)) return res.status(404).json({ error: 'We could not find that request.' });
+  const lead = await Lead.findOneAndUpdate(
+    { _id: id, status: { $ne: 'draft' } },
+    {
+      $set: {
+        requesterName: '', requesterEmail: '', contactName: '', contactPhone: '', note: '', status: 'closed', erasedAt: new Date(),
+        requesterUserId: null, emailOptOut: true,
+      },
+      $unset: { location: '' },
+    },
+    { new: true },
+  ).select('_id');
+  if (!lead) return res.status(404).json({ error: 'We could not find that request.' });
+  res.json({ erased: true });
+}
+
 /** POST /api/requests/:id/attach { t } — a signed-in person adds a request they opened by link to their own account. */
 export async function attachRequest(req: AuthedRequest, res: Response) {
   const id = req.params.id;

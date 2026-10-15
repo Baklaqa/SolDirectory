@@ -33,6 +33,10 @@ export interface TrackedRequest {
   providers: { name: string; progress: ProviderProgress; at?: string }[];
   note?: string;
   searchUrl: string;
+  /** The person closed the request (or deleted their details): no further provider can open it. */
+  closed: boolean;
+  /** The person's contact details were deleted at their request. */
+  erased: boolean;
 }
 
 const PROGRESS: Record<string, ProviderProgress> = { notified: 'waiting', viewed: 'viewed', contacted: 'responded', declined: 'declined' };
@@ -92,5 +96,7 @@ export function buildTrackedRequest(
       ? `${requested} does not manage requests through SolDirectory, so we cannot show when they see yours. You can contact them directly, or compare other providers below.`
       : undefined,
     searchUrl: `${siteOrigin()}/find-a-provider${params.toString() ? `?${params}` : ''}`,
+    closed: lead.status === 'closed',
+    erased: !!lead.erasedAt,
   };
 }
