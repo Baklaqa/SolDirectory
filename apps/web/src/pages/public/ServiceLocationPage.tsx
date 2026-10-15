@@ -1,4 +1,5 @@
 import { bannerFor } from '../../data/bannerImages';
+import { metaDescription } from '@soldirectory/topic-content';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
@@ -72,6 +73,9 @@ const SERVICE_GROUPS = [
     services: ['Housing (SDA & SIL)', 'Dementia care', 'Palliative care', 'Residential aged care'],
   },
 ] as const;
+
+/** Cuts a title to `max` characters at a word boundary, with an ellipsis. */
+const fitTitle = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, max - 1).replace(/\s+\S*$/, '')}…`);
 
 export default function ServiceLocationPage() {
   const navigate = useNavigate();
@@ -244,8 +248,9 @@ export default function ServiceLocationPage() {
     const fullTitle = `${serviceName} providers in ${suburbName}, ${stateAbbr}`;
     const compactTitle = `${serviceName} in ${suburbName}, ${stateAbbr}`;
     applySeoTags({
-      title: wp?.seo.title || seoTitle(fullTitle.length <= 50 ? fullTitle : compactTitle),
-      description: wp?.seo.description || introParagraph,
+      // 46 characters for the page part plus " | SolDirectory" keeps the whole title within 60.
+      title: wp?.seo.title || `${fitTitle(fullTitle.length <= 46 ? fullTitle : compactTitle, 46)} | SolDirectory`,
+      description: metaDescription(wp?.seo.description || introParagraph, 160),
       ogImage: wp?.seo.ogImage,
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
@@ -308,7 +313,7 @@ export default function ServiceLocationPage() {
         image={bannerFor({ text: serviceName, section: 'locations', state: stateAbbr })}
         imageAlt=""
         eyebrow={<>{serviceName} · {stateName}</>}
-        title={`Home ${serviceLower} providers in ${suburbName}, ${stateName}`}
+        title={`${serviceName} providers in ${suburbName}, ${stateName}`}
         description={`Compare provider profiles and public-register listings for ${serviceLower} in ${suburbName}, then send one request to providers serving your area.`}
         stats={<span><strong>{heroProviderLabel}</strong></span>}
         panel={{
@@ -397,7 +402,7 @@ export default function ServiceLocationPage() {
               <div className="svc-match-header">Get matched directly</div>
               <div className="svc-match-body">
                 <h3>Not finding the right match?</h3>
-                <p>Tell us what you need and we will connect you with home {serviceLower} providers in {suburbName}. No wait list.</p>
+                <p>Tell us what you need and we will connect you with {serviceLower} providers in {suburbName}. No wait list.</p>
                 {/* This used to be an inline "email or phone" box whose
                     Send button only flipped a local flag to "Thanks —
                     we'll be in touch" — nothing was ever sent, so a real

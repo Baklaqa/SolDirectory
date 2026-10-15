@@ -1753,7 +1753,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
 
   const body =
     `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
-    `<h1>Home ${esc(serviceLower)} providers in ${esc(suburbName)}, ${esc(stateName)}</h1>` +
+    `<h1>${esc(service)} providers in ${esc(suburbName)}, ${esc(stateName)}</h1>` +
     `<p>This page lists ${esc(serviceLower)} providers and register listings covering ${esc(suburbName)}, ${esc(code)}` +
     `${registerTotal > 0 ? ` — ${fmt(registerTotal)} organisation${registerTotal === 1 ? '' : 's'} on the public NDIS and My Aged Care registers list ${esc(serviceLower)} among their supports for this area` : ''}` +
     `${providerTotal > 0 ? `, and ${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider currently offers' : 'providers currently offer'} it here` : ''}.` +
@@ -1770,10 +1770,11 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
 
   return {
     status: 200,
+    // At most 60 characters in all: 46 for the page part plus " | SolDirectory".
     title: (() => {
       const fullTitle = `${service} providers in ${suburbName}, ${code}`;
       const compactTitle = `${service} in ${suburbName}, ${code}`;
-      return seoTitle(fullTitle.length <= 50 ? fullTitle : compactTitle);
+      return `${trimTo(fullTitle.length <= 46 ? fullTitle : compactTitle, 46)} | SolDirectory`;
     })(),
     description: metaDescription(description, 158),
     canonical: path,
