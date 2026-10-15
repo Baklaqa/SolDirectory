@@ -249,9 +249,10 @@ export function fundingFaqs(topic) {
  *  - Too long: the first whole sentence if it fits, otherwise cut at the last comma, colon or semicolon that leaves a
  *    sensible length, drop a dangling connector ("for example", "such as", "and"), and close with a full stop.
  *  - Nothing suitable: cut at a word and add an ellipsis, as a last resort.
+ * `min` (default 0, off) pads a finished sentence shorter than that with one plain closing sentence.
  * It only shortens what the page's own text already says; it never adds claims.
  */
-export function metaDescription(text, max = 160, min = 110) {
+export function metaDescription(text, max = 160, min = 0) {
   const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return '';
   const closing = ' Compare providers and questions to ask on SolDirectory.';

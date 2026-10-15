@@ -187,7 +187,7 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
     title: kind.type === 'ndis'
       ? 'NDIS provider register Australia | SolDirectory'
       : 'Aged care provider register Australia | SolDirectory',
-    description: trimTo(`Browse ${fmt(hub.total)} ${kind.plain} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`, 158),
+    description: metaDescription(`Browse ${fmt(hub.total)} ${kind.plain} providers listed on the public register, by state and suburb. See the supports listed, then get matched for free.`, 158),
     canonical: base,
     noindex: hub.total === 0,
     jsonLd: [
@@ -283,7 +283,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     status: 200,
     // "Australian Capital Territory" would push the title past what search results show, so the title says the ACT.
     title: `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
-    description: trimTo(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
+    description: metaDescription(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,
     jsonLd: [
@@ -356,7 +356,7 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
   return {
     status: 200,
     title: providerTitle(name, kind.label, where),
-    description: trimTo(
+    description: metaDescription(
       `${name} is ${kind.listedAs}${shown.length ? ` for ${shown.join(' and ')}${more > 0 ? ` and ${more} more area${more === 1 ? '' : 's'}` : ''}` : ''}. See the supports listed, where it operates and how to check its current status.`,
       158
     ),
@@ -591,7 +591,7 @@ async function providerProfilePage(site: string, slug: string): Promise<Page> {
   return {
     status: 200,
     title: `${trimTo(name, 44)} | Provider in ${where}`,
-    description: trimTo(
+    description: metaDescription(
       `${name}${offers ? ` offers ${offers}` : ' is listed on SolDirectory'}${suburbs.length ? ` and supports people in ${suburbs.slice(0, 3).join(', ')}` : ''}. See supports, funding accepted and service areas, then get matched for free.`,
       158
     ),
@@ -639,7 +639,7 @@ async function workerProfilePage(site: string, slug: string): Promise<Page> {
   return {
     status: 200,
     title: `${name}${w.role ? `, ${trimTo(w.role, 30)}` : ''} | Independent worker${where ? ` in ${where}` : ''}`,
-    description: trimTo(`${name} is an independent ${w.role ? String(w.role).toLowerCase() : 'support worker'}${where ? ` in ${where}` : ''}${offers ? ` offering ${offers}` : ''}. See supports, languages and availability.`, 158),
+    description: metaDescription(`${name} is an independent ${w.role ? String(w.role).toLowerCase() : 'support worker'}${where ? ` in ${where}` : ''}${offers ? ` offering ${offers}` : ''}. See supports, languages and availability.`, 158),
     canonical: path,
     noindex: false,
     ogImage: w.hasPhoto ? `${site}/api/workers/public/${w.publicSlug}/photo?v=${new Date(w.updatedAt).getTime()}` : undefined,
@@ -744,7 +744,7 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
       : `${heading}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
     description: conditionInfo
       ? trimTo(`Understand support considerations for ${conditionInfo.name}, compare providers who list relevant experience, and prepare practical questions about funding, safety and fit.`, 158)
-      : trimTo(`${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${mode === 'area' ? `${row.name} as an area they support` : `experience supporting ${row.name}`} on SolDirectory. See their supports and service areas, then get matched for free.`, 158),
+      : metaDescription(`${fmt(total)} ${total === 1 ? 'provider lists' : 'providers list'} ${mode === 'area' ? `${row.name} as an area they support` : `experience supporting ${row.name}`} on SolDirectory. See their supports and service areas, then get matched for free.`, 158),
     canonical: page > 1 ? `${base}?page=${page}` : base,
     noindex: mode === 'area' && total < MIN_INDEXABLE_PROVIDERS,
     jsonLd: [{ id: 'directory-breadcrumbs', data: { '@type': 'BreadcrumbList', itemListElement: [
@@ -819,7 +819,7 @@ function fundingTopicPage(site: string, slug: string): Page {
   return {
     status: 200,
     title: `${topic.name} | Funding | SolDirectory`,
-    description: trimTo(FUNDING_SEO_DESCRIPTIONS[topic.slug] ?? `Understand ${topic.name}, what to confirm with the responsible funding body, records to prepare and questions to ask providers before support begins.`, 158),
+    description: metaDescription(FUNDING_SEO_DESCRIPTIONS[topic.slug] ?? `Understand ${topic.name}, what to confirm with the responsible funding body, records to prepare and questions to ask providers before support begins.`, 158),
     canonical: `${base}/`,
     noindex: false,
     jsonLd: [
@@ -954,7 +954,7 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
   return {
     status: 200,
     title: seoTitle(specifics ? specifics.heading : `${topic.name} language support providers`),
-    description: trimTo(specifics ? specifics.about[0] : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
+    description: metaDescription(specifics ? specifics.about[0] : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
     canonical: page > 1 ? `${base}?page=${page}` : `${base}/`,
     // A language page with no member provider and no register listing that mentions it has only the shared guidance,
     // so it is reachable but kept out of search results until it has something specific to say.
@@ -1227,7 +1227,7 @@ async function servicePage(site: string, slug: string): Promise<Page> {
     return {
       status: 200,
       title: `${name} guide | SolDirectory`,
-      description: trimTo(editorial.shortAnswer, 158),
+      description: metaDescription(editorial.shortAnswer, 158),
       canonical: path,
       noindex: false,
       jsonLd: [
@@ -1253,7 +1253,7 @@ async function servicePage(site: string, slug: string): Promise<Page> {
   const title = plain(item.title?.rendered ?? '');
   const excerpt = plain(item.excerpt?.rendered ?? '');
   const seoTitle = s('seo_title') || title;
-  const description = metaDescription(s('seo_description') || excerpt || `${title} on SolDirectory.`, 160);
+  const description = metaDescription(s('seo_description') || excerpt || `${title} on SolDirectory.`, 160, 110);
   const path = `/services/${item.slug}`;
   const faqs = jsonArr(meta.faq_json).filter((f: any) => f?.question && f?.answer);
   const related = (Array.isArray(meta.related_services) ? meta.related_services : []).filter((r: any) => r?.slug && r?.title);
@@ -1488,7 +1488,7 @@ function wordpressBlogArticlePage(site: string, post: any): Page {
   const title = plain(post.title?.rendered ?? '');
   if (!title) return notFound();
   const excerpt = plain(post.excerpt?.rendered ?? '');
-  const description = trimTo(post.meta?.seo_description || post.yoast_head_json?.description || excerpt || `${title} | SolDirectory`, 158);
+  const description = metaDescription(post.meta?.seo_description || post.yoast_head_json?.description || excerpt || `${title} | SolDirectory`, 158);
   const path = `/blog/${post.slug}`;
   const categories = (post._embedded?.['wp:term'] ?? []).flat()
     .filter((term: any) => term?.taxonomy === 'category' && term.name)
@@ -1536,7 +1536,7 @@ function editorialBlogPage(site: string, editorial: EditorialBlogPost): Page {
   return {
     status: 200,
     title: `${editorial.seoTitle ?? editorial.title} | SolDirectory`,
-    description: trimTo(editorial.seoDescription ?? editorial.summary, 158),
+    description: metaDescription(editorial.seoDescription ?? editorial.summary, 158),
     canonical: path,
     noindex: expired,
     ogImage: `${site}${editorial.coverImage}`,
@@ -1601,7 +1601,7 @@ async function genericWpPage(site: string, restBase: 'pages' | 'locations', slug
     value('overview_content'), value('who_for'), value('eligibility'), value('funding_info'),
     value('plan_management_info'), value('cost_info'), value('typical_session'),
   ].filter((text, index, all) => text && all.indexOf(text) === index);
-  const description = trimTo(value('seo_description') || excerpt || authored[0] || `${title} on SolDirectory.`, 160);
+  const description = metaDescription(value('seo_description') || excerpt || authored[0] || `${title} on SolDirectory.`, 160);
   const noindex = meta.seo_noindex === true || meta.seo_noindex === '1';
   const parentName = restBase === 'locations' ? 'Locations' : null;
   const crumbs = [
@@ -1775,7 +1775,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
       const compactTitle = `${service} in ${suburbName}, ${code}`;
       return seoTitle(fullTitle.length <= 50 ? fullTitle : compactTitle);
     })(),
-    description: trimTo(description, 158),
+    description: metaDescription(description, 158),
     canonical: path,
     // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
     noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION,
