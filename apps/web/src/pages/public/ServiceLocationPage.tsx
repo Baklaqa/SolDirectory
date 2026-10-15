@@ -386,7 +386,7 @@ export default function ServiceLocationPage() {
             ) : null}
 
             <p className="svc-p">
-              Eligible Pro and Growth members are shown before Starter members, alphabetically within each group. Placement is not endorsement; compare suitability, safeguards, availability, fees and service terms directly.
+              Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.
             </p>
 
             <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} onTotal={setRegisterTotal} />

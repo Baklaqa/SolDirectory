@@ -310,7 +310,7 @@ for (const page of pages) {
     `<meta property="og:image" content="${esc(SHARE_IMAGE)}" />`,
     '<meta property="og:image:width" content="1200" />',
     '<meta property="og:image:height" content="630" />',
-    '<meta property="og:image:alt" content="Two people holding hands, a moment of care and support" />',
+    '<meta property="og:image:alt" content="A support worker bringing a woman a cup of coffee at home, with her crutches and a wheelchair beside her" />',
     '<meta name="twitter:card" content="summary_large_image" />',
     ...ld.map((d, i) => `<script type="application/ld+json" id="jsonld-prerender-${i}">${JSON.stringify({ '@context': 'https://schema.org', ...d }).replace(/</g, '\\u003c')}</script>`),
   ].join('\n    ');

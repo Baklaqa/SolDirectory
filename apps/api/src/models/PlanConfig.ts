@@ -61,13 +61,15 @@ export async function ensureDefaultPlans(): Promise<void> {
       priceCents: 64900,
       quota: null,
       seats: 10,
-      features: ['Unlimited lead unlocks', 'Priority placement in participant search', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'],
+      features: ['Unlimited lead unlocks', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'],
     },
   ];
 
   for (const plan of defaults) {
     await PlanConfig.updateOne({ key: plan.key }, { $setOnInsert: plan }, { upsert: true });
   }
+  // A paid plan does not change where a provider is listed (listing and ranking policy), so a stored plan row must not advertise it.
+  await PlanConfig.updateMany({}, { $pull: { features: 'Priority placement in participant search' } });
 }
 
 export default PlanConfig;

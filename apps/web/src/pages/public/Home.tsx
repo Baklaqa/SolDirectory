@@ -126,7 +126,7 @@ export default function Home() {
 
       <section id="top" className="hero-section" data-pointer>
         <div className="hero-photo-bg">
-          <PhotoSlot src="/images/banners/general-3.jpg" alt="Two women in conversation at a table, one holding a tablet" variant="care" />
+          <PhotoSlot src="/images/banners/housing-2.jpg" alt="A support worker bringing a woman a cup of coffee at home, with her crutches and a wheelchair beside her" variant="care" />
           <div className="hero-photo-overlay" />
         </div>
         <div className="hero-inner">
@@ -181,7 +181,7 @@ export default function Home() {
       <section id="about" className="about-section">
         <div className="about-photo-wrap" data-reveal data-pointer>
           <div className="about-photo">
-            <PhotoSlot src="/images/banners/employment-2.jpg" alt="A woman smiling at her desk in an office" variant="care" />
+            <PhotoSlot src="/images/banners/personal-care.jpg" alt="Older people and a carer chatting in a community room" variant="care" />
           </div>
           {/* The headline figure is the live count of organisations on the public NDIS register, labelled as that.
               The "accepting enquiries" count (real members) stays in the figures row below, under its own label. */}
@@ -273,7 +273,7 @@ export default function Home() {
 
       <section className="checks-section">
         <div className="checks-photo-bg">
-          <PhotoSlot src="/images/banners/support-coordination-2.jpg" alt="A couple at a kitchen table going through a document" variant="team" />
+          <PhotoSlot src="/images/banners/housing.jpg" alt="A man using a wheelchair in a kitchen, with another person washing up behind him" variant="team" />
           <div className="checks-photo-overlay" />
         </div>
         <div className="checks-inner">
@@ -376,7 +376,7 @@ export default function Home() {
         </div>
         <div className="providers-photo-wrap" data-reveal data-pointer style={{ '--rv': 1 } as CSSProperties}>
           <div className="providers-photo">
-            <PhotoSlot src="/images/banners/general-2.jpg" alt="Two people talking across a table" variant="meeting" />
+            <PhotoSlot src="/images/banners/older-people.jpg" alt="An older woman and a younger woman laughing together while gardening" variant="meeting" />
           </div>
           <div className="providers-steps-card">
             <span className="providers-steps-label">Listing, in three steps</span>

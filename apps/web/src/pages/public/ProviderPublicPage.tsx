@@ -8,6 +8,7 @@ import { slugify } from '../../lib/slugify';
 import { ApiError } from '../../api/client';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import { useMatchModal } from '../../context/MatchModalContext';
+import { siteConfig } from '../../config/siteConfig';
 import './Home.css';
 import './Directory.css';
 import './register/register.css';
@@ -118,6 +119,7 @@ export default function ProviderPublicPage() {
               <h1>{p.name}</h1>
               <p className="pp-sub">
                 {st && <span className={`dir-status dir-status-${st.tone}`}>{st.label}</span>}
+                {p.relatedBusiness && <span className="dir-status dir-status-neutral">Related business</span>}
                 {base && <span>Based in {base}</span>}
                 {p.serviceSuburbs.length > 0 && <span>Supports {p.serviceSuburbs.length} {p.serviceSuburbs.length === 1 ? 'area' : 'areas'}</span>}
               </p>
@@ -171,6 +173,12 @@ export default function ProviderPublicPage() {
             <p>Tell us where you are, when you need support and how it’s funded. Relevant providers review your enquiry — it’s free.</p>
             <button type="button" className="btn-gradient" onClick={() => openMatchModal()}>Submit an enquiry →</button>
             <Link className="pp-aside-alt" to="/find-a-provider">← Back to all providers</Link>
+            <a
+              className="pp-aside-alt"
+              href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent(`Report a problem with the listing for ${p.name}`)}`}
+            >
+              Report an error or concern about this listing
+            </a>
           </aside>
         </div>
         <RelatedArticles themes={['choosing', 'agreement', 'registration']} heading="Before you contact a provider" />

@@ -10,7 +10,7 @@ This is the record of the rights position for everything visual on SolDirectory,
 | Banner photos (`public/images/banners/*.jpg`, 94) | Unsplash, used under the [Unsplash licence](https://unsplash.com/license) | `public/images/banners/credits.json` (photographer, photo page, description). Shown on `/photo-credits`. |
 | Blog covers and thumbnails (`public/images/blog`, `blog-thumbs`) | Cropped from a credited banner | `packages/topic-content/blogCovers.js` (`photo` per article). Built by `npm run images:blog-covers -w apps/web`. One photo per article. |
 | Support cards (`public/images/supports/*.jpg`) | Crops of credited banners: personal-care, housing, transport, therapy-2, older-people-2, support-coordination, plan-management-2, housing-2 | `SUPPORT_SOURCES` in `scripts/audit-image-rights.mjs` |
-| Default share image (`public/images/share-default.jpg`, 1200x630) | Crop of `banners/general-3.jpg` | `SHARE_SOURCE` in `scripts/audit-image-rights.mjs` |
+| Default share image (`public/images/share-default.jpg`, 1200x630) | Crop of `banners/housing-2.jpg` | `SHARE_SOURCE` in `scripts/audit-image-rights.mjs` |
 | SolDirectory logos | Own artwork | n/a |
 
 There are no other photographs. Earlier versions of the site shipped seven stock photos with no recorded source

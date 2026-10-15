@@ -30,7 +30,7 @@ const SUPPORT_SOURCES = {
   'plan-management': 'plan-management-2',
   'housing-sda-sil': 'housing-2',
 };
-const SHARE_SOURCE = 'general-3'; // share-default.jpg is a 1200x630 crop of banners/general-3.jpg
+const SHARE_SOURCE = 'housing-2'; // share-default.jpg is a 1200x630 crop of banners/housing-2.jpg
 const OWN = new Set([
   'sol-directory-logo-black-transparent-v2.png', 'sol-directory-logo-black-transparent-v2-640.png',
   'sol-directory-logo-white-transparent-v2.png', 'sol-directory-logo-white-transparent-v2-640.png', 'email-logo-white.png',

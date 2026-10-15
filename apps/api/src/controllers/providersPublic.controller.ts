@@ -27,7 +27,7 @@ export function publicLogoUrl(p: { slug?: string | null; logoUrl?: string | null
 }
 
 const PROJECTION =
-  'legalEntityName tradingName slug registrationGroups acceptedFunding conditionExperience languages ageGroups serviceSuburbs businessAddress.suburb businessAddress.state intakeStatus travelRadiusKm logoUrl hasLogoUpload createdAt updatedAt';
+  'legalEntityName tradingName slug registrationGroups acceptedFunding conditionExperience languages ageGroups serviceSuburbs businessAddress.suburb businessAddress.state intakeStatus travelRadiusKm logoUrl hasLogoUpload createdAt updatedAt relatedBusiness';
 
 // GET /api/providers/public/:slug
 export async function getPublicProvider(req: Request, res: Response) {
@@ -54,6 +54,7 @@ export async function getPublicProvider(req: Request, res: Response) {
     intakeStatus: p.intakeStatus,
     travelRadiusKm: p.travelRadiusKm ?? null,
     memberSince: p.createdAt,
+    relatedBusiness: p.relatedBusiness === true,
   });
 }
 

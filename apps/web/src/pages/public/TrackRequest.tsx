@@ -6,6 +6,7 @@ import { attachRequest, closeTrackedRequest, deleteTrackedRequest, getTrackedReq
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useMatchModal } from '../../context/MatchModalContext';
+import { siteConfig } from '../../config/siteConfig';
 import { applySeoTags } from '../../lib/seo';
 import './TrackRequest.css';
 
@@ -115,7 +116,9 @@ export default function TrackRequest() {
                   <strong>Your choices</strong>
                   <span>
                     You can close this request at any time, and providers who have not yet opened it will not be able to. You can also ask us to
-                    delete your details. Our <Link to="/privacy">privacy policy</Link> explains what we keep and for how long.
+                    delete your details. Our <Link to="/privacy">privacy policy</Link> explains what we keep and for how long. You can also{' '}
+                    <a href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent(`Please review how request ${request.reference} was matched`)}`}>ask for a person</a>{' '}
+                    to review how your request was matched, or <Link to="/complaints">make a complaint</Link>.
                   </span>
                 </div>
                 {request.erased || choice === 'erased' ? (

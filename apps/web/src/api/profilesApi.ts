@@ -35,6 +35,8 @@ export interface PublicProviderProfile {
   intakeStatus: string;
   travelRadiusKm: number | null;
   memberSince: string;
+  /** Owned by a related party of SolDirectory; shown as "Related business". */
+  relatedBusiness?: boolean;
 }
 
 export const getPublicProvider = (slug: string) => publicGet<PublicProviderProfile>(`/providers/public/${encodeURIComponent(slug)}`);

@@ -332,12 +332,13 @@ function ConditionContentSections({ meta }: { meta: NonNullable<ReturnType<typeo
           the same way they write their supports and service areas. SolDirectory doesn’t independently verify clinical experience or assess quality.
         </p>
         <p>
-          <strong>How ordering works.</strong> Experience and other search filters determine which providers qualify. Eligible Pro and
-          Growth members are shown before Starter members, with providers listed alphabetically inside each plan group. Priority placement is not an endorsement.
+          <strong>How ordering works.</strong> Experience and other search filters determine which providers qualify. Members that confirmed
+          capacity this week come first, labelled “Taking new people”, then other members, each in alphabetical order. Paying never changes
+          the order. See the <a href="/listing-and-ranking-policy">listing and ranking policy</a>.
         </p>
         <p>
           <strong>Availability.</strong> Providers confirm each week that they’re taking referrals. One that hasn’t confirmed recently
-          is removed from results until they do.
+          stays listed without the “Taking new people” label and receives no new requests until they do.
         </p>
       </section>
 

@@ -57,8 +57,8 @@ export const PLANS = [
     tagline: 'Fifteen participant leads a month, matched to your registration groups and suburbs.',
     features: ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'] },
   { key: 'scale', name: 'Scale', price: '$649', per: '/month', quota: Infinity,
-    tagline: 'Unlimited leads, priority placement and exports for larger intake teams.',
-    features: ['Unlimited lead unlocks', 'Priority placement in participant search', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'] }
+    tagline: 'Unlimited unlocks and exports for larger intake teams.',
+    features: ['Unlimited lead unlocks', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'] }
 ];
 
 export const LEADS = [

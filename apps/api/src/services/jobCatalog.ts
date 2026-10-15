@@ -45,6 +45,15 @@ export const JOB_CATALOG: JobDefinition[] = [
     everyHours: 0.5,
   },
   {
+    name: 'request-deidentify',
+    label: 'De-identify old closed requests',
+    description: 'Clears the personal details of requests closed more than 12 months ago, as the privacy policy says.',
+    schedule: 'Every day, 3:00am',
+    cron: '0 3 * * *',
+    command: 'npm run job:request-deidentify -w apps/api',
+    everyHours: 24,
+  },
+  {
     name: 'search-alerts',
     label: 'Saved search alerts',
     description: 'Emails people who saved a search when new providers match it.',
