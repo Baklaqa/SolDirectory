@@ -92,7 +92,8 @@ const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,200}$/;
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 const fmt = (n: number) => n.toLocaleString('en-AU');
 const trimTo = (s: string, n: number) => (s.length <= n ? s : `${s.slice(0, n - 1).replace(/\s+\S*$/, '')}…`);
-const seoTitle = (text: string) => `${trimTo(text, 50)} | SolDirectory`;
+// 46 characters for the page part plus " | SolDirectory" keeps a title within 60.
+const seoTitle = (text: string) => `${trimTo(text, 46)} | SolDirectory`;
 
 function siteUrl(req: Request): string {
   if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '');
@@ -740,7 +741,7 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
   return {
     status: 200,
     title: mode === 'condition'
-      ? `${row.name} support providers${page > 1 ? ` (page ${page})` : ''} | SolDirectory`
+      ? `${(`${row.name} support providers`.length <= 46 ? `${row.name} support providers` : `${row.name} providers`).slice(0, 46)}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`
       : `${heading}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
     description: conditionInfo
       ? trimTo(`Understand support considerations for ${conditionInfo.name}, compare providers who list relevant experience, and prepare practical questions about funding, safety and fit.`, 158)

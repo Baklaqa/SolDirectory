@@ -20,7 +20,7 @@ import RelatedArticles from '../../components/blog/RelatedArticles';
 
 const PAGE_SIZE = 12;
 const fmt = (value: number) => value.toLocaleString('en-AU');
-const seoTitle = (text: string) => `${text.length <= 50 ? text : `${text.slice(0, 49).replace(/\s+\S*$/, '')}…`} | SolDirectory`;
+const seoTitle = (text: string) => `${text.length <= 46 ? text : `${text.slice(0, 45).replace(/\s+\S*$/, '')}…`} | SolDirectory`;
 const topicFor = (slug: string) => LANGUAGE_TOPICS.find((topic) => topic.slug === slug);
 const groups = [...new Set(LANGUAGE_TOPICS.map((topic) => topic.categoryGroup))];
 
