@@ -181,6 +181,11 @@ export interface FundingContentGroup {
 /** Written content for the 25 funding topics, in the order the page groups them. */
 export const FUNDING_CONTENT_GROUPS: FundingContentGroup[];
 export function fundingTopicContent(slug: string): FundingTopicContent | undefined;
+export function registerAreaFaqs(
+  kind: { register: string; plain: string; officialName: string; officialUrl: string },
+  areaName: string,
+  total: number,
+): { question: string; answer: string }[];
 /** A meta description that ends on a finished sentence and fits a search snippet. Only shortens existing text. */
 export function metaDescription(text: string, max?: number, min?: number): string;
 export function fundingFaqs(topic: Topic): { question: string; answer: string }[];

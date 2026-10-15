@@ -252,6 +252,33 @@ export function fundingFaqs(topic) {
  * `min` (default 0, off) pads a finished sentence shorter than that with one plain closing sentence.
  * It only shortens what the page's own text already says; it never adds claims.
  */
+/**
+ * FAQ for a register area page (state or suburb): four questions people ask when they land on a list of register
+ * providers. The answers describe what the register is and is not, in general terms; the only number is the page's own count.
+ * `kind` is { register, plain, officialName, officialUrl } as on the register pages.
+ */
+export function registerAreaFaqs(kind, areaName, total) {
+  const count = Number(total) || 0;
+  return [
+    {
+      question: `What does it mean to be listed on the ${kind.register}?`,
+      answer: `It means the organisation appears on the official public list. A listing shows what the provider is registered for and where. It is not a recommendation or a rating of quality.`,
+    },
+    {
+      question: `Does a listing mean a provider has room to start now?`,
+      answer: `No. A register listing does not show whether a provider has capacity, what it charges or whether it suits your needs. Providers who have joined SolDirectory confirm each week whether they are taking new people. For anyone else, ask the provider directly.`,
+    },
+    {
+      question: `How do I check a provider's registration?`,
+      answer: `Search the official register at ${kind.officialName} (${kind.officialUrl}), and ask the provider for its registration details and how its workers are screened before you agree to anything.`,
+    },
+    {
+      question: `How many ${kind.plain} providers are listed for ${areaName}?`,
+      answer: `${count.toLocaleString('en-AU')} ${count === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName} at the latest import. The register changes, so confirm a provider's current status before relying on it.`,
+    },
+  ];
+}
+
 export function metaDescription(text, max = 160, min = 0) {
   const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return '';

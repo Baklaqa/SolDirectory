@@ -33,3 +33,9 @@ Aim for under about 50% shared copy in a family, with something real and specifi
 text) above the template. A page with nothing specific should be kept out of search results until it has something.
 
 `corpus.json` and `quality_rows.json` are generated and are not committed.
+
+## Getting the full text of the audit emails
+
+`gmail-export.js` copies the complete text of the On-Page SEO Audit emails out of Gmail (it only reads what Gmail has already
+loaded in your own browser). Open one email, or a search result list, press F12, paste the file into the Console, press Enter.
+The text goes to your clipboard and to a `sol-audits-<date>.txt` download. See the header of the file for settings.

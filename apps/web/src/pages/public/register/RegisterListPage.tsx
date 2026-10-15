@@ -7,6 +7,7 @@ import ProviderMap from '../../../components/ProviderMap';
 import { getRegisterHub, searchRegister, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
 import { MIN_INDEXABLE, absoluteUrl, registerPath, stateBySlug, type RegisterKind } from '../../../lib/registerMeta';
 import { applySeoTags, setJsonLd } from '../../../lib/seo';
+import { metaDescription, registerAreaFaqs } from '@soldirectory/topic-content';
 import RegisterCard from './RegisterCard';
 import LocationWorkers from './LocationWorkers';
 import { Breadcrumbs, GetMatchedCta, VerifyNote, formatCount, titleCase, trimTo } from './RegisterParts';
@@ -147,7 +148,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     const title = `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
     applySeoTags({
       title,
-      description: trimTo(
+      description: metaDescription(
         `${formatCount(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`,
         158
       ),
@@ -179,7 +180,11 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
         })),
       },
     });
-    return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-area', null); };
+    setJsonLd('register-faq', total > 0 && !filtered ? {
+      '@type': 'FAQPage',
+      mainEntity: registerAreaFaqs(kind, areaName, total).map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+    } : null);
+    return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-area', null); setJsonLd('register-faq', null); };
   }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data]);
 
   if (!state) {
@@ -224,6 +229,13 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
             ...(suburbSlug ? [{ label: suburbName }] : []),
           ]}
         />
+
+        {total > 0 && !filtered && (
+          <GetMatchedCta
+            title={`Get matched with ${kind.plain} providers in ${areaName}`}
+            body="Tell us what you need once. Providers who have confirmed they are taking new people can respond. Free, with no obligation."
+          />
+        )}
 
         {facets.length > 0 && (
           <div className="reg-filters" role="group" aria-label="Filter by support">
@@ -320,6 +332,18 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
               ))}
             </ul>
           </>
+        )}
+
+        {total > 0 && !filtered && (
+          <section className="reg-faq" aria-labelledby="reg-faq-heading">
+            <h2 className="reg-h2" id="reg-faq-heading">Frequently asked questions</h2>
+            {registerAreaFaqs(kind, areaName, total).map((f) => (
+              <details key={f.question} className="reg-faq-item">
+                <summary>{f.question}</summary>
+                <p>{f.answer}</p>
+              </details>
+            ))}
+          </section>
         )}
 
         <VerifyNote kind={kind} />

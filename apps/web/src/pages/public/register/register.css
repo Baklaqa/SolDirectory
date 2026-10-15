@@ -238,3 +238,9 @@
   .reg-request-alt { border-left: 0; border-top: 1px solid #DFE8F2; }
 }
 .reg-asof { margin: 8px 0 0; color: #5A6B84; font-size: 14px; }
+
+.reg-faq { margin: 28px 0 0; max-width: 78ch; }
+.reg-faq-item { border-top: 1px solid var(--color-border, #E8EEF7); padding: 12px 0; }
+.reg-faq-item:last-child { border-bottom: 1px solid var(--color-border, #E8EEF7); }
+.reg-faq-item summary { cursor: pointer; font-weight: 600; color: var(--color-text, #10233F); }
+.reg-faq-item p { margin: 8px 0 0; font-size: 15px; line-height: 1.65; }
