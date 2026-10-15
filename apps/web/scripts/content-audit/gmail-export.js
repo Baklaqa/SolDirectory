@@ -70,7 +70,8 @@
     ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
   }
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  // The byte-order mark makes Windows editors read the file as UTF-8 (otherwise dashes and quotes show as "â€“" and "â€œ").
+  a.href = URL.createObjectURL(new Blob(['﻿', text], { type: 'text/plain;charset=utf-8' }));
   a.download = `sol-audits-${new Date().toISOString().slice(0, 10)}.txt`;
   document.body.appendChild(a); a.click(); a.remove();
   console.log(`Done: ${out.length} email(s), ${text.length} characters copied to the clipboard and saved as ${a.download}.`);
