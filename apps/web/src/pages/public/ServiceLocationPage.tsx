@@ -1,5 +1,5 @@
 import { bannerFor } from '../../data/bannerImages';
-import { isPriorityIndexSuburb, metaDescription, serviceLocalSnapshot } from '@soldirectory/topic-content';
+import { isIndexableSuburb, metaDescription, serviceLocalSections, serviceLocalSnapshot, type ServiceLocalData } from '@soldirectory/topic-content';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
@@ -18,7 +18,7 @@ import { MIN_INDEXABLE_SERVICE_LOCATION, REAL_SERVICES, stateBySlug, SUPPORT_CAT
 import Counter from '../../components/Counter';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { getServiceAreaPage, type ServiceAreaPage } from '../../api/wordpressApi';
-import { getAreaSupports, getServiceSuburbs } from '../../api/registerApi';
+import { getAreaSupports, getServiceLocal, getServiceSuburbs } from '../../api/registerApi';
 import { listPublicProviders, type PublicProviderRow } from '../../api/providerResources';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import RegisterNearby from './register/RegisterNearby';
@@ -122,6 +122,7 @@ export default function ServiceLocationPage() {
   const [areaSupports, setAreaSupports] = useState<{ category: string; count: number }[]>([]);
   const [otherSuburbs, setOtherSuburbs] = useState<{ slug: string; suburb: string; count: number }[]>([]);
   const [stateSuburbs, setStateSuburbs] = useState<{ slug: string; suburb: string; count: number }[]>([]);
+  const [localData, setLocalData] = useState<ServiceLocalData | null>(null);
 
   useEffect(() => { setRegisterTotal(null); }, [serviceSlug, stateSlug, suburbSlug]);
 
@@ -129,12 +130,16 @@ export default function ServiceLocationPage() {
     setAreaSupports([]);
     setOtherSuburbs([]);
     setStateSuburbs([]);
+    setLocalData(null);
     if (!realState) return;
     let alive = true;
     getAreaSupports(realState.code, suburbSlug)
       .then((r) => { if (alive) setAreaSupports(r.categories); })
       .catch(() => {});
     if ((REAL_SERVICES as readonly string[]).includes(serviceName)) {
+      getServiceLocal(serviceName, realState.code, suburbSlug)
+        .then((r) => { if (alive) setLocalData(r); })
+        .catch(() => {});
       getServiceSuburbs(serviceName, undefined, realState.code)
         .then((r) => { if (alive) { setStateSuburbs(r.suburbs); setOtherSuburbs(r.suburbs.filter((s) => s.slug !== suburbSlug).slice(0, 40)); } })
         .catch(() => {});
@@ -176,6 +181,11 @@ export default function ServiceLocationPage() {
     .filter((r) => r.category !== serviceName && r.count >= MIN_INDEXABLE_SERVICE_LOCATION && REAL_SERVICES.includes(r.category))
     .slice(0, 12);
   const localSnapshot = serviceLocalSnapshot(serviceName, suburbName, suburbSlug, stateName, stateSuburbs);
+  // Closest suburbs, the nearest larger centre (for a suburb that is not indexed) and languages listings here support: the same words as the crawler HTML.
+  const localSections = serviceLocalSections(
+    serviceName, suburbName, stateName, localData,
+    registerTotal !== null && registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(stateAbbr, suburbName, registerTotal),
+  );
   const suburbRows = otherSuburbs.filter((s) => s.count >= MIN_INDEXABLE_SERVICE_LOCATION).slice(0, 12);
   const localFacts: [string, string][] = wp?.local
     ? ([
@@ -258,7 +268,7 @@ export default function ServiceLocationPage() {
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
         : `/services/${serviceSlug}/${suburbSlug}`}`,
-      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isPriorityIndexSuburb(stateAbbr, suburbName),
+      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(stateAbbr, suburbName, registerTotal),
     });
     setJsonLd('service-location', {
       '@type': 'Service',
@@ -403,6 +413,28 @@ export default function ServiceLocationPage() {
                 <p className="svc-p">{localSnapshot}</p>
               </>
             )}
+
+            {localSections.nearby && (
+              <section id="nearby-suburbs">
+                <h2 className="svc-h2-sm">{localSections.nearby.heading}</h2>
+                <p className="svc-p">{localSections.nearby.intro}</p>
+                <div className="svc-state-grid">
+                  {localSections.nearby.items.map((it) => (
+                    <Link key={it.slug} to={`/services/${serviceSlug}/${stateSlug}/${it.slug}`} className="svc-state-card">
+                      <span className="svc-state-abbr">{it.label}</span>
+                      <span className="svc-state-count">{it.detail}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+            {localSections.townNote && (
+              <p className="svc-p">
+                {localSections.townNote.text}{' '}
+                <Link to={`/services/${serviceSlug}/${stateSlug}/${localSections.townNote.slug}`}>{serviceName} in {localSections.townNote.suburb}</Link>
+              </p>
+            )}
+            {localSections.languages && <p className="svc-p">{localSections.languages}</p>}
 
             <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} onTotal={setRegisterTotal} />
 

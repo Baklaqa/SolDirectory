@@ -39,7 +39,9 @@
     "job:check-expiry": "tsx src/scripts/notifyExpiringChecks.ts",
     "job:register-freshness": "tsx src/scripts/checkRegisterFreshness.ts",
     "register:remove": "tsx src/scripts/removeRegisterListing.ts",
-    "register:actions": "tsx src/scripts/applyRegisterActions.ts"
+    "register:actions": "tsx src/scripts/applyRegisterActions.ts",
+    "audit:indexing": "tsx src/scripts/auditIndexing.ts",
+    "audit:service-pages": "tsx src/scripts/auditServicePages.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1147.0",

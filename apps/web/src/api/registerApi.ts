@@ -1,5 +1,6 @@
 import { ApiError } from './client';
 import type { RegisterType } from '../lib/registerMeta';
+import type { ServiceLocalData } from '@soldirectory/topic-content';
 
 /**
  * Public-register listings (api register.controller.ts). No login, no
@@ -81,6 +82,8 @@ export interface ServiceSuburbs {
   suburbs: { state: string; slug: string; suburb: string; count: number }[];
 }
 /** Every suburb with genuine register demand for a support category, combined across both registers — the real data behind /services/:service/:state/:suburb (see ServiceLocationPage.tsx). */
+export const getServiceLocal = (service: string, state: string, suburbSlug: string): Promise<ServiceLocalData> =>
+  request(`/service-local?service=${encodeURIComponent(service)}&state=${encodeURIComponent(state)}&suburb=${encodeURIComponent(suburbSlug)}`);
 export const getServiceSuburbs = (category: string, limit?: number, state?: string): Promise<ServiceSuburbs> =>
   request(`/service-suburbs?category=${encodeURIComponent(category)}${limit ? `&limit=${limit}` : ''}${state ? `&state=${encodeURIComponent(state)}` : ''}`);
 

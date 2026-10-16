@@ -7,7 +7,7 @@ import ProviderMap from '../../../components/ProviderMap';
 import { getRegisterHub, searchRegister, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
 import { MIN_INDEXABLE, absoluteUrl, registerPath, stateBySlug, type RegisterKind } from '../../../lib/registerMeta';
 import { applySeoTags, setJsonLd } from '../../../lib/seo';
-import { isPriorityIndexSuburb, metaDescription, registerAreaFaqs } from '@soldirectory/topic-content';
+import { isIndexableSuburb, metaDescription, registerAreaFaqs } from '@soldirectory/topic-content';
 import RegisterCard from './RegisterCard';
 import LocationWorkers from './LocationWorkers';
 import { Breadcrumbs, GetMatchedCta, VerifyNote, formatCount, titleCase, trimTo } from './RegisterParts';
@@ -140,7 +140,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   // A page is worth indexing only if it's a real, unfiltered list. Suburb
   // pages also need a few genuine listings — below that it's a near-empty
   // page that exists only to carry a keyword.
-  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || !isPriorityIndexSuburb(state.code, suburbName)))));
+  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || !isIndexableSuburb(state.code, suburbName, total)))));
 
   useEffect(() => {
     if (!state || loading) return;

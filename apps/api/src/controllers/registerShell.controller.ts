@@ -9,12 +9,12 @@ import WorkerReview from '../models/WorkerReview.js';
 import { BUSINESS } from '../config/business.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
-import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
+import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceLocal, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { eligibleStates, workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isPriorityIndexSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, serviceLocalSections, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isIndexableSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -244,8 +244,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     : null;
   const areaName = suburbName ? `${suburbName}, ${code}` : STATE_NAMES[code];
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  // Phase 1 (gap audit A1): a suburb page is indexed only for the capital cities and regional centres.
-  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isPriorityIndexSuburb(code, suburbName ?? '')));
+  // Phased indexing (gap audit A1): a suburb page is indexed only if the current phase allows it (indexingPolicy.js).
+  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isIndexableSuburb(code, suburbName ?? '', total)));
 
   const crumbs = [
     { name: 'Home', path: '/' },
@@ -1769,6 +1769,20 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
   const snapshot = serviceLocalSnapshot(service, suburbName, suburbSlug, stateName, suburbs.filter((s) => s.state === code));
   const snapshotHtml = snapshot ? `<h2>${esc(suburbName)} at a glance</h2><p>${esc(snapshot)}</p>` : '';
 
+  // The closest suburbs with listings, the nearest larger centre (for a suburb that is not indexed) and the languages listings here
+  // say they support (gap audit A2). Real distances and counts, different on every page.
+  const indexable = registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(code, suburbName, registerTotal);
+  const localParts = serviceLocalSections(service, suburbName, stateName, await computeServiceLocal(service, code, suburbSlug), indexable);
+  const localHtml =
+    (localParts.nearby
+      ? `<h2>${esc(localParts.nearby.heading)}</h2><p>${esc(localParts.nearby.intro)}</p>` +
+        `<ul>${localParts.nearby.items.map((it) => li(`/services/${serviceSlug}/${stateSlug}/${it.slug}`, it.label, it.detail)).join('')}</ul>`
+      : '') +
+    (localParts.townNote
+      ? `<p>${esc(localParts.townNote.text)} <a href="${esc(`/services/${serviceSlug}/${stateSlug}/${localParts.townNote.slug}`)}">${esc(service)} in ${esc(localParts.townNote.suburb)}</a></p>`
+      : '') +
+    (localParts.languages ? `<p>${esc(localParts.languages)}</p>` : '');
+
   const body =
     `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
     `<h1>${esc(service)} providers in ${esc(suburbName)}, ${esc(stateName)}</h1>` +
@@ -1778,6 +1792,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     ` Providers set their own supports, service areas and availability, and confirm their capacity each week. Before you engage a provider, confirm their registration, insurance and worker screening directly with them.</p>` +
     (SVC_DESCRIPTION[service] ? `<h2>About ${esc(serviceLower)}</h2><p>${esc(SVC_DESCRIPTION[service])} People in ${esc(suburbName)} and the surrounding ${esc(stateName)} area can search for a provider below, or send a free request and let providers who cover this area respond directly.</p>` : '') +
     snapshotHtml +
+    localHtml +
     providersHtml +
     `<p>Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.</p>` +
     registerHtml +
@@ -1798,7 +1813,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     description: metaDescription(description, 158),
     canonical: path,
     // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
-    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isPriorityIndexSuburb(code, suburbName),
+    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(code, suburbName, registerTotal),
     jsonLd: [
       breadcrumbLd(site, crumbs),
       { id: 'service-location', data: {

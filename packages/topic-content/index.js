@@ -13,7 +13,7 @@ export { CONDITION_CONTENT_GROUPS } from './conditionContent.js';
 export { FUNDING_CONTENT_GROUPS } from './fundingContent.js';
 export { LANGUAGE_SPECIFICS } from './languageSpecifics.js';
 export { LEGAL_PACK, LEGAL_PRACTICES, resolveLegalDoc, legalDocBySlug } from './legalPack.js';
-export { INDEX_ALL_SUBURBS, INDEX_REGISTER_PROFILES, EXTRA_INDEX_SUBURBS, isPriorityIndexSuburb } from './indexingPolicy.js';
+export { INDEX_PHASE, PHASE_2_MIN_LISTINGS, INDEX_REGISTER_PROFILES, EXTRA_INDEX_SUBURBS, isPriorityIndexSuburb, isIndexableSuburb } from './indexingPolicy.js';
 export { LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, languageResourceAgencies } from './languageResources.js';
 export { LINK_TERMS, MAX_LINKS_PER_ARTICLE, newLinkState, linkParagraph, linkScopeFor, faqHtml } from './blogLinks.js';
 export { DIRECTORY_PAGE_TITLE, DIRECTORY_PAGE_HEADING, DIRECTORY_PAGE_DESCRIPTION, DIRECTORY_PAGE_UPDATED, DIRECTORY_PAGE_SUBTITLE, DIRECTORY_SUPPORTS, DIRECTORY_GUIDANCE, WORKER_PAGE_TITLE, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_UPDATED, WORKER_HERO_CHECKS, PROVIDER_PAGE_UPDATED, PROVIDER_PAGE_DESCRIPTION, INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS, DIRECTORY_STEPS, DIRECTORY_FAQS, STATE_CENTRES, LOCATION_FAQS, PROVIDER_UNDERSTAND, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_PATHS, PROVIDER_SAFEGUARDS, WORKER_PROFILE_DETAILS, WORKER_HOW_IT_WORKS, WORKER_SAFEGUARDS, PROVIDER_PLANS } from './pageContent.js';
@@ -267,6 +267,47 @@ export function fundingFaqs(topic) {
  * What every register page says about how the data is kept current and how to get a listing corrected or removed (gap audit B2, B3).
  * The page and the crawler HTML use the same words. The 5 business days matches the data sources page (section 12.5).
  */
+/**
+ * Real, page-specific local detail for a service x suburb page (gap audit A2), built from `local`:
+ *   { nearby: [{ slug, suburb, count, km }], nearestTown: { slug, suburb, count, km } | null, languages: [{ language, count }] }
+ * `indexable` says whether this page is indexed. When it is not, the page points to the nearest larger centre instead, so a small
+ * suburb is folded into the town page rather than competing with it. Returns null for a part with nothing to say.
+ */
+export function serviceLocalSections(service, suburbName, stateName, local, indexable) {
+  const lower = String(service).toLowerCase();
+  const n = (x) => Number(x).toLocaleString('en-AU');
+  const far = (km) => (km < 1 ? 'under 1 km' : `about ${Math.round(km)} km`);
+  const listings = (c) => `${n(c)} ${Number(c) === 1 ? 'listing' : 'listings'}`;
+  const items = (local?.nearby ?? []).map((s) => ({
+    slug: s.slug,
+    suburb: s.suburb,
+    label: `${service} in ${s.suburb}`,
+    detail: `(${listings(s.count)}, ${far(s.km)})`,
+  }));
+  const nearby = items.length
+    ? {
+        heading: `${service} near ${suburbName}`,
+        intro: `These ${stateName} suburbs are the closest to ${suburbName} with register listings for ${lower}. Distances are in a straight line between suburb centres.`,
+        items,
+      }
+    : null;
+  const town = local?.nearestTown;
+  const townNote = !indexable && town
+    ? {
+        slug: town.slug,
+        suburb: town.suburb,
+        text: `If you want to look wider, the nearest larger centre is ${town.suburb}, ${far(town.km)} from ${suburbName}, with ${listings(town.count)} for ${lower}.`,
+      }
+    : null;
+  const langs = (local?.languages ?? []).filter((l) => l && l.language && l.count > 0);
+  const names = langs.map((l) => `${l.language} (${listings(l.count)})`);
+  const joined = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
+  const languages = names.length
+    ? `Some ${lower} listings in ${suburbName} say on their own websites that they support ${joined}.`
+    : null;
+  return { nearby, townNote, languages };
+}
+
 export const REGISTER_CORRECTION = {
   schedule: 'We re-import the register every month.',
   response: 'We reply to every request within 5 business days.',

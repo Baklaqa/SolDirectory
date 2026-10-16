@@ -6,7 +6,7 @@ import Provider from '../models/Provider.js';
 import SuburbGeo from '../models/SuburbGeo.js';
 import { VISIBLE_PROVIDER, publicLogoUrl } from './providersPublic.controller.js';
 import { EmailService } from '../services/email.service.js';
-import { LANGUAGE_TOPICS } from '@soldirectory/topic-content';
+import { LANGUAGE_TOPICS, isPriorityIndexSuburb } from '@soldirectory/topic-content';
 import {
   MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, REGISTER_SUPPORT_CATEGORIES, REGISTER_TYPES, STATE_CODES, safeRegisterName,
   type RegisterType, type StateCode,
@@ -369,6 +369,76 @@ export async function computeServiceSuburbs(category: string) {
   const value = [...merged.values()].filter((s) => s.count >= MIN_SUBURB_LISTINGS).sort((a, b) => b.count - a.count);
   serviceSuburbsCache.set(category, { at: Date.now(), value });
   return value;
+}
+
+// ---------------------------------------------------------------
+// Local detail for one service x suburb page (gap audit A2)
+// GET /api/register/service-local?service=&state=&suburb=
+// The closest suburbs with listings for the service, the nearest larger centre (for a suburb that is not indexed), and the languages
+// listings here say they support. All from the register data and the suburb coordinates we already hold; nothing written by hand.
+// ---------------------------------------------------------------
+const NEARBY_MAX_KM = 60;
+const TOWN_MAX_KM = 150;
+const serviceLocalCache = new Map<string, { at: number; value: ServiceLocal }>();
+const SERVICE_LOCAL_TTL_MS = 30 * 60 * 1000;
+
+export interface ServiceLocal {
+  nearby: { slug: string; suburb: string; count: number; km: number }[];
+  nearestTown: { slug: string; suburb: string; count: number; km: number } | null;
+  languages: { language: string; count: number }[];
+}
+
+const kmBetween = (a: [number, number], b: [number, number]): number => {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b[1] - a[1]);
+  const dLng = rad(b[0] - a[0]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[1])) * Math.cos(rad(b[1])) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+};
+
+export async function computeServiceLocal(service: string, state: string, suburbSlug: string): Promise<ServiceLocal> {
+  const key = `${service}|${state}|${suburbSlug}`;
+  const hit = serviceLocalCache.get(key);
+  if (hit && Date.now() - hit.at < SERVICE_LOCAL_TTL_MS) return hit.value;
+
+  const inState = (await computeServiceSuburbs(service)).filter((s) => s.state === state);
+  const geos = await SuburbGeo.find({ state, suburbSlug: { $in: inState.map((s) => s.slug) }, failed: { $ne: true } }).select('suburbSlug location').lean();
+  const pos = new Map<string, [number, number]>();
+  for (const g of geos) if (g.location?.coordinates?.length === 2) pos.set(g.suburbSlug, g.location.coordinates as [number, number]);
+  const here = pos.get(suburbSlug);
+
+  const others = here
+    ? inState
+        .filter((s) => s.slug !== suburbSlug && pos.has(s.slug))
+        .map((s) => ({ slug: s.slug, suburb: s.suburb, count: s.count, km: kmBetween(here, pos.get(s.slug)!) }))
+        .sort((a, b) => a.km - b.km || b.count - a.count)
+    : [];
+  const nearby = others.filter((s) => s.km <= NEARBY_MAX_KM).slice(0, 6);
+  const nearestTown = others.find((s) => s.km <= TOWN_MAX_KM && s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isPriorityIndexSuburb(state, s.suburb)) ?? null;
+
+  const langRows = await RegisterListing.aggregate([
+    { $match: { areas: { $elemMatch: { state, suburbSlug } }, supportCategories: service, 'languages.0': { $exists: true } } },
+    { $unwind: '$languages' },
+    { $group: { _id: '$languages', n: { $sum: 1 } } },
+    { $sort: { n: -1, _id: 1 } },
+    { $limit: 5 },
+  ]);
+  const languages = (langRows as { _id: string; n: number }[]).map((r) => ({ language: r._id, count: r.n }));
+
+  const value: ServiceLocal = { nearby, nearestTown, languages };
+  serviceLocalCache.set(key, { at: Date.now(), value });
+  return value;
+}
+
+export async function getServiceLocal(req: Request, res: Response) {
+  const service = str(req.query.service);
+  const state = parseState(req.query.state);
+  const suburb = str(req.query.suburb).toLowerCase();
+  if (!(REGISTER_SUPPORT_CATEGORIES as readonly string[]).includes(service) || !state || !/^[a-z0-9-]{1,80}$/.test(suburb)) {
+    return res.status(400).json({ error: 'service, state and suburb are required.' });
+  }
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json(await computeServiceLocal(service, state, suburb));
 }
 
 export async function getServiceSuburbs(req: Request, res: Response) {

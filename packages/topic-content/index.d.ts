@@ -181,6 +181,22 @@ export interface FundingContentGroup {
 /** Written content for the 25 funding topics, in the order the page groups them. */
 export const FUNDING_CONTENT_GROUPS: FundingContentGroup[];
 export function fundingTopicContent(slug: string): FundingTopicContent | undefined;
+export interface ServiceLocalData {
+  nearby: { slug: string; suburb: string; count: number; km: number }[];
+  nearestTown: { slug: string; suburb: string; count: number; km: number } | null;
+  languages: { language: string; count: number }[];
+}
+export function serviceLocalSections(
+  service: string,
+  suburbName: string,
+  stateName: string,
+  local: Partial<ServiceLocalData> | null | undefined,
+  indexable: boolean,
+): {
+  nearby: { heading: string; intro: string; items: { slug: string; suburb: string; label: string; detail: string }[] } | null;
+  townNote: { slug: string; suburb: string; text: string } | null;
+  languages: string | null;
+};
 export const REGISTER_CORRECTION: { schedule: string; response: string; individuals: string };
 export function serviceLocalSnapshot(
   service: string,
@@ -234,11 +250,14 @@ export interface ResolvedLegalDoc extends Omit<LegalPackDoc, 'sections'> {
 export const LEGAL_PACK: LegalPackDoc[];
 export const LEGAL_PRACTICES: Record<string, boolean>;
 export function resolveLegalDoc(doc: LegalPackDoc, practices?: Record<string, boolean>): ResolvedLegalDoc;
-export const INDEX_ALL_SUBURBS: boolean;
+export const INDEX_PHASE: number;
+export const PHASE_2_MIN_LISTINGS: number;
 export const INDEX_REGISTER_PROFILES: boolean;
 export const EXTRA_INDEX_SUBURBS: string[];
-/** True if a suburb page for this state and suburb is indexed in the current phase (see indexingPolicy.js). */
+/** True for the capital cities, regional centres and extra suburbs (see indexingPolicy.js). */
 export function isPriorityIndexSuburb(stateCode: string, suburbName: string): boolean;
+/** True if the suburb page covering `count` register listings is indexed in the current phase. The page's own minimum still applies. */
+export function isIndexableSuburb(stateCode: string, suburbName: string, count: number, phase?: number): boolean;
 export function legalDocBySlug(slug: string, practices?: Record<string, boolean>): ResolvedLegalDoc | undefined;
 export interface LanguageResource {
   agency: 'NDIS' | 'My Aged Care';
