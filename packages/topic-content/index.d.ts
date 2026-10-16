@@ -185,7 +185,27 @@ export interface ServiceLocalData {
   nearby: { slug: string; suburb: string; count: number; km: number }[];
   nearestTown: { slug: string; suburb: string; count: number; km: number } | null;
   languages: { language: string; count: number }[];
+  profile: {
+    total: number;
+    ndis: number;
+    agedCare: number;
+    reach: { local: number; district: number; regional: number; wide: number };
+    multiState: number;
+    withWebsite: number;
+    specialists: number;
+    typicalSupports: number;
+    localNames: string[];
+    topSupports: { category: string; count: number }[];
+  };
 }
+export function serviceLocalDetail(
+  service: string,
+  suburbName: string,
+  stateName: string,
+  suburbSlug: string,
+  stateRows: { slug: string; suburb: string; count: number }[] | undefined,
+  local: Partial<ServiceLocalData> | null | undefined,
+): { analysis: { heading: string; paragraphs: string[] } | null; faqs: { question: string; answer: string }[] };
 export function serviceLocalSections(
   service: string,
   suburbName: string,

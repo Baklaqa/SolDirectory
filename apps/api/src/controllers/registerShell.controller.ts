@@ -14,7 +14,7 @@ import { eligibleStates, workersForService, workersInArea } from './workersPubli
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, serviceLocalSections, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isIndexableSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, serviceLocalSections, serviceLocalDetail, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isIndexableSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -1772,7 +1772,9 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
   // The closest suburbs with listings, the nearest larger centre (for a suburb that is not indexed) and the languages listings here
   // say they support (gap audit A2). Real distances and counts, different on every page.
   const indexable = registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(code, suburbName, registerTotal);
-  const localParts = serviceLocalSections(service, suburbName, stateName, await computeServiceLocal(service, code, suburbSlug), indexable);
+  const localData = await computeServiceLocal(service, code, suburbSlug);
+  const localParts = serviceLocalSections(service, suburbName, stateName, localData, indexable);
+  const detail = serviceLocalDetail(service, suburbName, stateName, suburbSlug, suburbs.filter((s) => s.state === code), localData);
   const localHtml =
     (localParts.nearby
       ? `<h2>${esc(localParts.nearby.heading)}</h2><p>${esc(localParts.nearby.intro)}</p>` +
@@ -1781,7 +1783,11 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     (localParts.townNote
       ? `<p>${esc(localParts.townNote.text)} <a href="${esc(`/services/${serviceSlug}/${stateSlug}/${localParts.townNote.slug}`)}">${esc(service)} in ${esc(localParts.townNote.suburb)}</a></p>`
       : '') +
-    (localParts.languages ? `<p>${esc(localParts.languages)}</p>` : '');
+    (localParts.languages ? `<p>${esc(localParts.languages)}</p>` : '') +
+    (detail.analysis ? `<h2>${esc(detail.analysis.heading)}</h2>${detail.analysis.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}` : '');
+  const faqHtml = detail.faqs.length
+    ? `<h2>Questions about ${esc(serviceLower)} in ${esc(suburbName)}</h2>${detail.faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}`
+    : '';
 
   const body =
     `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
@@ -1799,7 +1805,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     editorialHtml +
     `<h2>What to compare before choosing</h2><p>Use these ${esc(serviceLower)}-specific checks when you contact providers in ${esc(suburbName)}. Confirm each answer directly: a directory listing does not prove current capacity.</p>` +
     SVC_COMPARE.map(([t, b, ask]) => `<h3>${esc(t)}</h3><p>${esc(b)}</p><p><strong>Ask:</strong> ${esc(ask)}</p>`).join('') +
-    relatedServicesHtml + otherSuburbsHtml +
+    relatedServicesHtml + otherSuburbsHtml + faqHtml +
     `<p><a href="/find-a-provider?service=${encodeURIComponent(service)}">See all ${esc(serviceLower)} providers</a></p>`;
 
   return {
@@ -1816,6 +1822,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(code, suburbName, registerTotal),
     jsonLd: [
       breadcrumbLd(site, crumbs),
+      ...(detail.faqs.length ? [{ id: 'service-location-faq', data: { '@type': 'FAQPage', mainEntity: detail.faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
       { id: 'service-location', data: {
         '@type': 'Service', name: `${service} in ${suburbName}, ${code}`, serviceType: service,
         areaServed: { '@type': 'City', name: suburbName, containedInPlace: { '@type': 'State', name: stateName } },

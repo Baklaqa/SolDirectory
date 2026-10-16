@@ -7,9 +7,9 @@ import { STATE_CENTRES } from './pageContent.js';
  * treat that as scaled content and mark the whole domain down. So indexing grows in phases, and each phase is switched on only
  * after Search Console shows the one before it is indexed and ranking:
  *
- *  - PHASE 1 (now): suburb pages (register suburb hubs and service x suburb pages) are indexed only for the capital cities and
+ *  - PHASE 1: suburb pages (register suburb hubs and service x suburb pages) are indexed only for the capital cities and
  *    regional centres in STATE_CENTRES, plus anything in EXTRA_INDEX_SUBURBS.
- *  - PHASE 2: also any suburb with at least PHASE_2_MIN_LISTINGS register listings (the busy suburbs).
+ *  - PHASE 2 (now, from 16 October 2026, after the local content was added to every page): also any suburb with at least PHASE_2_MIN_LISTINGS register listings (the busy suburbs).
  *  - PHASE 3: every suburb page that meets the normal page minimum (MIN_SUBURB_LISTINGS, and 5 for service x suburb pages).
  *
  * Every other suburb page still works and is linked, but carries "noindex, follow" and is left out of the sitemap.
@@ -19,7 +19,7 @@ import { STATE_CENTRES } from './pageContent.js';
  * To move to the next phase, change INDEX_PHASE below and deploy. The API (sitemap and crawler HTML) and the web app (meta
  * robots) both read this file, so they always agree.
  */
-export const INDEX_PHASE = 1;
+export const INDEX_PHASE = 2;
 export const PHASE_2_MIN_LISTINGS = 25;
 export const INDEX_REGISTER_PROFILES = false;
 /** Extra suburbs to index in every phase, as 'STATE:Suburb' (for example 'NSW:Penrith'). */

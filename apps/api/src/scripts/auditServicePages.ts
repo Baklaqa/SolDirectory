@@ -97,8 +97,8 @@ async function main() {
     const blocksAll: string[] = [];
     const blocksWithoutLocal: string[] = [];
     for (const sec of sections(html)) {
-      // The two sections added for A2: where the suburb ranks, and the closest suburbs (with the nearest-town note and the languages line).
-      const isLocal = sec.heading === `${p.suburb} at a glance` || sec.heading === `${p.service} near ${p.suburb}`;
+      // The sections added for A2: where the suburb ranks, the closest suburbs (with the nearest-town note and languages line), who lists the service here, and the questions.
+      const isLocal = [`${p.suburb} at a glance`, `${p.service} near ${p.suburb}`, `Who lists ${p.service.toLowerCase()} in ${p.suburb}`, `Questions about ${p.service.toLowerCase()} in ${p.suburb}`].includes(sec.heading);
       const parts = [sec.heading, ...sec.lines].flatMap((line) => line.split(/(?<=[.!?])\s+/)).filter((x) => x.length >= 40 && /[.!?]$/.test(x)).map(norm);
       all.push(...parts);
       if (!isLocal) withoutLocal.push(...parts);

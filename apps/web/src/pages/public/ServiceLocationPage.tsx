@@ -1,5 +1,5 @@
 import { bannerFor } from '../../data/bannerImages';
-import { isIndexableSuburb, metaDescription, serviceLocalSections, serviceLocalSnapshot, type ServiceLocalData } from '@soldirectory/topic-content';
+import { isIndexableSuburb, metaDescription, serviceLocalDetail, serviceLocalSections, serviceLocalSnapshot, type ServiceLocalData } from '@soldirectory/topic-content';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
@@ -205,8 +205,10 @@ export default function ServiceLocationPage() {
   const glanceItems = wp?.glance ?? [];
   const serviceCountsItems = wp?.serviceCounts ?? [];
   const requestedItems = wp?.requested ?? [];
-  // Questions only where an editor wrote them for this page; a generic list repeated on every suburb adds nothing.
-  const faqItems = wp?.faq ?? [];
+  // An editor's own questions win. Otherwise the questions are built from this suburb's register data (serviceLocalDetail), so each
+  // page's answers are different; they are never one generic list repeated on every suburb.
+  const localDetail = serviceLocalDetail(serviceName, suburbName, stateName, suburbSlug, stateSuburbs, localData);
+  const faqItems = wp?.faq?.length ? wp.faq : localDetail.faqs.map((f) => ({ q: f.question, a: f.answer }));
 
   // The ToC only lists sections that actually render — "Costs" and
   // "What to expect" used to be listed unconditionally although no such
@@ -435,6 +437,12 @@ export default function ServiceLocationPage() {
               </p>
             )}
             {localSections.languages && <p className="svc-p">{localSections.languages}</p>}
+            {localDetail.analysis && (
+              <section id="who-lists">
+                <h2 className="svc-h2-sm">{localDetail.analysis.heading}</h2>
+                {localDetail.analysis.paragraphs.map((t) => <p key={t} className="svc-p">{t}</p>)}
+              </section>
+            )}
 
             <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} onTotal={setRegisterTotal} />
 
