@@ -6,6 +6,7 @@ import RegisterListing from '../models/RegisterListing.js';
 import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import WorkerReview from '../models/WorkerReview.js';
+import { BUSINESS } from '../config/business.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
 import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
@@ -13,7 +14,7 @@ import { eligibleStates, workersForService, workersInArea } from './workersPubli
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isPriorityIndexSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -126,6 +127,10 @@ async function prerenderedPage(slug: string): Promise<string | null> {
   }
 }
 
+/** How the data is kept current, and how to ask for a listing to be corrected or removed (gap audit B2, B3). */
+const correctionHtml = () =>
+  `${esc(REGISTER_CORRECTION.schedule)} <a href="mailto:${esc(BUSINESS.email)}?subject=${encodeURIComponent('Register listing: error or removal request')}">Report an error or request removal</a>. ${esc(REGISTER_CORRECTION.response)} ${esc(REGISTER_CORRECTION.individuals)}`;
+
 /** "12 October 2026", in Australian time, so the page and its crawler HTML always print the same date. */
 const registerDateLabel = (iso: string) => new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' });
 /** The same day as YYYY-MM-DD (Australian time), for datetime attributes and dateModified. */
@@ -210,7 +215,7 @@ async function hubPage(site: string, kindPath: KindPath): Promise<Page> {
       `<h2>Browse ${esc(kind.plain)} providers by state</h2><ul>${STATE_CODES.filter((c) => hub.states[c]).map((c) => li(`${base}/${c.toLowerCase()}`, `${kind.label} providers in ${STATE_NAMES[c]}`, `(${fmt(hub.states[c])})`)).join('')}</ul>` +
       `<h2>Suburbs with the most listings</h2><ul>${hub.suburbs.slice(0, 40).map((s) => li(`${base}/${s.state.toLowerCase()}/${s.slug}`, `${s.suburb}, ${s.state}`, `(${fmt(s.count)})`)).join('')}</ul>` +
       `<h2>What “listed on the register” means</h2><p>Each provider here appears on the ${esc(kind.register)}. That tells you what the provider was listed for and where — it is not a recommendation, a quality rating or a statement about availability. SolDirectory separately asks providers to confirm each week whether they can take on new people; that is what “Get matched” uses.</p>` +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>. ${correctionHtml()}</p>` +
       (hub.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hub.asOf))}">${esc(registerDateLabel(hub.asOf))}</time>.</p>` : ''),
   };
 }
@@ -239,7 +244,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     : null;
   const areaName = suburbName ? `${suburbName}, ${code}` : STATE_NAMES[code];
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const noindex = filtered || total === 0 || (!!suburbSlug && total < MIN_SUBURB_LISTINGS);
+  // Phase 1 (gap audit A1): a suburb page is indexed only for the capital cities and regional centres.
+  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isPriorityIndexSuburb(code, suburbName ?? '')));
 
   const crumbs = [
     { name: 'Home', path: '/' },
@@ -313,7 +319,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), [d.abn ? `ABN ${d.abn}` : '', d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : ''].filter(Boolean).join(' '))).join('')}</ul>` +
       `<p>${pager}</p>${workersHtml}${extra}` +
       (total > 0 && !filtered ? `<h2>Frequently asked questions</h2>${registerAreaFaqs(kind as any, areaName, total).map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>. ${correctionHtml()}</p>` +
       (hubForKind.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hubForKind.asOf))}">${esc(registerDateLabel(hubForKind.asOf))}</time>.</p>` : ''),
   };
 }
@@ -357,7 +363,8 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
     `<li>${doc.states.length === 1 ? 'State' : 'States'}: ${esc(doc.states.map((s) => STATE_NAMES[s] ?? s).join(', '))}</li>` +
     `<li>Areas listed: ${fmt(doc.areaCount)}</li>` +
     `<li>Website: ${doc.website ? `<a href="${esc(doc.website)}" rel="nofollow noopener noreferrer">${esc(host)}</a>` : 'Not listed'}</li>` +
-    `${doc.abn ? `<li>ABN: ${esc(doc.abn)}</li>` : ''}</ul>`;
+    `${doc.abn ? `<li>ABN: ${esc(doc.abn)}</li>` : ''}</ul>` +
+    `<p>Register data last imported on <time datetime="${esc(registerDateIso(new Date(doc.lastSeenAt ?? doc.importedAt).toISOString()))}">${esc(registerDateLabel(new Date(doc.lastSeenAt ?? doc.importedAt).toISOString()))}</time>.</p>`;
 
   return {
     status: 200,
@@ -367,7 +374,8 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
       158
     ),
     canonical: p,
-    noindex: thin,
+    // Gap audit A3: the individual register profile pages are thin copies of the public register, so they are not indexed for now.
+    noindex: thin || !INDEX_REGISTER_PROFILES,
     jsonLd: [
       {
         id: 'register-provider',
@@ -395,7 +403,7 @@ async function providerPage(site: string, kindPath: KindPath, slug: string): Pro
       `<li>Confirm the provider’s current status on <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>.</li>` +
       `<li>Ask whether they have capacity to start, and when. This listing doesn’t say.</li>` +
       `<li>Ask how they screen and train their workers, and what they charge — see our <a href="/guides/choosing-a-provider">guide to choosing a provider</a>.</li></ul>` +
-      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>.</p>` +
+      `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>. ${correctionHtml()}</p>` +
       (related.length ? `<h2>Other providers listed in ${esc(where)}</h2><ul>${related.map((r) => li(`/${kindPath}/${r.slug}`, registerName(r))).join('')}</ul>` : '') +
       `<p><a href="/${kindPath}">Browse the full register</a> · <a href="/find-a-provider">Compare provider profiles</a> · <a href="/locations">Browse by location</a></p>`,
   };
@@ -1757,6 +1765,10 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
       `<p><a href="/services/${serviceSlug}">Read the full guide to ${esc(serviceLower)}</a>: planning, funding, questions to ask and official information.</p>`
     : '';
 
+  // Where this suburb sits among the state's suburbs for this service: real numbers, different on every page.
+  const snapshot = serviceLocalSnapshot(service, suburbName, suburbSlug, stateName, suburbs.filter((s) => s.state === code));
+  const snapshotHtml = snapshot ? `<h2>${esc(suburbName)} at a glance</h2><p>${esc(snapshot)}</p>` : '';
+
   const body =
     `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
     `<h1>${esc(service)} providers in ${esc(suburbName)}, ${esc(stateName)}</h1>` +
@@ -1765,6 +1777,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     `${providerTotal > 0 ? `, and ${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider currently offers' : 'providers currently offer'} it here` : ''}.` +
     ` Providers set their own supports, service areas and availability, and confirm their capacity each week. Before you engage a provider, confirm their registration, insurance and worker screening directly with them.</p>` +
     (SVC_DESCRIPTION[service] ? `<h2>About ${esc(serviceLower)}</h2><p>${esc(SVC_DESCRIPTION[service])} People in ${esc(suburbName)} and the surrounding ${esc(stateName)} area can search for a provider below, or send a free request and let providers who cover this area respond directly.</p>` : '') +
+    snapshotHtml +
     providersHtml +
     `<p>Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.</p>` +
     registerHtml +
@@ -1785,7 +1798,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     description: metaDescription(description, 158),
     canonical: path,
     // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
-    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION,
+    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isPriorityIndexSuburb(code, suburbName),
     jsonLd: [
       breadcrumbLd(site, crumbs),
       { id: 'service-location', data: {

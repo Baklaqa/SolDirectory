@@ -7,6 +7,7 @@ import { getRegisterListing, submitClaimRequest, type RegisterListing } from '..
 import { ApiError } from '../../../api/client';
 import { absoluteUrl, areaLabel, registerPath, stateByCode, type RegisterKind } from '../../../lib/registerMeta';
 import { applySeoTags, setJsonLd } from '../../../lib/seo';
+import { INDEX_REGISTER_PROFILES } from '@soldirectory/topic-content';
 import RegisterCard from './RegisterCard';
 import { Breadcrumbs, GetMatchedCta, RequestProviderCta, VerifyNote, formatCount, trimTo } from './RegisterParts';
 import { useMatchModal } from '../../../context/MatchModalContext';
@@ -59,7 +60,7 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
         158
       ),
       canonicalUrl: absoluteUrl(path),
-      noindex: thin,
+      noindex: thin || !INDEX_REGISTER_PROFILES,
     });
     setJsonLd('register-provider', {
       '@type': 'Organization',
@@ -194,6 +195,14 @@ export default function RegisterProviderPage({ kind, slug }: { kind: RegisterKin
           <li>Ask how they screen and train their workers, and what they charge — see our <Link to="/guides/choosing-a-provider">guide to choosing a provider</Link>.</li>
         </ul>
         <VerifyNote kind={kind} />
+        {listing.asOf && (
+          <p className="reg-asof">
+            Register data last imported on{' '}
+            <time dateTime={new Date(listing.asOf).toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' })}>
+              {new Date(listing.asOf).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' })}
+            </time>.
+          </p>
+        )}
 
         <GetMatchedCta
           title={`Need support in ${where}?`}

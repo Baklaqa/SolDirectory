@@ -59,4 +59,9 @@ noindex on the legal pages have been removed; the pages are live and indexable.
 - The web build (`apps/web/scripts/prerender.mjs`) now writes static HTML for the 12 legal and policy pages, /about and /contact.
   Before this, the API answered most of them with a 404 "Page not found" to any visitor that did not run JavaScript. After deploy,
   fetch `/about`, `/contact`, `/collection-notice` and `/statement-of-rights` and confirm each returns 200.
+- Register pages and data-sources 12.3 now say the register is re-imported monthly, that unclaimed listings no longer on it are removed, and
+  that listings are checked against the NDIS Commission's compliance actions. Each needs a person to do the monthly routine in
+  `deploy/GAP_AUDIT_STATUS.md` (import with `--prune`, then `register:actions`). The daily freshness job only warns when an import is over 35 days old.
+- Register pages promise a reply to correction and removal requests within 5 business days (data-sources 12.5). Someone has to read the mailbox.
+- Phased indexing (gap audit A1 to A3): see `packages/topic-content/indexingPolicy.js`. Do not widen it until Search Console shows the first tier indexed.
 

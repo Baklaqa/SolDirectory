@@ -1684,7 +1684,7 @@ export const LEGAL_PACK = [
         "blocks": [
           {
             "t": "p",
-            "text": "Register data was last imported on the date shown on each register page. We refresh it regularly, but it can lag behind the live registers. Always confirm a provider’s current registration on the official NDIS Provider Register (ndiscommission.gov.au) or My Aged Care (myagedcare.gov.au) before relying on it."
+            "text": "Register data was last imported on the date shown on each register page. We re-import the register every month, take off listings that are no longer on it, and check the listings against the compliance actions published by the NDIS Commission (banning orders and revoked or suspended registrations), so a provider that has been banned or has lost its registration is not shown as registered. The data can still lag behind the live registers. Always confirm a provider’s current registration on the official NDIS Provider Register (ndiscommission.gov.au) or My Aged Care (myagedcare.gov.au) before relying on it."
           }
         ]
       },

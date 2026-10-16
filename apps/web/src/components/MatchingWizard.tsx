@@ -455,11 +455,11 @@ export default function MatchingWizard() {
             <form className="mw-form" noValidate onSubmit={(e) => { e.preventDefault(); goNext(); }}>
               <div className="mw-progress-row">
                 <span className="mw-progress-text">
-                  Step {safeIndex + 1} of {steps.length}
+                  Step {safeIndex + 1} of {steps.length + 1}
                   <span className="mw-progress-label"> · {STEP_LABELS[currentStepId]}</span>
                 </span>
-                <div className="mw-progress-track" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={safeIndex + 1}>
-                  <div className="mw-progress-fill" style={{ width: `${((safeIndex + 1) / steps.length) * 100}%` }} />
+                <div className="mw-progress-track" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length + 1} aria-valuenow={safeIndex + 1}>
+                  <div className="mw-progress-fill" style={{ width: `${((safeIndex + 1) / (steps.length + 1)) * 100}%` }} />
                 </div>
               </div>
 

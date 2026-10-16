@@ -62,6 +62,8 @@ export interface RegisterListingDoc extends Document {
   /** Set when an admin links a claimed listing to the real Provider account. */
   providerId?: mongoose.Types.ObjectId;
   importedAt: Date;
+  /** Set by every import that still includes this listing. The "data as at" date shown on register pages is the latest of these. */
+  lastSeenAt?: Date;
   sourceUpdatedAt?: Date;
   /**
    * A logo/icon URL found on the business's OWN website (see
@@ -121,6 +123,7 @@ const registerListingSchema = new Schema<RegisterListingDoc>(
     claimStatus: { type: String, enum: ['unclaimed', 'requested', 'claimed'], default: 'unclaimed' },
     providerId: { type: Schema.Types.ObjectId, ref: 'Provider' },
     importedAt: { type: Date, default: Date.now },
+    lastSeenAt: Date,
     sourceUpdatedAt: Date,
     logoUrl: String,
     logoCheckedAt: Date,

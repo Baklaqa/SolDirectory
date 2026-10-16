@@ -1,3 +1,4 @@
+import { REGISTER_CORRECTION } from '@soldirectory/topic-content';
 import { siteConfig } from '../../../config/siteConfig';
 import { Link } from 'react-router-dom';
 import { useMatchModal } from '../../../context/MatchModalContext';
@@ -37,7 +38,8 @@ export function VerifyNote({ kind }: { kind: RegisterKind }) {
       current status, search the official register at{' '}
       <a href={kind.officialUrl} target="_blank" rel="noopener noreferrer">{kind.officialName}</a>. A listing does not show whether a
       provider has capacity to take on new people. {source} See <a href="/data-sources">data sources and attribution</a>.{' '}
-      <a href={report}>Report an error or request removal</a>.
+      {REGISTER_CORRECTION.schedule} <a href={report}>Report an error or request removal</a>. {REGISTER_CORRECTION.response}{' '}
+      {REGISTER_CORRECTION.individuals}
     </p>
   );
 }

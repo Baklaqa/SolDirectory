@@ -465,7 +465,7 @@ export async function computeHub(type: RegisterType) {
       { $sort: { n: -1, '_id.state': 1, '_id.suburb': 1 } },
     ]),
     RegisterListing.countDocuments({ type }),
-    RegisterListing.aggregate([{ $match: { type } }, { $group: { _id: null, at: { $max: '$importedAt' } } }]),
+    RegisterListing.aggregate([{ $match: { type } }, { $group: { _id: null, at: { $max: { $ifNull: ['$lastSeenAt', '$importedAt'] } } } }]),
   ]);
 
   const importedAt = (latest as { at?: Date }[])[0]?.at;
@@ -532,6 +532,8 @@ export async function getRegisterListing(req: Request, res: Response) {
     type: doc.type,
     slug: doc.slug,
     name: safeRegisterName(doc.name, doc.slug),
+    /** When this listing was last present in a register import (ISO). */
+    asOf: new Date(doc.lastSeenAt ?? doc.importedAt).toISOString(),
     states: doc.states,
     areaCount: doc.areaCount,
     areas: doc.areas.slice(0, AREAS_IN_DETAIL),

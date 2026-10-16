@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import RegisterListing from '../models/RegisterListing.js';
-import { CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_TOPICS } from '@soldirectory/topic-content';
+import { CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_TOPICS, GUIDE_DOCS, INDEX_REGISTER_PROFILES, LANGUAGE_TOPICS, isPriorityIndexSuburb } from '@soldirectory/topic-content';
 import { computeHub, computeServiceSuburbs } from './register.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, areaRows } from './providersPublic.controller.js';
 import { eligibleStates } from './workersPublic.controller.js';
@@ -153,8 +153,11 @@ async function buildRegisterUrls(): Promise<UrlEntry[]> {
     const hub = await computeHub(type);
     // A state with no listings is a noindex empty page — don't advertise it.
     for (const state of STATE_CODES) if (hub.states[state]) urls.push({ path: `${base}/${state.toLowerCase()}` });
-    for (const s of hub.suburbs) urls.push({ path: `${base}/${s.state.toLowerCase()}/${s.slug}` });
+    // Phase 1 (gap audit A1): suburb hubs only for the capital cities and regional centres.
+    for (const s of hub.suburbs) if (isPriorityIndexSuburb(s.state, s.suburb)) urls.push({ path: `${base}/${s.state.toLowerCase()}/${s.slug}` });
 
+    // Gap audit A3: the individual register profile pages are thin copies of the public register, so they are noindex and not listed here.
+    if (!INDEX_REGISTER_PROFILES) continue;
     const cursor = RegisterListing.find({ type, 'services.0': { $exists: true } }).select('slug updatedAt').lean().cursor();
     for await (const d of cursor) urls.push({ path: `${base}/${d.slug}`, lastmod: (d as any).updatedAt });
   }
@@ -182,7 +185,7 @@ async function buildServiceAreaUrls(): Promise<UrlEntry[]> {
     const serviceSlug = slugifyService(service);
     const suburbs = await computeServiceSuburbs(service);
     // Only the indexed tier: pages with a few listings stay reachable but are noindex (MIN_INDEXABLE_SERVICE_LOCATION).
-    for (const s of suburbs) if (s.count >= MIN_INDEXABLE_SERVICE_LOCATION) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
+    for (const s of suburbs) if (s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isPriorityIndexSuburb(s.state, s.suburb)) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
   }
   serviceAreaCache = { urls, at: Date.now() };
   return urls;

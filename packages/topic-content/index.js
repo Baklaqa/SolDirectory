@@ -13,6 +13,7 @@ export { CONDITION_CONTENT_GROUPS } from './conditionContent.js';
 export { FUNDING_CONTENT_GROUPS } from './fundingContent.js';
 export { LANGUAGE_SPECIFICS } from './languageSpecifics.js';
 export { LEGAL_PACK, LEGAL_PRACTICES, resolveLegalDoc, legalDocBySlug } from './legalPack.js';
+export { INDEX_ALL_SUBURBS, INDEX_REGISTER_PROFILES, EXTRA_INDEX_SUBURBS, isPriorityIndexSuburb } from './indexingPolicy.js';
 export { LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, languageResourceAgencies } from './languageResources.js';
 export { LINK_TERMS, MAX_LINKS_PER_ARTICLE, newLinkState, linkParagraph, linkScopeFor, faqHtml } from './blogLinks.js';
 export { DIRECTORY_PAGE_TITLE, DIRECTORY_PAGE_HEADING, DIRECTORY_PAGE_DESCRIPTION, DIRECTORY_PAGE_UPDATED, DIRECTORY_PAGE_SUBTITLE, DIRECTORY_SUPPORTS, DIRECTORY_GUIDANCE, WORKER_PAGE_TITLE, WORKER_PAGE_DESCRIPTION, WORKER_PAGE_UPDATED, WORKER_HERO_CHECKS, PROVIDER_PAGE_UPDATED, PROVIDER_PAGE_DESCRIPTION, INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS, DIRECTORY_STEPS, DIRECTORY_FAQS, STATE_CENTRES, LOCATION_FAQS, PROVIDER_UNDERSTAND, PROVIDER_REACH, PROVIDER_STEPS, PROVIDER_PATHS, PROVIDER_SAFEGUARDS, WORKER_PROFILE_DETAILS, WORKER_HOW_IT_WORKS, WORKER_SAFEGUARDS, PROVIDER_PLANS } from './pageContent.js';
@@ -257,6 +258,35 @@ export function fundingFaqs(topic) {
  * providers. The answers describe what the register is and is not, in general terms; the only number is the page's own count.
  * `kind` is { register, plain, officialName, officialUrl } as on the register pages.
  */
+/**
+ * One sentence of real, page-specific detail for a service x suburb page: where the suburb sits among the state's suburbs by
+ * number of register listings for that service. `rows` is the state's suburbs for the service ({ slug, suburb, count }), any order.
+ * Returns '' when there is nothing to compare. The same words are used by the page and by the crawler HTML.
+ */
+/**
+ * What every register page says about how the data is kept current and how to get a listing corrected or removed (gap audit B2, B3).
+ * The page and the crawler HTML use the same words. The 5 business days matches the data sources page (section 12.5).
+ */
+export const REGISTER_CORRECTION = {
+  schedule: 'We re-import the register every month.',
+  response: 'We reply to every request within 5 business days.',
+  individuals: 'If you are an individual, such as a sole trader, listed under your own name, you can ask us to change or remove that listing.',
+};
+
+export function serviceLocalSnapshot(service, suburbName, suburbSlug, stateName, rows) {
+  const list = (rows ?? []).filter((r) => r && Number(r.count) > 0);
+  const mine = list.find((r) => r.slug === suburbSlug);
+  if (!mine || list.length < 2) return '';
+  const n = (x) => Number(x).toLocaleString('en-AU');
+  const rank = 1 + list.filter((r) => r.count > mine.count).length;
+  const top = [...list].sort((a, b) => b.count - a.count || String(a.suburb).localeCompare(String(b.suburb)))[0];
+  const lower = service.toLowerCase();
+  const position = rank === 1
+    ? `${suburbName} has the most ${lower} listings of the ${n(list.length)} ${stateName} suburbs we compare, with ${n(mine.count)}.`
+    : `Of the ${n(list.length)} ${stateName} suburbs we compare, ${suburbName} is number ${n(rank)} for ${lower} listings, with ${n(mine.count)}. The most is ${top.suburb}, with ${n(top.count)}.`;
+  return position;
+}
+
 export function registerAreaFaqs(kind, areaName, total) {
   const count = Number(total) || 0;
   return [

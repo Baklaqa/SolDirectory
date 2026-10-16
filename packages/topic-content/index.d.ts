@@ -181,6 +181,14 @@ export interface FundingContentGroup {
 /** Written content for the 25 funding topics, in the order the page groups them. */
 export const FUNDING_CONTENT_GROUPS: FundingContentGroup[];
 export function fundingTopicContent(slug: string): FundingTopicContent | undefined;
+export const REGISTER_CORRECTION: { schedule: string; response: string; individuals: string };
+export function serviceLocalSnapshot(
+  service: string,
+  suburbName: string,
+  suburbSlug: string,
+  stateName: string,
+  rows: { slug: string; suburb: string; count: number }[] | undefined,
+): string;
 export function registerAreaFaqs(
   kind: { register: string; plain: string; officialName: string; officialUrl: string },
   areaName: string,
@@ -226,6 +234,11 @@ export interface ResolvedLegalDoc extends Omit<LegalPackDoc, 'sections'> {
 export const LEGAL_PACK: LegalPackDoc[];
 export const LEGAL_PRACTICES: Record<string, boolean>;
 export function resolveLegalDoc(doc: LegalPackDoc, practices?: Record<string, boolean>): ResolvedLegalDoc;
+export const INDEX_ALL_SUBURBS: boolean;
+export const INDEX_REGISTER_PROFILES: boolean;
+export const EXTRA_INDEX_SUBURBS: string[];
+/** True if a suburb page for this state and suburb is indexed in the current phase (see indexingPolicy.js). */
+export function isPriorityIndexSuburb(stateCode: string, suburbName: string): boolean;
 export function legalDocBySlug(slug: string, practices?: Record<string, boolean>): ResolvedLegalDoc | undefined;
 export interface LanguageResource {
   agency: 'NDIS' | 'My Aged Care';

@@ -6,6 +6,7 @@
  *   npx tsx src/scripts/importRegisterListings.ts path/to/providers.jsonl --dry-run
  *   npx tsx src/scripts/importRegisterListings.ts path/to/providers.jsonl
  *   npx tsx src/scripts/importRegisterListings.ts path/to/providers.jsonl --limit 2000
+ *   npx tsx src/scripts/importRegisterListings.ts path/to/providers.jsonl --prune   (a full export only: also removes unclaimed listings that are no longer on the register)
  *
  * Input: JSON Lines, one row per provider x service-area suburb. The
  * file is streamed, so a 1 GB export is fine. Rows for the same provider
@@ -52,6 +53,7 @@ function parseArgs() {
   return {
     file,
     dryRun: args.includes('--dry-run'),
+    prune: args.includes('--prune'),
     limit: limitIdx >= 0 ? Number(args[limitIdx + 1]) || undefined : undefined,
   };
 }
@@ -122,7 +124,8 @@ function toDoc(a: Acc) {
 }
 
 async function main() {
-  const { file, dryRun, limit } = parseArgs();
+  const { file, dryRun, limit, prune } = parseArgs();
+  const runStart = new Date();
   if (!file) {
     console.error('Usage: npx tsx src/scripts/importRegisterListings.ts <providers.jsonl> [--dry-run] [--limit N]');
     process.exit(1);
@@ -160,8 +163,11 @@ async function main() {
   const { connectDB } = await import('../config/db.js');
   const { default: RegisterListing } = await import('../models/RegisterListing.js');
   await connectDB();
+  const { loadRemovals, purgeRemoved, pruneUnseen } = await import('../services/registerRemoval.js');
+  const removals = await loadRemovals();
 
   let written = 0;
+  let skippedRemoved = 0;
   let protectedCount = 0;
   for (let i = 0; i < docs.length; i += BATCH) {
     const batch = docs.slice(i, i + BATCH);
@@ -174,7 +180,9 @@ async function main() {
       .select('type slug').lean();
     const claimed = new Set(claimedDocs.map((r) => `${r.type}|${r.slug}`));
 
-    const ops = batch.map((d) => {
+    const wanted = batch.filter((d) => !removals.slugs.has(`${d.type}|${d.slug}`));
+    skippedRemoved += batch.length - wanted.length;
+    const ops = wanted.map((d) => {
       const { website, phone, sourceUpdatedAt, ...rest } = d;
       const isClaimed = claimed.has(`${d.type}|${d.slug}`);
       if (isClaimed) protectedCount++;
@@ -190,8 +198,8 @@ async function main() {
             // Claimed: only note that the source still lists this business — never touch its facts.
             // Not claimed (or new): the full re-import, same as before.
             $set: isClaimed
-              ? (sourceUpdatedAt ? { sourceUpdatedAt } : {})
-              : { ...rest, ...(website ? { website } : {}), ...(phone ? { phone } : {}), ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}) },
+              ? { lastSeenAt: runStart, ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}) }
+              : { ...rest, lastSeenAt: runStart, ...(website ? { website } : {}), ...(phone ? { phone } : {}), ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}) },
             ...(Object.keys(unset).length ? { $unset: unset } : {}),
             // Only on first insert: a re-import must never reset a listing that's been claimed.
             $setOnInsert: { claimStatus: 'unclaimed', importedAt: new Date() },
@@ -205,6 +213,15 @@ async function main() {
     process.stdout.write(`\r[register-import] ${Math.min(i + BATCH, docs.length)}/${docs.length}`);
   }
   console.log(`\n[register-import] Done. ${written} listing(s) created or updated. ${protectedCount} already-claimed listing(s) left untouched (only their "still on the register" date was refreshed).`);
+  const purged = await purgeRemoved(removals);
+  if (skippedRemoved || purged) console.log(`[register-import] ${skippedRemoved} listing(s) left out because they were removed earlier; ${purged} removed listing(s) deleted from the site.`);
+  if (prune && limit) console.log('[register-import] --prune ignored: it only runs on a full export (no --limit).');
+  if (prune && !limit) {
+    const result = await pruneUnseen(runStart, byType);
+    console.log(`[register-import] Pruned ${result.pruned} unclaimed listing(s) that are no longer on the register.`);
+    if (result.claimedUnseen) console.log(`[register-import] ${result.claimedUnseen} CLAIMED listing(s) were not in this export. They were left alone: check each against the official register by hand.`);
+    for (const line of result.skipped) console.log(`[register-import] ${line}`);
+  }
 }
 
 main()

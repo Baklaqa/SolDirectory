@@ -119,6 +119,8 @@ export interface RegisterListing {
   type: RegisterType;
   slug: string;
   name: string;
+  /** When this listing was last present in a register import (ISO). */
+  asOf?: string | null;
   states: string[];
   areaCount: number;
   areas: RegisterArea[];

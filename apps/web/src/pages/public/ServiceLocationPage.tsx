@@ -1,5 +1,5 @@
 import { bannerFor } from '../../data/bannerImages';
-import { metaDescription } from '@soldirectory/topic-content';
+import { isPriorityIndexSuburb, metaDescription, serviceLocalSnapshot } from '@soldirectory/topic-content';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
@@ -121,12 +121,14 @@ export default function ServiceLocationPage() {
   // Every support listed in this suburb, and other suburbs with this support, from the register (real counts).
   const [areaSupports, setAreaSupports] = useState<{ category: string; count: number }[]>([]);
   const [otherSuburbs, setOtherSuburbs] = useState<{ slug: string; suburb: string; count: number }[]>([]);
+  const [stateSuburbs, setStateSuburbs] = useState<{ slug: string; suburb: string; count: number }[]>([]);
 
   useEffect(() => { setRegisterTotal(null); }, [serviceSlug, stateSlug, suburbSlug]);
 
   useEffect(() => {
     setAreaSupports([]);
     setOtherSuburbs([]);
+    setStateSuburbs([]);
     if (!realState) return;
     let alive = true;
     getAreaSupports(realState.code, suburbSlug)
@@ -134,7 +136,7 @@ export default function ServiceLocationPage() {
       .catch(() => {});
     if ((REAL_SERVICES as readonly string[]).includes(serviceName)) {
       getServiceSuburbs(serviceName, undefined, realState.code)
-        .then((r) => { if (alive) setOtherSuburbs(r.suburbs.filter((s) => s.slug !== suburbSlug).slice(0, 40)); })
+        .then((r) => { if (alive) { setStateSuburbs(r.suburbs); setOtherSuburbs(r.suburbs.filter((s) => s.slug !== suburbSlug).slice(0, 40)); } })
         .catch(() => {});
     }
     return () => { alive = false; };
@@ -173,6 +175,7 @@ export default function ServiceLocationPage() {
   const supportRows = areaSupports
     .filter((r) => r.category !== serviceName && r.count >= MIN_INDEXABLE_SERVICE_LOCATION && REAL_SERVICES.includes(r.category))
     .slice(0, 12);
+  const localSnapshot = serviceLocalSnapshot(serviceName, suburbName, suburbSlug, stateName, stateSuburbs);
   const suburbRows = otherSuburbs.filter((s) => s.count >= MIN_INDEXABLE_SERVICE_LOCATION).slice(0, 12);
   const localFacts: [string, string][] = wp?.local
     ? ([
@@ -255,7 +258,7 @@ export default function ServiceLocationPage() {
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
         : `/services/${serviceSlug}/${suburbSlug}`}`,
-      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION,
+      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isPriorityIndexSuburb(stateAbbr, suburbName),
     });
     setJsonLd('service-location', {
       '@type': 'Service',
@@ -393,6 +396,13 @@ export default function ServiceLocationPage() {
             <p className="svc-p">
               Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.
             </p>
+
+            {localSnapshot && (
+              <>
+                <h2 className="svc-h2-sm">{suburbName} at a glance</h2>
+                <p className="svc-p">{localSnapshot}</p>
+              </>
+            )}
 
             <RegisterNearby serviceName={serviceName} suburbSlug={suburbSlug} suburbName={suburbName} stateAbbr={stateAbbr} onTotal={setRegisterTotal} />
 
