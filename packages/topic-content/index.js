@@ -338,6 +338,8 @@ export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, s
 
   const rows = (stateRows ?? []).filter((r) => r && Number(r.count) > 0);
   const paragraphs = [`${plural(p.total, 'register listing', 'register listings')} for ${lower} cover ${suburbName}: ${registers}.`];
+  const census = censusDetail(suburbName, stateName, local?.census);
+  if (census) paragraphs.push(census.paragraph);
   if (tiers.length) paragraphs.push(`Reach varies. ${join(tiers).replace(/^./, (c) => c.toUpperCase())}.${moreThanOneState}`);
   if (top.length) paragraphs.push(`Listings that include ${lower} here also list ${join(top)}.`);
   if (p.typicalSupports || p.specialists) {
@@ -403,6 +405,10 @@ export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, s
       answer: `Some say on their own websites that they support ${join(langs.map((l) => `${l.language} (${plural(l.count, 'listing', 'listings')})`))}. Ask a provider directly to confirm.`,
     });
   }
+  if (census) {
+    faqs.push({ question: census.question, answer: census.answer });
+    paragraphs.push(CENSUS_CREDIT);
+  }
   return { analysis: { heading: `Who lists ${lower} in ${suburbName}`, paragraphs }, faqs };
 }
 
@@ -433,6 +439,7 @@ export function registerAreaDetail(kind, areaName, stateName, suburbName, local)
 
   const paragraphs = [];
   const faqs = [];
+  const census = censusDetail(where, stateName, local?.census);
   const near = (local?.nearby ?? []).slice(0, 4);
   const busiest = local?.busiest ?? [];
 
@@ -445,6 +452,7 @@ export function registerAreaDetail(kind, areaName, stateName, suburbName, local)
   } else {
     paragraphs.push(`${plural(p.total, `${plain} provider is`, `${plain} providers are`)} listed for ${stateName}, spread across ${n(local.suburbsCovered)} suburbs that have their own page.${busiest.length ? ` The busiest are ${join(busiest.map((b) => `${b.suburb} (${n(b.count)})`))}.` : ''}`);
   }
+  if (census) paragraphs.push(census.paragraph);
   if (tiers.length) paragraphs.push(`Reach varies. ${reach}`);
   if (top.length) paragraphs.push(`The supports listed most often are ${join(top)}.`);
   if (p.typicalSupports || p.specialists) {
@@ -470,6 +478,10 @@ export function registerAreaDetail(kind, areaName, stateName, suburbName, local)
   if (suburbName && (p.localNames ?? []).length) faqs.push({ question: `Which ${plain} listings in ${suburbName} cover only a few areas?`, answer: `${plural(p.reach?.local ?? 0, 'listing covers', 'listings cover')} 5 or fewer areas, including ${join(p.localNames)}.` });
   if (langText) faqs.push({ question: `Do any ${plain} listings in ${where} mention languages other than English?`, answer: `${langText} Ask a provider directly to confirm.` });
 
+  if (census) {
+    faqs.push({ question: census.question, answer: census.answer });
+    paragraphs.push(CENSUS_CREDIT);
+  }
   return { analysis: { heading: `Who is listed in ${where}`, paragraphs }, faqs };
 }
 
@@ -478,6 +490,29 @@ export const REGISTER_CORRECTION = {
   response: 'We reply to every request within 5 business days.',
   individuals: 'If you are an individual, such as a sole trader, listed under your own name, you can ask us to change or remove that listing.',
 };
+
+/** The credit that must appear wherever ABS Census figures are shown (CC BY 4.0). */
+export const CENSUS_CREDIT = 'Source: Australian Bureau of Statistics, 2021 Census of Population and Housing, General Community Profile (suburbs and localities). Licensed under Creative Commons Attribution 4.0 (CC BY 4.0). Percentages are calculated by SolDirectory.';
+
+/** One paragraph and one question about a suburb's (or a state's) Census figures; null when there are none. */
+function censusDetail(name, stateName, c) {
+  if (!c || !c.population) return null;
+  const n = (x) => Number(x).toLocaleString('en-AU');
+  const pc = (x) => `${Number(x).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+  const needWhat = 'a core activity such as self-care, mobility or communication';
+  if (c.level === 'state') {
+    return {
+      paragraph: `At the 2021 Census, ${name} had ${n(c.population)} residents. ${n(c.needHelp)} people (${pc(c.needHelpPct)}) reported needing help with ${needWhat}, compared with ${pc(c.australiaNeedHelpPct)} across Australia. ${pc(c.over65Pct)} were aged 65 or over (${pc(c.australiaOver65Pct)} across Australia).`,
+      question: `How many people in ${name} need help with everyday activities?`,
+      answer: `At the 2021 Census, ${n(c.needHelp)} people in ${name} (${pc(c.needHelpPct)}) reported needing help with ${needWhat}, compared with ${pc(c.australiaNeedHelpPct)} across Australia. This is a self-reported Census figure, not a count of NDIS participants.`,
+    };
+  }
+  return {
+    paragraph: `At the 2021 Census, ${name} had ${n(c.population)} residents${c.medianAge ? ` with a median age of ${c.medianAge}` : ''}. ${n(c.needHelp)} people (${pc(c.needHelpPct)}) reported needing help with ${needWhat}, compared with ${pc(c.stateNeedHelpPct)} across ${stateName}. ${pc(c.over65Pct)} were aged 65 or over (${pc(c.stateOver65Pct)} across ${stateName}).${c.medianWeeklyHouseholdIncome ? ` The median household income was $${n(c.medianWeeklyHouseholdIncome)} a week.` : ''}`,
+    question: `How many people in ${name} need help with everyday activities?`,
+    answer: `At the 2021 Census, ${n(c.needHelp)} people in ${name} (${pc(c.needHelpPct)}) reported needing help with ${needWhat}, compared with ${pc(c.stateNeedHelpPct)} across ${stateName}. This is a self-reported Census figure, not a count of NDIS participants.`,
+  };
+}
 
 /** Lowercases the first letter only, so "Housing (SDA & SIL)" becomes "housing (SDA & SIL)" and keeps its acronyms. */
 const lowerFirst = (s) => String(s ?? '').replace(/^./, (ch) => ch.toLowerCase());

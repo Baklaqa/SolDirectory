@@ -95,11 +95,11 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   // Who is listed in this area: reach, supports, nearest suburbs, rank. Page 1 of an unfiltered list only, as in the crawler HTML.
   useEffect(() => {
     setAreaLocal(null);
-    if (!state || category || q || page > 1) return undefined;
+    if (!state || category || q) return undefined;
     let alive = true;
     getAreaLocal(kind.type, state.code, suburbSlug).then((r) => { if (alive) setAreaLocal(r); }).catch(() => {});
     return () => { alive = false; };
-  }, [kind.type, state, suburbSlug, category, q, page]);
+  }, [kind.type, state, suburbSlug, category, q]);
 
   // Suburb links for internal navigation (cached server-side).
   useEffect(() => {
@@ -136,7 +136,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   }, [data, hub, suburbSlug, state]);
 
   const areaName = suburbSlug ? `${suburbName}, ${state?.code ?? ''}` : state?.name ?? '';
-  const areaDetail = registerAreaDetail(kind, areaName, state?.name ?? '', suburbSlug ? suburbName : null, areaLocal);
+  const areaDetail = registerAreaDetail(kind, areaName, state?.name ?? '', suburbSlug ? suburbName : null, page === 1 ? areaLocal : null);
   const filtered = !!(category || q);
   const total = data?.total ?? 0;
   const basePath = registerPath(kind, stateSlug, suburbSlug);
@@ -151,7 +151,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   // A page is worth indexing only if it's a real, unfiltered list. Suburb
   // pages also need a few genuine listings — below that it's a near-empty
   // page that exists only to carry a keyword.
-  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || !isIndexableSuburb(state.code, suburbName, total)))));
+  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || !isIndexableSuburb(state.code, suburbName, total, undefined, !!areaLocal?.census)))));
 
   useEffect(() => {
     if (!state || loading) return;

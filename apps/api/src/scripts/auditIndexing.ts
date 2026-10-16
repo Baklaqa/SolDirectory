@@ -38,24 +38,25 @@ async function main() {
   const { computeHub, computeServiceSuburbs } = await import('../controllers/register.controller.js');
   const { REAL_SERVICES, REGISTER_TYPES, MIN_INDEXABLE_SERVICE_LOCATION } = await import('../services/registerNormalise.js');
   const { INDEX_PHASE, INDEX_REGISTER_PROFILES, PHASE_2_MIN_LISTINGS, isIndexableSuburb } = await import('@soldirectory/topic-content');
+  const { censusFor } = await import('../services/census.js');
   const { default: RegisterListing } = await import('../models/RegisterListing.js');
   await connectDB();
 
-  const hubSuburbs: { state: string; suburb: string; count: number }[] = [];
+  const hubSuburbs: { state: string; slug: string; suburb: string; count: number }[] = [];
   for (const type of REGISTER_TYPES) hubSuburbs.push(...(await computeHub(type)).suburbs);
-  const servicePages: { state: string; suburb: string; count: number }[] = [];
+  const servicePages: { state: string; slug: string; suburb: string; count: number }[] = [];
   for (const service of REAL_SERVICES) servicePages.push(...(await computeServiceSuburbs(service)).filter((s) => s.count >= MIN_INDEXABLE_SERVICE_LOCATION));
   const profiles = await RegisterListing.countDocuments({ 'services.0': { $exists: true } });
 
   const row = (phase: number) => {
-    const reg = hubSuburbs.filter((s) => isIndexableSuburb(s.state, s.suburb, s.count, phase)).length;
-    const svc = servicePages.filter((s) => isIndexableSuburb(s.state, s.suburb, s.count, phase)).length;
+    const reg = hubSuburbs.filter((s) => isIndexableSuburb(s.state, s.suburb, s.count, phase, !!censusFor(s.state, s.slug))).length;
+    const svc = servicePages.filter((s) => isIndexableSuburb(s.state, s.suburb, s.count, phase, !!censusFor(s.state, s.slug))).length;
     return { reg, svc };
   };
 
   console.log(`Current phase: ${INDEX_PHASE}. Phase 2 adds suburbs with ${PHASE_2_MIN_LISTINGS}+ listings. Register profile pages indexed: ${INDEX_REGISTER_PROFILES ? 'yes' : 'no'}.\n`);
   console.log('Phase                      register suburb pages   service x suburb pages   total suburb pages');
-  for (const [phase, label] of [[1, '1 centres only'], [2, `2 plus ${PHASE_2_MIN_LISTINGS}+ listings`], [3, '3 every eligible suburb']] as const) {
+  for (const [phase, label] of [[1, '1 centres only'], [2, `2 plus ${PHASE_2_MIN_LISTINGS}+ listings`], [3, '3 plus eligible with Census']] as const) {
     const r = row(phase);
     console.log(`${label.padEnd(26)} ${String(r.reg).padStart(21)}   ${String(r.svc).padStart(22)}   ${String(r.reg + r.svc).padStart(18)}${phase === INDEX_PHASE ? '   <- current' : ''}`);
   }

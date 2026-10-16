@@ -184,7 +184,7 @@ export default function ServiceLocationPage() {
   // Closest suburbs, the nearest larger centre (for a suburb that is not indexed) and languages listings here support: the same words as the crawler HTML.
   const localSections = serviceLocalSections(
     serviceName, suburbName, stateName, localData,
-    registerTotal !== null && registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(stateAbbr, suburbName, registerTotal),
+    registerTotal !== null && registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(stateAbbr, suburbName, registerTotal, undefined, !!localData?.census),
   );
   const suburbRows = otherSuburbs.filter((s) => s.count >= MIN_INDEXABLE_SERVICE_LOCATION).slice(0, 12);
   const localFacts: [string, string][] = wp?.local
@@ -270,7 +270,7 @@ export default function ServiceLocationPage() {
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
         : `/services/${serviceSlug}/${suburbSlug}`}`,
-      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(stateAbbr, suburbName, registerTotal),
+      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(stateAbbr, suburbName, registerTotal, undefined, !!localData?.census),
     });
     setJsonLd('service-location', {
       '@type': 'Service',
@@ -294,7 +294,7 @@ export default function ServiceLocationPage() {
       setJsonLd('service-location-faq', null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wpLoading, registerTotal, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems]);
+  }, [wpLoading, registerTotal, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems, localData]);
 
   const heroProviderLabel = providersLoading
     ? `Checking providers serving ${suburbName}`

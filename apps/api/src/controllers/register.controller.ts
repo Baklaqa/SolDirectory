@@ -7,6 +7,7 @@ import SuburbGeo from '../models/SuburbGeo.js';
 import { VISIBLE_PROVIDER, publicLogoUrl } from './providersPublic.controller.js';
 import { EmailService } from '../services/email.service.js';
 import { LANGUAGE_TOPICS, isPriorityIndexSuburb } from '@soldirectory/topic-content';
+import { censusFor, type CensusFacts } from '../services/census.js';
 import {
   MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, REGISTER_SUPPORT_CATEGORIES, REGISTER_TYPES, STATE_CODES, safeRegisterName,
   type RegisterType, type StateCode,
@@ -383,6 +384,7 @@ const serviceLocalCache = new Map<string, { at: number; value: ServiceLocal }>()
 const SERVICE_LOCAL_TTL_MS = 30 * 60 * 1000;
 
 export interface ServiceLocal {
+  census: CensusFacts | null;
   nearby: { slug: string; suburb: string; count: number; km: number }[];
   nearestTown: { slug: string; suburb: string; count: number; km: number } | null;
   languages: { language: string; count: number }[];
@@ -479,7 +481,7 @@ export async function computeServiceLocal(service: string, state: string, suburb
     service,
   );
 
-  const value: ServiceLocal = { nearby, nearestTown, languages, profile };
+  const value: ServiceLocal = { census: censusFor(state, suburbSlug), nearby, nearestTown, languages, profile };
   serviceLocalCache.set(key, { at: Date.now(), value });
   return value;
 }
@@ -491,6 +493,7 @@ export async function computeServiceLocal(service: string, state: string, suburb
 // where the suburb ranks, the closest suburbs, and the busiest suburbs for a state. All from register data and suburb coordinates.
 // ---------------------------------------------------------------
 export interface AreaLocal {
+  census: CensusFacts | null;
   profile: ServiceLocal['profile'];
   /** Suburbs in the state with a page for this register (state pages). */
   suburbsCovered: number;
@@ -543,6 +546,7 @@ export async function computeAreaLocal(type: RegisterType, state: string, suburb
   ]);
 
   const value: AreaLocal = {
+    census: censusFor(state, suburbSlug),
     profile,
     suburbsCovered: suburbSlug ? 0 : inState.length,
     busiest: suburbSlug ? [] : [...inState].sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb)).slice(0, 5).map((s) => ({ slug: s.slug, suburb: s.suburb, count: s.count })),

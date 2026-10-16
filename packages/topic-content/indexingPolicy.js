@@ -9,8 +9,9 @@ import { STATE_CENTRES } from './pageContent.js';
  *
  *  - PHASE 1: suburb pages (register suburb hubs and service x suburb pages) are indexed only for the capital cities and
  *    regional centres in STATE_CENTRES, plus anything in EXTRA_INDEX_SUBURBS.
- *  - PHASE 2 (now, from 16 October 2026, after the local content was added to every page): also any suburb with at least PHASE_2_MIN_LISTINGS register listings (the busy suburbs).
- *  - PHASE 3: every suburb page that meets the normal page minimum (MIN_SUBURB_LISTINGS, and 5 for service x suburb pages).
+ *  - PHASE 2: also any suburb with at least PHASE_2_MIN_LISTINGS register listings (the busy suburbs).
+ *  - PHASE 3 (now, from 16 October 2026, after local content and ABS Census facts were added to every page): also any suburb page that meets the normal page minimum (MIN_SUBURB_LISTINGS, and 5 for service x suburb pages) AND has
+ *    ABS Census figures, so every page in this tier has facts about its own suburb that no neighbouring page has.
  *
  * Every other suburb page still works and is linked, but carries "noindex, follow" and is left out of the sitemap.
  * Individual register profile pages (one per listed organisation) are noindex for now. They copy the public register and are
@@ -19,7 +20,7 @@ import { STATE_CENTRES } from './pageContent.js';
  * To move to the next phase, change INDEX_PHASE below and deploy. The API (sitemap and crawler HTML) and the web app (meta
  * robots) both read this file, so they always agree.
  */
-export const INDEX_PHASE = 2;
+export const INDEX_PHASE = 3;
 export const PHASE_2_MIN_LISTINGS = 25;
 export const INDEX_REGISTER_PROFILES = false;
 /** Extra suburbs to index in every phase, as 'STATE:Suburb' (for example 'NSW:Penrith'). */
@@ -43,10 +44,11 @@ export function isPriorityIndexSuburb(stateCode, suburbName) {
 /**
  * True if the page for this suburb is indexed in the current phase. `count` is the number of register listings the page covers.
  * The caller still applies the page's own minimum (a page with too few listings is never indexed, whatever the phase).
+ * `hasCensus` says whether the suburb has Census figures; it only matters from phase 3.
  */
-export function isIndexableSuburb(stateCode, suburbName, count, phase = INDEX_PHASE) {
+export function isIndexableSuburb(stateCode, suburbName, count, phase = INDEX_PHASE, hasCensus = true) {
   if (isPriorityIndexSuburb(stateCode, suburbName)) return true;
-  if (phase >= 3) return true;
-  if (phase === 2) return Number(count) >= PHASE_2_MIN_LISTINGS;
+  if (phase >= 2 && Number(count) >= PHASE_2_MIN_LISTINGS) return true;
+  if (phase >= 3) return !!hasCensus;
   return false;
 }

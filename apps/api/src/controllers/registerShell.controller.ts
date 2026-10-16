@@ -7,6 +7,7 @@ import Provider from '../models/Provider.js';
 import Worker from '../models/Worker.js';
 import WorkerReview from '../models/WorkerReview.js';
 import { BUSINESS } from '../config/business.js';
+import { censusFor } from '../services/census.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
 import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeAreaLocal, computeLanguageSnapshot, computeServiceLocal, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
@@ -245,7 +246,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
   const areaName = suburbName ? `${suburbName}, ${code}` : STATE_NAMES[code];
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   // Phased indexing (gap audit A1): a suburb page is indexed only if the current phase allows it (indexingPolicy.js).
-  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isIndexableSuburb(code, suburbName ?? '', total)));
+  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isIndexableSuburb(code, suburbName ?? '', total, undefined, !!censusFor(code, suburbSlug))));
 
   const crumbs = [
     { name: 'Home', path: '/' },
@@ -1777,7 +1778,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
 
   // The closest suburbs with listings, the nearest larger centre (for a suburb that is not indexed) and the languages listings here
   // say they support (gap audit A2). Real distances and counts, different on every page.
-  const indexable = registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(code, suburbName, registerTotal);
+  const indexable = registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(code, suburbName, registerTotal, undefined, !!censusFor(code, suburbSlug));
   const localData = await computeServiceLocal(service, code, suburbSlug);
   const localParts = serviceLocalSections(service, suburbName, stateName, localData, indexable);
   const detail = serviceLocalDetail(service, suburbName, stateName, suburbSlug, suburbs.filter((s) => s.state === code), localData, areaSupports);
@@ -1825,7 +1826,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     description: metaDescription(description, 158),
     canonical: path,
     // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
-    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(code, suburbName, registerTotal),
+    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(code, suburbName, registerTotal, undefined, !!censusFor(code, suburbSlug)),
     jsonLd: [
       breadcrumbLd(site, crumbs),
       ...(detail.faqs.length ? [{ id: 'service-location-faq', data: { '@type': 'FAQPage', mainEntity: detail.faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),

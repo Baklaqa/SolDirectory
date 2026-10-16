@@ -1714,6 +1714,19 @@ export const LEGAL_PACK = [
             "text": "Member profiles are written and kept up to date by the providers themselves. Registration details on member profiles always come from the register and can’t be edited by the provider."
           }
         ]
+      },
+      {
+        "heading": "12.7 Census figures",
+        "blocks": [
+          {
+            "t": "p",
+            "text": "Suburb pages show a few figures from the 2021 Census: population, median age, the share of people aged 65 or over, and the share who reported needing help with a core activity such as self-care, mobility or communication. These are self-reported Census figures for the Australian Bureau of Statistics suburb area. They are not a count of NDIS participants or aged care clients, and they describe 2021."
+          },
+          {
+            "t": "note",
+            "text": "Source: Australian Bureau of Statistics, 2021 Census of Population and Housing, General Community Profile (suburbs and localities). © Commonwealth of Australia (Australian Bureau of Statistics). Licensed under Creative Commons Attribution 4.0 International (creativecommons.org/licenses/by/4.0). Changes made: we selected a few figures, matched suburbs by name and state, and calculated percentages."
+          }
+        ]
       }
     ]
   }

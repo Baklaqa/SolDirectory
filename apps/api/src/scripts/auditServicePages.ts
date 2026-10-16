@@ -52,6 +52,7 @@ async function main() {
   const { computeServiceSuburbs } = await import('../controllers/register.controller.js');
   const { REAL_SERVICES, MIN_INDEXABLE_SERVICE_LOCATION } = await import('../services/registerNormalise.js');
   const { isIndexableSuburb } = await import('@soldirectory/topic-content');
+  const { censusFor } = await import('../services/census.js');
   await connectDB();
 
   const slugify = (t: string) => t.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -68,7 +69,7 @@ async function main() {
       for (const s of (await computeHub(type)).suburbs) {
         pages.push({
           service: '', state: s.state, suburb: s.suburb, slug: s.slug, count: s.count,
-          indexed: s.count >= MIN_SUBURB_LISTINGS && isIndexableSuburb(s.state, s.suburb, s.count),
+          indexed: s.count >= MIN_SUBURB_LISTINGS && isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug)),
           path: `/seo-shell/${path}/${s.state.toLowerCase()}/${s.slug}`,
           localHeadings: [`Who is listed in ${s.suburb}`],
         });
@@ -77,7 +78,7 @@ async function main() {
   } else {
     for (const service of REAL_SERVICES) {
       for (const s of await computeServiceSuburbs(service)) {
-        pages.push({ service, state: s.state, suburb: s.suburb, slug: s.slug, count: s.count, indexed: s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(s.state, s.suburb, s.count) });
+        pages.push({ service, state: s.state, suburb: s.suburb, slug: s.slug, count: s.count, indexed: s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug)) });
       }
     }
   }

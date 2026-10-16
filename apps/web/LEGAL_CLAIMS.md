@@ -64,4 +64,5 @@ noindex on the legal pages have been removed; the pages are live and indexable.
   `deploy/GAP_AUDIT_STATUS.md` (import with `--prune`, then `register:actions`). The daily freshness job only warns when an import is over 35 days old.
 - Register pages promise a reply to correction and removal requests within 5 business days (data-sources 12.5). Someone has to read the mailbox.
 - Phased indexing (gap audit A1 to A3): see `packages/topic-content/indexingPolicy.js`. Do not widen it until Search Console shows the first tier indexed.
-
+- ABS 2021 Census figures appear on suburb pages with the CC BY 4.0 credit (CENSUS_CREDIT in packages/topic-content) and data-sources 12.7. Keep the credit wherever the figures are shown. The figures are self-reported 2021 Census numbers, not NDIS participant counts, and the pages say so.
+- Indexing is on phase 3 (see deploy/GAP_AUDIT_STATUS.md). Do not widen it further: profile pages stay noindex.

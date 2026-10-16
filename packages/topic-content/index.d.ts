@@ -181,7 +181,23 @@ export interface FundingContentGroup {
 /** Written content for the 25 funding topics, in the order the page groups them. */
 export const FUNDING_CONTENT_GROUPS: FundingContentGroup[];
 export function fundingTopicContent(slug: string): FundingTopicContent | undefined;
+export interface CensusData {
+  level: 'suburb' | 'state';
+  population: number;
+  medianAge: number | null;
+  medianWeeklyHouseholdIncome: number | null;
+  over65: number;
+  over65Pct: number;
+  needHelp: number;
+  needHelpPct: number;
+  stateOver65Pct: number;
+  stateNeedHelpPct: number;
+  australiaOver65Pct: number;
+  australiaNeedHelpPct: number;
+}
+export const CENSUS_CREDIT: string;
 export interface ServiceLocalData {
+  census?: CensusData | null;
   nearby: { slug: string; suburb: string; count: number; km: number }[];
   nearestTown: { slug: string; suburb: string; count: number; km: number } | null;
   languages: { language: string; count: number }[];
@@ -208,6 +224,7 @@ export function serviceLocalDetail(
   areaSupports?: { category: string; count: number }[],
 ): { analysis: { heading: string; paragraphs: string[] } | null; faqs: { question: string; answer: string }[] };
 export interface AreaLocalData {
+  census?: CensusData | null;
   profile: ServiceLocalData['profile'];
   suburbsCovered: number;
   busiest: { slug: string; suburb: string; count: number }[];
@@ -293,7 +310,7 @@ export const EXTRA_INDEX_SUBURBS: string[];
 /** True for the capital cities, regional centres and extra suburbs (see indexingPolicy.js). */
 export function isPriorityIndexSuburb(stateCode: string, suburbName: string): boolean;
 /** True if the suburb page covering `count` register listings is indexed in the current phase. The page's own minimum still applies. */
-export function isIndexableSuburb(stateCode: string, suburbName: string, count: number, phase?: number): boolean;
+export function isIndexableSuburb(stateCode: string, suburbName: string, count: number, phase?: number, hasCensus?: boolean): boolean;
 export function legalDocBySlug(slug: string, practices?: Record<string, boolean>): ResolvedLegalDoc | undefined;
 export interface LanguageResource {
   agency: 'NDIS' | 'My Aged Care';
