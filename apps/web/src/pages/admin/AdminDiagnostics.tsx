@@ -24,7 +24,7 @@ async function countFromHeader(path: string): Promise<number | null> {
 }
 
 function StatusBadge({ status }: { status: CheckResult['status'] }) {
-  const map = { ok: ['OK', '#177C4B', '#E4F5EC'], error: ['ERROR', '#B4232F', '#FBE7E7'], unconfigured: ['NOT CONFIGURED', '#9A6B00', '#FFF4DC'] } as const;
+  const map = { ok: ['OK', '#177C4B', '#E4F5EC'], error: ['ERROR', '#B4232F', '#FBE7E7'], unconfigured: ['NOT CONFIGURED', '#7A5300', '#FFF4DC'] } as const;
   const [label, color, bg] = map[status];
   return <span style={{ fontSize: 11, fontWeight: 700, color, background: bg, padding: '3px 9px', borderRadius: 100 }}>{label}</span>;
 }

@@ -63,6 +63,7 @@ export default function AdminOperations() {
     { label: 'Admin alerts', ok: system.adminAlerts, hint: system.adminAlerts ? 'Address set' : 'No address' },
     { label: 'Sender identity', ok: system.senderIdentity, hint: system.senderIdentity ? 'In email footers' : 'Missing' },
     { label: 'Payments', ok: system.payments, hint: system.payments ? 'Stripe on' : 'Off' },
+    { label: 'GST on invoices', ok: system.gstTaxRate, hint: system.gstTaxRate ? 'Tax rate set' : 'Missing: charges would have no GST' },
     { label: 'Maps', ok: system.maps, hint: system.maps ? 'Mapbox on' : 'Off' },
     { label: 'SMS', ok: system.sms, hint: system.sms ? 'Twilio on' : 'Off (optional)' },
     { label: 'Provider-area emails', ok: system.registerLeadEmails, hint: system.registerLeadEmails ? 'Switched on' : 'Switched off' },
@@ -89,7 +90,7 @@ export default function AdminOperations() {
           <p className="ao-allgood"><span className="ao-dot ao-dot-ok" /> Everything is running normally. Nothing needs your attention.</p>
         ) : (
           <>
-            <h3 className="ao-subtitle">Needs attention ({alerts.length})</h3>
+            <h2 className="ao-subtitle">Needs attention ({alerts.length})</h2>
             <ul className="ao-alert-list">
               {alerts.map((a, i) => (
                 <li key={i} className={`ao-alert ao-alert-${a.severity}`}>

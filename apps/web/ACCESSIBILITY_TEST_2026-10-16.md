@@ -64,3 +64,22 @@ This only takes effect after the web build is deployed. Confirm with `curl -I ht
 - 200% zoom and text-spacing overrides, and Windows High Contrast mode, were not tested.
 - Prefers-reduced-motion is respected by the preloader; other animations (home page motion, carousel) were not checked.
 - The accessibility statement still says "we aim to meet WCAG 2.2 AA", which is accurate. Do not change it to "meets" until the screen reader pass is done.
+
+## Addendum: signed-in areas (16 October 2026, later)
+
+Scanned with axe-core 4.10 (WCAG 2.0 to 2.2 A and AA plus best practice) in a real browser against a local build and a throwaway database
+of demo accounts, which was dropped afterwards.
+
+| Area | Pages | Before | After |
+|---|---|---|---|
+| Provider | dashboard, leads, my listing, onboarding, plans, security | none | none |
+| Participant | dashboard | none | none |
+| Worker | dashboard, my profile | none | none |
+| Admin | dashboard, operations, reports, providers, users, plans, services, enquiries, content, diagnostics, claims, register | charts with no description (10), unlabeled selects (37), low-contrast links and status pills (4), skipped heading levels (3) | none |
+| 404 page | any unknown address | no `<main>`, skip link with no target | fixed |
+
+Admin charts now say what they show in text (for example "New registrations per day over 30 days: 118 in total"). Plan and status
+selects in the member plans table are named after the member. The 404 page is a `<main>` with the target the skip link uses.
+
+Still not done: a screen reader pass, other admin pages not listed above (workers, worker detail, conditions, worker reviews), and anything that appears only after
+an action (modals other than Get matched, error states).

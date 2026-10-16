@@ -89,6 +89,10 @@ export async function createCheckoutSession(provider: ProviderDoc, planKey: stri
   const priceId = process.env[`STRIPE_PRICE_${planKey.toUpperCase()}`];
   const quotaText = plan.quota === null ? 'Unlimited lead unlocks' : `${plan.quota} lead unlocks per month`;
   const meta = { planKey, providerId: String(provider._id) };
+  // The plan price is shown and agreed as "plus GST" ($249 + GST = $273.90). A Stripe tax rate (10% GST, added on top) makes the checkout and
+  // the invoice say so; without it Stripe would charge the plain price and print no GST. Create it once with scripts/createStripeGstTaxRate.ts.
+  const gstRate = process.env.STRIPE_GST_TAX_RATE_ID;
+  if (!gstRate) console.warn('[stripe] STRIPE_GST_TAX_RATE_ID is not set: checkout will not add GST, so the charge will not match the "plus GST" price shown to providers.');
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -96,13 +100,15 @@ export async function createCheckoutSession(provider: ProviderDoc, planKey: stri
     client_reference_id: String(provider._id),
     line_items: [
       priceId
-        ? { price: priceId, quantity: 1 }
+        ? { price: priceId, quantity: 1, ...(gstRate ? { tax_rates: [gstRate] } : {}) }
         : {
             quantity: 1,
+            ...(gstRate ? { tax_rates: [gstRate] } : {}),
             price_data: {
               currency: (process.env.STRIPE_CURRENCY ?? 'aud').toLowerCase(),
               unit_amount: plan.priceCents,
               recurring: { interval: 'month' },
+              ...(gstRate ? { tax_behavior: 'exclusive' as const } : {}),
               product_data: { name: `SolDirectory ${plan.name} plan`, description: quotaText },
             },
           },

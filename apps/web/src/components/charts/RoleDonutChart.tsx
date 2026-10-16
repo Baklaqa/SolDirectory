@@ -31,6 +31,7 @@ export default function RoleDonutChart({ data }: Props) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
       <div style={{ width: 160, height: 160, flex: 'none' }}>
         <Doughnut
+          aria-label={`Users by role: ${labels.map((l, i) => `${l} ${values[i]}`).join(', ')}`}
           data={{
             labels: labels.map((l) => l[0].toUpperCase() + l.slice(1)),
             datasets: [{

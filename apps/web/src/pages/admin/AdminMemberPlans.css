@@ -11,7 +11,7 @@
 
 .mp-status-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px; text-transform: capitalize; }
 .mp-status-pill-active { background: #E4F5EC; color: #177C4B; }
-.mp-status-pill-trial { background: #FFF4DC; color: #9A6B00; }
+.mp-status-pill-trial { background: #FFF4DC; color: #7A5300; }
 .mp-status-pill-expired { background: #F1F1F1; color: #5A6B84; }
 .mp-status-pill-cancelled { background: #FBE7E7; color: #B4232F; }
 .mp-status-pill-suspended { background: #FBE7E7; color: #B4232F; }

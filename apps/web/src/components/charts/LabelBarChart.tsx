@@ -16,6 +16,7 @@ export default function LabelBarChart({ labels, values, color = '#1769E0', noun,
   return (
     <div style={{ height }}>
       <Bar
+        aria-label={`${noun} by category: ${labels.map((l, i) => `${l} ${values[i]}`).join(', ')}`}
         data={{ labels, datasets: [{ data: values, backgroundColor: color, borderRadius: 4, maxBarThickness: 34 }] }}
         options={{
           responsive: true,

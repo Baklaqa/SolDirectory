@@ -75,7 +75,7 @@ function Item({ item, wordpress, onChanged }: { item: ContentUpdate; wordpress: 
         <div className="ac-detail">
           <div className="ac-cols">
             <div>
-              <h4>What the official page covers</h4>
+              <h3>What the official page covers</h3>
               {item.headings.length > 0 ? (
                 <ul className="ac-list">{item.headings.map((h) => <li key={h}>{h}</li>)}</ul>
               ) : <p className="ad-empty-note">No section headings. About {item.wordCount} words.</p>}
@@ -85,7 +85,7 @@ function Item({ item, wordpress, onChanged }: { item: ContentUpdate; wordpress: 
               {item.teaser && <p className="ao-dim ac-teaser">Official summary (for you only, never published): {item.teaser}</p>}
             </div>
             <div>
-              <h4>Links to include</h4>
+              <h3>Links to include</h3>
               <ul className="ac-list">
                 <li><a href={item.url} target="_blank" rel="noopener noreferrer">The official page</a> (cite it)</li>
                 {(item.related ?? []).map((r) => <li key={r.path}>{r.label} <span className="ao-mono">{r.path}</span></li>)}
@@ -261,7 +261,7 @@ export default function AdminContent() {
       {hasMore && <div className="ae-more"><button type="button" className="ao-btn" disabled={loading} onClick={() => setPage((p) => p + 1)}>{loading ? 'Loading…' : `Show more (${total - items.length} left)`}</button></div>}
 
       <div className="ad-panel ac-howto">
-        <h3 className="ad-panel-title">How this stays safe</h3>
+        <h2 className="ad-panel-title">How this stays safe</h2>
         <ul>
           <li><strong>It reads facts, not articles.</strong> Only titles, dates, section headings and a change fingerprint are kept. The NDIA licenses its website CC BY-NC and asks that it is not used for commercial traffic, so posts must be written in your own words and cite the official page.</li>
           <li><strong>Drafts are private.</strong> Each brief is a WordPress draft with an outline and suggested internal links. It cannot be published while the brief box or any [[EDITOR…]] marker is in it, if it is thin, uncited, or has no excerpt.</li>

@@ -22,6 +22,7 @@ export default function UserGrowthChart({ series }: Props) {
   return (
     <div style={{ height: 220 }}>
       <Line
+        aria-label={`New registrations per day over ${series.length} days: ${series.reduce((a, s) => a + s.count, 0)} in total`}
         data={{
           labels: series.map((s, i) => (i % labelEvery === 0 ? new Date(s.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '')),
           datasets: [{

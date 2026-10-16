@@ -52,6 +52,7 @@ The generated file also sets `Permissions-Policy`. If the live file already sets
 1. Download the NDIS Commission and My Aged Care exports and convert to the importer's JSONL.
 2. `npx tsx src/scripts/importRegisterListings.ts providers.jsonl --dry-run`, check, then run again with `--prune`.
 3. Save the Commission's compliance actions (banning orders, revoked or suspended registrations) as CSV with `abn` and `name` columns. `npm run register:actions -w apps/api -- actions.csv`, read the report, then add `--apply`.
+   The Commission does not publish a download. Its compliance actions are a search (Part 2 of the NDIS Provider Register, hundreds of pages, updated often) at `ndiscommission.gov.au/about-us/compliance-and-enforcement/compliance-actions`, so this step is manual: filter to the current year and to type and status you care about, copy the providers' names and ABNs into the CSV, and run the tool. A provider whose registration is revoked leaves Part 1 of the register, so the monthly import with `--prune` removes it without this step; the compliance CSV matters for providers that stay registered but have an action against them. Banning orders are mostly against individual workers, not provider listings.
 4. Claimed listings are never deleted by these scripts. Each one reported is checked by hand.
 
 ## H1: end of build checklist
@@ -61,3 +62,14 @@ The generated file also sets `Permissions-Policy`. If the live file already sets
 - Delete local copies of production data on developer machines, and any exports or backups outside the company's storage.
 - Move ownership of the domain, hosting, Stripe, Mapbox, GitHub organisation and Search Console to company email addresses.
 - Use staging with dummy data only while the build continues.
+
+## "What was not checked" in the audit: now checked (16 October 2026)
+
+| Area | Result |
+|---|---|
+| Enquiry form beyond step 1 (D2, D3) | **Walked through on a local build to the consent step.** Both checkboxes are unticked; the first is required (the form refuses to continue, and the API returns 400 and stores nothing without it); the second is separate and optional. The counter reads "Step 7 of 12" and matches the 12-item list. The consent says up to 10 matched providers get a summary and up to 3 see contact details. Nothing was submitted. |
+| Logged-in areas | **Scanned with axe-core on a throwaway local database** (demo accounts from `npm run db:seed:admin`, then dropped). Provider (dashboard, leads, listing, onboarding, plans, security), participant and worker dashboards: no violations. Admin: found and fixed unnamed charts (10), unlabeled selects (37), low-contrast links and status pills, and two skipped heading levels; the 404 page had no `<main>`. Admin pages re-scanned clean. |
+| Lead unlock flow | **New automated test, `npm run test:lead-unlock -w apps/api`** (12 checks, all pass): contact details hidden until unlock; Idempotency-Key required; three providers can unlock; the fourth gets LEAD_FULL and uses no quota; repeat unlocks are free; a free-plan provider is told to choose a plan. |
+| Stripe checkout and GST | **Found a gap and added a fix.** Checkout charged the plain plan price ($249) with no tax line, but the pages and the provider agreement say "$249 + GST = $273.90" and promise a tax invoice showing the GST. Checkout now adds a GST tax rate when `STRIPE_GST_TAX_RATE_ID` is set; `npm run stripe:gst-rate -w apps/api` creates the rate in Stripe; Admin > Operations shows "GST on invoices: Missing" until it is set. I did not call Stripe. **You do:** run the script with your Stripe key, put the id in the server `.env`, and add the ABN under Stripe's business settings so invoices are valid tax invoices. Test one checkout in Stripe test mode first. |
+| Emails | Not tested (no mail server is configured locally). Send one of each template to yourself from a staging server. |
+| Guides and blogs accuracy | See `deploy/GUIDE_FACT_CHECK_2026-10-16.md`: 124 outside links (0 broken), six time-sensitive claims checked against official pages, one overstated sentence fixed. |

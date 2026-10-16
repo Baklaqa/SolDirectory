@@ -3,7 +3,7 @@ import './NotFound.css';
 
 export default function NotFound() {
   return (
-    <div className="not-found-page" aria-live="polite">
+    <main id="main-content" className="not-found-page">
       <div className="not-found-page__inner">
         <div className="not-found-page__eyebrow">Page missing</div>
         <span className="not-found-page__code" aria-hidden="true">404</span>
@@ -25,6 +25,6 @@ export default function NotFound() {
           <Link to="/independent-workers">Independent Workers</Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -9,7 +9,7 @@
 .ad-attn-strip-ok { background: #E4F5EC; border-color: #1F9D63; color: #177C4B; }
 .ad-attn-strip-warn { background: #FFF6E0; border-color: #E0A021; }
 .ad-attn-strip-critical { background: #FBE7E7; border-color: #D64545; }
-.ad-attn-strip-link { font-weight: 700; color: var(--color-primary, #1769E0); white-space: nowrap; }
+.ad-attn-strip-link { font-weight: 700; color: #0F4FA8; white-space: nowrap; }
 
 .ad-feed { display: flex; flex-direction: column; }
 .ad-feed-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--color-border, #E8EEF7); }
@@ -87,7 +87,7 @@
 
 .ad-attention-list { display: flex; flex-direction: column; gap: 10px; }
 .ad-attention-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--color-primary-tint, #F2F7FF); border-radius: 10px; font-size: 13.5px; }
-.ad-attention-action { font-weight: 700; color: var(--color-primary, #1769E0); }
+.ad-attention-action { font-weight: 700; color: #0F4FA8; }
 .ad-empty-note { color: var(--color-text-muted, #5A6B84); font-size: 13.5px; margin: 0; }
 
 .ad-quick-actions { display: flex; flex-wrap: wrap; gap: 10px; }

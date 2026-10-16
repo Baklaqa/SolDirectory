@@ -63,7 +63,7 @@ export const PROVIDER_POSTS = [
       {
         heading: 'Check which portal applies',
         paragraphs: [
-          'From 12 October 2026 the Commission runs two provider portals. New applications start in the new NDIS Commission Portal, and applications already under way finish in the existing portal; draft applications left in the existing portal are removed on 12 October 2026. This changes, so read the Commission’s “which portal do I use” page before you start. This article is general information, not a substitute for the Commission’s instructions.',
+          'From 12 October 2026 the Commission runs two provider portals. New applications start in the new NDIS Commission Portal, and applications already under way finish in the existing portal. The Commission says some drafts have been removed from the existing portal, so check its guidance on what to do with a draft. This changes, so read the Commission’s “which portal do I use” page before you start. This article is general information, not a substitute for the Commission’s instructions.',
         ],
       },
     ],

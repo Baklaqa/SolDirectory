@@ -117,7 +117,7 @@ export default function AdminMemberPlans() {
                 <span>{row.name}</span>
                 <span>{row.ownerName ?? '—'}<span className="admin-providers-owner-email">{row.ownerEmail ?? ''}</span></span>
                 <span>
-                  <select className="mp-inline-select" value={row.plan} disabled={updatingId === row.id} onChange={(e) => handlePlanChange(row, e.target.value as PlanTier)}>
+                  <select className="mp-inline-select" aria-label={`Plan for ${row.name}`} value={row.plan} disabled={updatingId === row.id} onChange={(e) => handlePlanChange(row, e.target.value as PlanTier)}>
                     {PLAN_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </span>
@@ -127,6 +127,7 @@ export default function AdminMemberPlans() {
                 <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <select
                     className="mp-inline-select"
+                    aria-label={`Change status for ${row.name}`}
                     value=""
                     disabled={updatingId === row.id}
                     onChange={(e) => { if (e.target.value) handleStatusChange(row, e.target.value as PlanStatus); e.target.value = ''; }}

@@ -15,6 +15,7 @@ export default function DailyBarChart({ dates, series, noun }: Props) {
   return (
     <div style={{ height: 190 }}>
       <Bar
+        aria-label={`${noun} per day over ${dates.length} days: ${series.map((s) => `${s.label} ${s.values.reduce((a, b) => a + b, 0)}`).join(', ')}`}
         data={{
           labels: dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })),
           datasets: series.map((s) => ({ label: s.label, data: s.values, backgroundColor: s.color, borderRadius: 3, maxBarThickness: 22 })),

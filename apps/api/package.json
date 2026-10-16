@@ -30,6 +30,8 @@
     "job:request-summaries": "tsx src/scripts/sendRequestSummaries.ts",
     "test:request-summaries": "tsx src/scripts/testRequestSummaries.ts",
     "test:coordinator-page": "tsx src/scripts/testCoordinatorPage.ts",
+    "test:lead-unlock": "tsx src/scripts/testLeadUnlockFlow.ts",
+    "stripe:gst-rate": "tsx src/scripts/createStripeGstTaxRate.ts",
     "job:ndis-news-monitor": "tsx src/scripts/monitorNdisNews.ts",
     "audit:register": "tsx src/scripts/auditRegisterData.ts",
 "mark:verified-contacts": "tsx src/scripts/markVerifiedContacts.ts",

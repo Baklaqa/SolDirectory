@@ -25,6 +25,7 @@ export default function GrowthChart({ rows }: { rows: MonthlyRow[] }) {
   return (
     <div style={{ height: 300 }}>
       <Chart
+        aria-label={`Monthly sign-ups by role over ${rows.length} months. The running total of users is ${rows.length ? rows[rows.length - 1].cumulativeUsers : 0}.`}
         type="bar"
         data={{
           labels: rows.map((r) => label(r.month)),

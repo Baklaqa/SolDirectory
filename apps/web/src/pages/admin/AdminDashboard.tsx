@@ -190,7 +190,7 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-          <select className="ad-period-select" value={period} onChange={(e) => setPeriod(e.target.value)}>
+          <select className="ad-period-select" aria-label="Time period" value={period} onChange={(e) => setPeriod(e.target.value)}>
             {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
           <ExportMenu period={period} periodLabel={PERIODS.find((p) => p.value === period)?.label ?? ''} />
