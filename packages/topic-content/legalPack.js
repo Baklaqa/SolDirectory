@@ -29,7 +29,7 @@ export const LEGAL_PACK = [
     "n": 1,
     "title": "Collection notice",
     "meets": "Australian Privacy Principle 5 (notification of collection), APP 3.3 (consent for sensitive information), APP 8 (cross-border disclosure: none). Shown on the Get matched form immediately before the contact details step, with a link to the full privacy policy.",
-    "updated": "",
+    "updated": "16 October 2026",
     "sections": [
       {
         "heading": "",
@@ -87,7 +87,7 @@ export const LEGAL_PACK = [
           {
             "t": "ul",
             "items": [
-              "☐ **Required:**  I agree to SolDirectory collecting the information in this form, including sensitive information, and sharing it with up to 3 matched providers so they can contact me about this request.",
+              "☐ **Required:**  I agree to SolDirectory collecting the information in this form, including sensitive information, and sharing a summary of it with up to 10 matched providers, and my name and contact details with up to 3 of them, so they can contact me about this request.",
               "☐ **Required if sending for someone else:**  I have the permission of the person this request is for, or I’m their nominee, guardian or authorised representative.",
               "☐ **Optional:**  Send me occasional updates and guides from SolDirectory by email. I can unsubscribe at any time."
             ]
@@ -101,7 +101,7 @@ export const LEGAL_PACK = [
     "n": 2,
     "title": "Privacy policy",
     "meets": "Privacy Act 1988 (Cth) and all 13 Australian Privacy Principles, including APP 1.4 (policy content), APP 1.7 to 1.9 (automated decisions, in force from 10 December 2026), the Notifiable Data Breaches scheme, and the Spam Act 2003 (Cth) for electronic marketing.",
-    "updated": "15 October 2026",
+    "updated": "16 October 2026",
     "sections": [
       {
         "heading": "",
@@ -403,15 +403,23 @@ export const LEGAL_PACK = [
         ]
       },
       {
-        "heading": "2.12 Accessing, correcting and deleting your information",
+        "heading": "2.12 Accessing and correcting your information",
         "blocks": [
           {
             "t": "p",
-            "text": "You can ask to see the personal information we hold about you, ask us to correct it if it’s inaccurate, out of date, incomplete, irrelevant or misleading, or ask us to delete it. Contact our privacy officer using the details in section 2.15. We may need to confirm your identity first."
+            "text": "You can ask to see the personal information we hold about you, and ask us to correct it if it’s inaccurate, out of date, incomplete, irrelevant or misleading. You can also ask us to delete it."
           },
           {
             "t": "p",
-            "text": "We’ll respond within 30 days. We don’t charge for a request. If we refuse access or correction, we’ll tell you why in writing (unless that would be unreasonable) and how to complain. If we refuse a correction, you can ask us to attach a statement to your information saying you believe it’s incorrect."
+            "text": "**How to ask.**  Email directory@solbusinessconsultant.com.au with “Privacy request” in the subject line and say whether you want access, a correction or deletion. Or phone 0460 003 494, or write to our Privacy Officer at 97 John St, Glenroy VIC 3046. We may need to confirm your identity first."
+          },
+          {
+            "t": "p",
+            "text": "**Who to contact.**  Our Privacy Officer, Safdar Hussain. Full contact details are in section 2.15."
+          },
+          {
+            "t": "p",
+            "text": "**When we’ll reply.**  We’ll respond within 30 days. We don’t charge for a request. If we refuse access or correction, we’ll tell you why in writing (unless that would be unreasonable) and how to complain. If we refuse a correction, you can ask us to attach a statement to your information saying you believe it’s incorrect."
           },
           {
             "t": "p",
@@ -765,7 +773,7 @@ export const LEGAL_PACK = [
     "n": 5,
     "title": "Provider agreement",
     "meets": "Australian Consumer Law including the unfair contract terms regime for standard form small business contracts (penalties apply from 9 November 2023); Privacy Act 1988 (Cth); Spam Act 2003 (Cth); A New Tax System (Goods and Services Tax) Act 1999 (Cth); NDIS Act 2013 (Cth) and NDIS Code of Conduct as they apply to the provider.",
-    "updated": "15 October 2026",
+    "updated": "16 October 2026",
     "sections": [
       {
         "heading": "",
@@ -884,7 +892,6 @@ export const LEGAL_PACK = [
               "**Listed plan:**  free. Includes a verified profile, the weekly capacity check, email notification of matching briefs (summary only), and worker directory search.",
               "**Connect plan:**  $249 plus GST ($273.90 including GST) a month. Includes everything in Listed plus 15 unlocks a month, SMS alerts, 3 team seats and response-time reporting.",
               "**Founding member price:**  if you join as one of our first 100 founding members, your Connect plan is $149 plus GST ($163.90 including GST) a month for the first 12 months of your subscription, then our standard price.",
-              "**Free trial:**  new Connect subscriptions include a 7-day free trial. You won’t be charged if you cancel during the trial.",
               "Fees are charged monthly in advance to your nominated card by our payment processor, Stripe, and your subscription renews automatically each month until cancelled.",
               "We’ll issue a tax invoice for each payment showing our ABN and the GST included.",
               "Unused unlocks don’t carry over to the next month.",
@@ -1290,7 +1297,7 @@ export const LEGAL_PACK = [
     "n": 8,
     "title": "Statement of rights",
     "meets": "participant choice and control under the NDIS Act 2013 (Cth), the Statement of Rights under the Aged Care Act 2024 (Cth), the Australian Privacy Principles and the Australian Consumer Law, as they apply to using SolDirectory.",
-    "updated": "",
+    "updated": "15 October 2026",
     "sections": [
       {
         "heading": "",

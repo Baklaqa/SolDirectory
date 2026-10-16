@@ -145,7 +145,7 @@ function RequireAdminOrProProvider({ children }: { children: ReactElement }) {
         <h2>Not available for your account type</h2>
         <p>
           {user.role === 'provider'
-            ? "The worker directory is available on the Pro plan. "
+            ? "The worker directory is available on the Connect Plus plan. "
             : "This section isn't part of your role. "}
           <a href="/dashboard">Back to dashboard</a>
         </p>

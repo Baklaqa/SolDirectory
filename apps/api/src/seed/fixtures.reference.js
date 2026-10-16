@@ -50,13 +50,13 @@ export const VERIFY_QUEUE = [
 ];
 
 export const PLANS = [
-  { key: 'starter', name: 'Starter', price: '$0', per: '/month', quota: 0,
+  { key: 'starter', name: 'Listed', price: '$0', per: '/month', quota: 0,
     tagline: 'Stay listed and searchable. Lead briefs arrive as headlines only.',
     features: ['Public provider listing', 'Search the worker directory', 'Contact requests to workers', 'Lead headlines, no contact details'] },
-  { key: 'growth', name: 'Growth', price: '$249', per: '/month', quota: 15, popular: true,
+  { key: 'growth', name: 'Connect', price: '$249', per: '/month', quota: 15, popular: true,
     tagline: 'Fifteen participant leads a month, matched to your registration groups and suburbs.',
     features: ['15 lead unlocks per month', 'Full brief, budget and contact details', 'Matched to your service areas', 'Three team seats', 'Response time reporting'] },
-  { key: 'scale', name: 'Scale', price: '$649', per: '/month', quota: Infinity,
+  { key: 'scale', name: 'Connect Plus', price: '$649', per: '/month', quota: Infinity,
     tagline: 'Unlimited unlocks and exports for larger intake teams.',
     features: ['Unlimited lead unlocks', 'CSV export and webhook feed', 'Ten team seats', 'Named account manager'] }
 ];

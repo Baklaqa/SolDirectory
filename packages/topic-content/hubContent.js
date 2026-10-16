@@ -354,8 +354,8 @@ const PROVIDERS = {
     { heading: 'How enquiries reach you', list: PROVIDER_REACH.map((c) => ({ text: c.body, title: c.title })) },
     { heading: 'How it works', paragraphs: ['Complete your profile and tell us where you have capacity. Listing does not guarantee enquiries: matching depends on demand and how closely your profile fits what people are searching for.'], list: PROVIDER_STEPS.map((c) => ({ text: c.body, title: c.title })) },
     {
-      heading: 'Free listing, or Growth',
-      paragraphs: ['A Starter listing provides directory visibility and limited enquiry information. Growth adds contact access and a monthly lead allowance.'],
+      heading: 'Free listing, or Connect',
+      paragraphs: ['A Listed profile provides directory visibility and limited enquiry information. Connect adds contact access and a monthly lead allowance.'],
       list: [
         { text: PROVIDER_PLANS.starter.features.join('; ') + '.', title: `${PROVIDER_PLANS.starter.name}: ${PROVIDER_PLANS.starter.price}` },
         { text: PROVIDER_PLANS.growth.features.join('; ') + '.', title: `${PROVIDER_PLANS.growth.name}: ${PROVIDER_PLANS.growth.price}` },

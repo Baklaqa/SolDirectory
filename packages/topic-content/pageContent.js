@@ -135,7 +135,7 @@ export const PROVIDER_FAQS = [
   },
   {
     question: 'How much does it cost?',
-    answer: 'Claiming and verifying your listing is free. The Growth plan is a flat monthly subscription that includes a set number of lead unlocks — see the comparison below for current pricing and inclusions.',
+    answer: 'Claiming and verifying your listing is free. The Connect plan is a flat monthly subscription that includes a set number of lead unlocks — see the comparison below for current pricing and inclusions.',
   },
   {
     question: 'Will listing guarantee me new clients?',
@@ -143,7 +143,7 @@ export const PROVIDER_FAQS = [
   },
   {
     question: 'Can I cancel any time?',
-    answer: 'Yes. Growth is billed monthly with no lock-in contract — cancel from your dashboard whenever you like and you will not be billed again for the next cycle.',
+    answer: 'Yes. Connect is billed monthly with no lock-in contract — cancel from your dashboard whenever you like and you will not be billed again for the next cycle.',
   },
   {
     question: 'How do participants find me?',

@@ -24,6 +24,7 @@ export default function AboutPage() {
           <Link to="/">Home</Link> <span aria-hidden="true">/</span> <span>About</span>
         </nav>
         <h1>About SolDirectory</h1>
+        <p className="legal-summary">Last updated: 15 October 2026</p>
         <p className="legal-summary">
           SolDirectory helps people find disability and aged care support that can actually start. You tell us what you need once, and
           providers who have confirmed this week that they’re taking new people can respond. You decide who to speak to, and you’re never

@@ -53,6 +53,7 @@ export default function ContactPage() {
           <Link to="/">Home</Link> <span aria-hidden="true">/</span> <span>Contact</span>
         </nav>
         <h1>Get in touch</h1>
+        <p className="legal-summary">Last updated: 15 October 2026</p>
         <p className="legal-summary">We’re here to help you use SolDirectory, update a listing, or raise a concern.</p>
 
         <section className="legal-section">

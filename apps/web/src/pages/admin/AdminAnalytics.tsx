@@ -218,15 +218,15 @@ export default function AdminAnalytics({ period, periodLabel }: { period: string
           <h3 className="ad-panel-title">Provider plans</h3>
           {planTotal === 0 ? <p className="ad-empty-note">No providers yet.</p> : (
             <>
-              <div className="ax-stack" role="img" aria-label={`Starter ${plans.starter ?? 0}, Growth ${plans.growth ?? 0}, Pro ${plans.pro ?? 0}`}>
+              <div className="ax-stack" role="img" aria-label={`Listed ${plans.starter ?? 0}, Connect ${plans.growth ?? 0}, Connect Plus ${plans.pro ?? 0}`}>
                 {(plans.starter ?? 0) > 0 && <span style={{ width: `${pct(plans.starter ?? 0, planTotal)}%`, background: '#C4CEDD' }} />}
                 {(plans.growth ?? 0) > 0 && <span style={{ width: `${pct(plans.growth ?? 0, planTotal)}%`, background: '#1769E0' }} />}
                 {(plans.pro ?? 0) > 0 && <span style={{ width: `${pct(plans.pro ?? 0, planTotal)}%`, background: '#0B2D5C' }} />}
               </div>
               <ul className="ax-legend">
                 <li><i style={{ background: '#C4CEDD' }} /> Listed <b>{fmt(plans.starter ?? 0)}</b></li>
-                <li><i style={{ background: '#1769E0' }} /> Growth <b>{fmt(plans.growth ?? 0)}</b></li>
-                <li><i style={{ background: '#0B2D5C' }} /> Pro <b>{fmt(plans.pro ?? 0)}</b></li>
+                <li><i style={{ background: '#1769E0' }} /> Connect <b>{fmt(plans.growth ?? 0)}</b></li>
+                <li><i style={{ background: '#0B2D5C' }} /> Connect Plus <b>{fmt(plans.pro ?? 0)}</b></li>
               </ul>
               <Link to="/admin/plans" className="ad-table-link">Manage plans →</Link>
             </>
