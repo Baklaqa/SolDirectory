@@ -33,8 +33,10 @@ noindex on the legal pages have been removed; the pages are live and indexable.
    The text uses cautious wording until `LEGAL_PRACTICES.australiaOnly` is set true (`legalPack.js`).
 2. **Administrator two-factor "required".** Set `ADMIN_REQUIRE_2FA=true` on the server once the admins have enrolled, then set
    `LEGAL_PRACTICES.adminTwoFactor` true.
-3. **Founding-member price ($149 for the first 100), 7-day trial, annual option, failed-payment downgrade after 14 days:**
-   need Stripe prices, coupons and a billing change. Not built.
+3. **Founding-member price ($149 for the first 100), annual option, failed-payment downgrade after 14 days:**
+   need Stripe prices, coupons and a billing change. Not built, and the provider agreement still states the founding price and the
+   downgrade as facts: build them or ask for the text to change. (The 7-day free trial was removed from the agreement on 2026-10-16:
+   Checkout creates no trial, so the pricing page and the agreement now agree.)
 4. **Distance ordering** only where a page already filters by area.
 5. **"Business verified" / "Registered NDIS provider" labels:** no ABN-register (ABR) check exists, so nothing shows them.
 6. **Editorial policy:** says every guide names an author and reviewer with a biography. Needs real people.
@@ -51,3 +53,10 @@ noindex on the legal pages have been removed; the pages are live and indexable.
 - Old browser tabs with the previous form are refused until reloaded (consent is required).
 - New environment variables (all optional): `ADMIN_REQUIRE_2FA`, `MIN_PUBLIC_WORKERS`, `SMS_SENDER_ID`, `REQUEST_DEIDENTIFY_AFTER_MONTHS`,
   `OUTCOME_CHECK_AFTER_DAYS`, `BUSINESS_*`.
+- Plan names are Listed, Connect and Connect Plus everywhere in the code. Stripe Checkout builds the product name from the plan
+  name (`SolDirectory Connect plan`), so new invoices say Connect. A product or price created earlier in the Stripe dashboard under
+  the old name "Growth" keeps that name on existing subscriptions until it is renamed there.
+- The web build (`apps/web/scripts/prerender.mjs`) now writes static HTML for the 12 legal and policy pages, /about and /contact.
+  Before this, the API answered most of them with a 404 "Page not found" to any visitor that did not run JavaScript. After deploy,
+  fetch `/about`, `/contact`, `/collection-notice` and `/statement-of-rights` and confirm each returns 200.
+

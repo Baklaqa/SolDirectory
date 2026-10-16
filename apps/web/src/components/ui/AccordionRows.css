@@ -41,3 +41,5 @@
 @media (prefers-reduced-motion: reduce) {
   .acc-row, .acc-mark, .acc-chevron, .acc-panel, .acc-row.is-open .acc-panel { transition: none; }
 }
+
+.acc-panel-inner p a { text-decoration: underline; text-underline-offset: 2px; }

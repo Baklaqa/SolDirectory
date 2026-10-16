@@ -506,6 +506,7 @@ export default function Directory() {
               </div>
             )}
 
+            <h2 className="visually-hidden">Providers</h2>
             <ul className={`dir-grid${pageLoading ? ' dir-grid-loading' : ''}`} aria-busy={pageLoading}>
               {results.map((p) => {
                 const name = p.tradingName || p.legalEntityName || 'Provider';

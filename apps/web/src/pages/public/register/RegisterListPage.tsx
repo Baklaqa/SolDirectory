@@ -308,6 +308,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
                 href: registerPath(kind, i.slug),
               }))}
             />
+            <h2 className="visually-hidden">Providers listed in {areaName}</h2>
             <ul className={`dir-grid${loading ? ' dir-grid-loading' : ''}`} aria-busy={loading}>
               {data.items.map((i) => <RegisterCard key={`${i.type}-${i.slug}`} item={i} />)}
             </ul>

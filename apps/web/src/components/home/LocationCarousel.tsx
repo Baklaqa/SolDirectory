@@ -183,7 +183,7 @@ export default function LocationCarousel({ counts }: { counts: Record<string, nu
             const idx = slides.findIndex((s) => s.code === code);
             const on = current.code === code;
             return (
-              <button key={code} type="button" className={`lc-dot${on ? ' is-on' : ''}`} aria-pressed={on} aria-label={STATES.find((s) => s.code === code)?.name} onClick={() => setActive(idx)}>
+              <button key={code} type="button" className={`lc-dot${on ? ' is-on' : ''}`} aria-pressed={on} aria-label={`${code}, ${STATES.find((s) => s.code === code)?.name ?? code}`} onClick={() => setActive(idx)}>
                 <span>{code}</span>
               </button>
             );

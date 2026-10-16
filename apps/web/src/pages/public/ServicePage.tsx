@@ -17,6 +17,7 @@ export default function ServicePage() {
   return (
     <>
       <PublicHeader />
+      <main>
 
       <section className="svc-hero">
         <p className="svc-breadcrumb">
@@ -57,6 +58,7 @@ export default function ServicePage() {
         </p>
       </section>
 
+      </main>
       <PublicFooter />
     </>
   );

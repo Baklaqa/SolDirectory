@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getProviderProfile, requestProviderContact, getShortlistStatus,
@@ -6,6 +6,7 @@ import {
 } from '../api/providerResources';
 import { ApiError } from '../api/client';
 import { useToast } from './ui/Toast';
+import { useFocusTrap } from '../lib/useFocusTrap';
 import './ProviderDetailModal.css';
 
 interface Props {
@@ -27,6 +28,8 @@ export default function ProviderDetailModal({ providerId, onClose, onShortlistCh
   const [shortlistBusy, setShortlistBusy] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [callbackSent, setCallbackSent] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(cardRef);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -92,7 +95,7 @@ export default function ProviderDetailModal({ providerId, onClose, onShortlistCh
 
   return (
     <div className="pdm-overlay" onClick={onClose}>
-      <div className="pdm-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="pdm-card" ref={cardRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Provider details">
         <button className="pdm-close" onClick={onClose} aria-label="Close">✕</button>
 
         {loading && <p className="pdm-loading">Loading…</p>}

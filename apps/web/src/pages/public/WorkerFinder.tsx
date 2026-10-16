@@ -93,6 +93,7 @@ export default function WorkerFinder() {
   return (
     <>
       <PublicHeader />
+      <main>
       <div className="directory-page-header directory-page-header--workers">
         <div className="directory-page-header-inner">
           <span className="eyebrow eyebrow-light"><span className="eyebrow-rule" />Independent workers</span>
@@ -192,6 +193,7 @@ export default function WorkerFinder() {
           />
         )}
 
+        <h2 className="visually-hidden">Independent workers</h2>
         <ul className="dir-grid" aria-busy={loading}>
           {(data?.items ?? []).map((w) => {
             const name = `${w.firstName} ${w.lastInitial ? `${w.lastInitial}.` : ''}`.trim();
@@ -248,6 +250,7 @@ export default function WorkerFinder() {
         </section>
       </section>
       <RelatedArticles standalone themes={['workers', 'choosing']} heading="Working with an independent worker" />
+      </main>
       <PublicFooter />
     </>
   );

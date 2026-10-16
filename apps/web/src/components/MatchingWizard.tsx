@@ -236,13 +236,35 @@ export default function MatchingWizard() {
   const currentStepId = steps[safeIndex];
   const hasProgress = Object.values(form).some((v) => v.trim() !== '');
 
+  // Remember what had focus when the dialog opened and give it back when the dialog closes (WCAG 2.4.3).
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (isOpen) openerRef.current = document.activeElement as HTMLElement | null;
+    else if (openerRef.current) { openerRef.current.focus?.(); openerRef.current = null; }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) headingRef.current?.focus();
   }, [isOpen, stepIndex, phase]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && isOpen) requestClose();
+      if (!isOpen) return;
+      if (e.key === 'Escape') { requestClose(); return; }
+      if (e.key !== 'Tab') return;
+      // Keep Tab and Shift+Tab inside the dialog that is on top (the "leave?" prompt sits above the form).
+      const dialogs = document.querySelectorAll<HTMLElement>('.mw-overlay [role="dialog"], .mw-overlay [role="alertdialog"]');
+      const root = dialogs[dialogs.length - 1];
+      if (!root) return;
+      const items = Array.from(root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !root.contains(active)) { e.preventDefault(); first.focus(); return; }
+      if (e.shiftKey && (active === first || !items.includes(active))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);

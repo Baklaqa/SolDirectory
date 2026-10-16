@@ -264,9 +264,12 @@ export default function ProviderListingPage({ mode }: { mode: Mode }) {
               </div>
             </div>
           ) : (
-            <ul className="dir-grid" aria-busy={loading}>
-              {items.map((p) => <ProviderCardItem key={p.id} p={p} />)}
-            </ul>
+            <>
+              <h2 className="visually-hidden">Providers</h2>
+              <ul className="dir-grid" aria-busy={loading}>
+                {items.map((p) => <ProviderCardItem key={p.id} p={p} />)}
+              </ul>
+            </>
           )}
           <Pagination page={page} totalPages={totalPages} disabled={loading} onChange={(n) => { setParams(n > 1 ? { page: String(n) } : {}); topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
         </section>

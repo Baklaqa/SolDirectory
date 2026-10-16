@@ -43,9 +43,9 @@ if (!site) {
 }
 
 /** Bundles a TS data module (and what it imports) to a temp ESM file and loads it. */
-async function loadTs(relPath) {
+async function loadTs(relPath, define = {}) {
   const out = path.join(os.tmpdir(), `prerender-${path.basename(relPath)}-${process.pid}.mjs`);
-  await build({ entryPoints: [path.join(webRoot, relPath)], outfile: out, bundle: true, format: 'esm', platform: 'node', logLevel: 'silent' });
+  await build({ entryPoints: [path.join(webRoot, relPath)], outfile: out, bundle: true, format: 'esm', platform: 'node', logLevel: 'silent', define });
   const mod = await import(`${pathToFileURL(out).href}?t=${Date.now()}`);
   fs.rmSync(out, { force: true });
   return mod;
@@ -54,9 +54,12 @@ async function loadTs(relPath) {
 const {
   GUIDE_DOCS, fundingShellEditorial, FUNDING_SEO_DESCRIPTIONS, EDITORIAL_BLOG_POSTS, GLOSSARY, EDITORIAL_STANDARDS,
   INDEPENDENT_WORKER_FAQS, PROVIDER_FAQS, WORKER_PAGE_GUIDES, PROVIDER_PAGE_GUIDES, WORKER_SETUP_STEPS, PROVIDER_LISTING_CHECKS,
+  LEGAL_PACK, legalDocBySlug,
 } = await import(pathToFileURL(path.resolve(webRoot, '../../packages/topic-content/index.js')).href);
 const { FUNDING_CATEGORY_GROUPS, FUNDING_CONTENT } = await loadTs('src/data/fundingContent.ts');
 const { STATIC_MEGA_MENU_FALLBACK } = await loadTs('src/data/staticMegaMenuFallback.ts');
+const { LEGAL_PAGE_ORDER } = await loadTs('src/pages/public/legalContent.ts');
+const { siteConfig, phoneHref } = await loadTs('src/config/siteConfig.ts', { 'import.meta.env': JSON.stringify(env) });
 
 const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -289,6 +292,84 @@ for (const f of FUNDING_CONTENT) {
       `<h2>Official sources</h2>${ul((editorial.sources ?? []).map((source) => `<a href="${esc(source.href)}" rel="noopener noreferrer">${esc(source.label)}</a>`))}` +
       (siblings.length ? `<h2>Other topics in ${esc(f.categoryGroup)}</h2>${ul(siblings.map((s) => a(`/funding/${s.slug}/`, s.name)))}` : '') +
       `<p>${a('/find-a-provider', 'Find a provider')} &middot; ${a('/funding', 'All funding topics')}</p>`,
+  });
+}
+
+// ---- Legal and policy pages, About and Contact ----
+// These are client-rendered pages with no per-request data, so they get a real HTML file like the guides do. Without one
+// the API answered most of them with a 404 "Page not found" for anything that did not run JavaScript.
+{
+  // "**Lead-in.** rest" → bold lead-in, as LegalPage.tsx does.
+  const inline = (text) => String(text).split('**').map((part, i) => (i % 2 === 1 ? `<strong>${esc(part)}</strong>` : esc(part))).join('');
+  const legalBlock = (b) => {
+    if (b.t === 'ul') return `<ul>${b.items.map((item) => `<li>${inline(item)}</li>`).join('')}</ul>`;
+    if (b.t === 'table') {
+      return '<table><thead><tr>' + b.head.map((cell) => `<th scope="col">${inline(cell)}</th>`).join('') + '</tr></thead><tbody>' +
+        b.rows.map((row) => '<tr>' + row.map((cell, i) => (i === 0 ? `<th scope="row">${inline(cell)}</th>` : `<td>${inline(cell)}</td>`)).join('') + '</tr>').join('') +
+        '</tbody></table>';
+    }
+    return `<p>${inline(b.text)}</p>`;
+  };
+  const contactParagraph = `${esc(siteConfig.legalEntity)}${siteConfig.contactAddress ? `, ${esc(siteConfig.contactAddress)}` : ''}.` +
+    (siteConfig.contactEmail ? ` Email ${a(`mailto:${siteConfig.contactEmail}`, siteConfig.contactEmail)}.` : '') +
+    (siteConfig.contactPhone ? ` Phone ${esc(siteConfig.contactPhone)}${siteConfig.supportHours ? ` (${esc(siteConfig.supportHours)})` : ''}.` : '');
+
+  for (const slug of LEGAL_PAGE_ORDER) {
+    const doc = legalDocBySlug(slug);
+    if (!doc) continue;
+    pages.push({
+      path: `/${slug}`,
+      title: `${doc.title} | SolDirectory`,
+      description: `${doc.title} for SolDirectory, run by Sol Business Consultant Pty Ltd.`,
+      crumbs: [{ name: 'Home', path: '/' }, { name: doc.title, path: `/${slug}` }],
+      jsonLd: [{ '@type': 'WebPage', name: doc.title, url: `${site}/${slug}`, inLanguage: 'en-AU' }],
+      body: (c) => `${c}<h1>${esc(doc.title)}</h1>` +
+        (doc.updated ? `<p>Last updated: ${esc(doc.updated)}</p>` : '') +
+        doc.sections.map((sec) => `<section>${sec.heading ? `<h2>${esc(sec.heading)}</h2>` : ''}${sec.blocks.map(legalBlock).join('')}</section>`).join('') +
+        `<section><h2>Contact</h2><p>${contactParagraph}</p></section>` +
+        `<nav aria-label="Other legal pages">${LEGAL_PAGE_ORDER.filter((x) => x !== slug).map((x) => {
+          const other = LEGAL_PACK.find((entry) => entry.slug === x);
+          return other ? a(`/${x}`, other.title) : '';
+        }).filter(Boolean).join(' &middot; ')}</nav>`,
+    });
+  }
+
+  // Same words as AboutPage.tsx and ContactPage.tsx.
+  pages.push({
+    path: '/about',
+    title: 'About SolDirectory',
+    description: 'Who operates SolDirectory, how it makes money, our related businesses and how we keep listings fair.',
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }],
+    jsonLd: [{ '@type': 'AboutPage', name: 'About SolDirectory', url: `${site}/about`, about: { '@type': 'Organization', name: 'SolDirectory', url: site } }],
+    body: (c) => `${c}<h1>About SolDirectory</h1><p>Last updated: 15 October 2026</p>` +
+      '<p>SolDirectory helps people find disability and aged care support that can actually start. You tell us what you need once, and providers who have confirmed this week that they’re taking new people can respond. You decide who to speak to, and you’re never obliged to go ahead.</p>' +
+      '<h2>Why we built it</h2><p>We run a registered NDIS provider ourselves, so we see both sides every day: families phoning ten providers to find one with room, and good providers who can’t reach the people looking for them. SolDirectory is built to close that gap honestly.</p>' +
+      `<h2>Who runs SolDirectory</h2><p>SolDirectory is operated by ${esc(siteConfig.legalEntity)}, based in Glenroy, Victoria. Our director is Safdar Hussain. You can reach us on ${a('/contact', 'our contact page')}.</p>` +
+      '<h2>Our related businesses, and how we keep things fair</h2><p>We want you to know exactly who we are:</p>' +
+      ul([
+        'Our director also owns WeCare Disability Services, a registered NDIS provider. WeCare is listed on SolDirectory under the same rules as every other provider. It’s labelled “Related business”, it gets no priority in matching, and it’s never added to a request by hand.',
+        'Sol Business Consultant also helps organisations become registered NDIS providers. We only mention those services on pages for providers and workers, clearly labelled as our own. Our guides for participants and families never recommend Sol.',
+      ]) +
+      `<h2>How we make money</h2><p>SolDirectory is free for participants and families. Providers can list for free, and pay a monthly subscription if they want to see the contact details of people who send requests. We never take a cut of what a provider charges you, and paying never moves a provider higher in results. Read exactly how results are ordered in our ${a('/listing-and-ranking-policy', 'listing and ranking policy')}.</p>` +
+      `<h2>Where our listings come from</h2><p>Some listings are providers who have joined SolDirectory and keep their profiles up to date. Others come from the public NDIS Commission and My Aged Care registers. See ${a('/data-sources', 'data sources and attribution')}.</p>`,
+  });
+  pages.push({
+    path: '/contact',
+    title: 'Contact SolDirectory',
+    description: 'Phone, email and post details for SolDirectory, and a form to ask for help, update a listing or raise a concern.',
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }],
+    jsonLd: [{ '@type': 'ContactPage', name: 'Contact SolDirectory', url: `${site}/contact` }],
+    body: (c) => `${c}<h1>Get in touch</h1><p>Last updated: 15 October 2026</p>` +
+      '<p>We’re here to help you use SolDirectory, update a listing, or raise a concern.</p>' +
+      ul([
+        ...(siteConfig.contactPhone ? [`<strong>Phone:</strong> ${a(phoneHref(siteConfig.contactPhone), siteConfig.contactPhone)}${siteConfig.supportHours ? `, ${esc(siteConfig.supportHours)}` : ''}`] : []),
+        ...(siteConfig.contactEmail ? [`<strong>Email:</strong> ${a(`mailto:${siteConfig.contactEmail}`, siteConfig.contactEmail)}`] : []),
+        ...(siteConfig.contactAddress ? [`<strong>Post:</strong> SolDirectory, ${esc(siteConfig.contactAddress)}`] : []),
+      ]) +
+      `<p>Looking for support right now? ${a('/find-a-provider', 'Find a provider')} or get matched for free from the button at the top of the page.</p>` +
+      `<p>Need to make a complaint? See our ${a('/complaints', 'complaints policy')}.</p>` +
+      '<p>If someone is in immediate danger, call 000. SolDirectory is not an emergency service.</p>' +
+      '<h2>Send us a message</h2><p>The form on this page sends your message to our team by email.</p>',
   });
 }
 

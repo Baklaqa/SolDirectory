@@ -106,7 +106,7 @@ function BlogCard({ post, featured = false, badge }: { post: WPBlogPost; feature
   const cardImage = !featured && fullImage.startsWith('/images/blog/') ? blogThumb(fullImage) : fullImage;
   return (
     <article className={`blog-card${featured ? ' blog-card-featured' : ''}`}>
-      <Link className="blog-card-image-link" to={`/blog/${post.slug}`} aria-label={`Read ${post.title}`}>
+      <Link className="blog-card-image-link" to={`/blog/${post.slug}`} aria-label={`${badge ? `${badge}: ` : ''}Read ${post.title}`}>
         <img
           className="blog-card-image"
           src={cardImage}

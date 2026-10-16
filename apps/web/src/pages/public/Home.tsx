@@ -123,6 +123,7 @@ export default function Home() {
   return (
     <>
       <PublicHeader />
+      <main>
 
       <section id="top" className="hero-section" data-pointer>
         <div className="hero-photo-bg">
@@ -152,7 +153,7 @@ export default function Home() {
       <section className="info-cards" aria-label="How Get Matched works">
         <div className="info-card info-card-accent" data-reveal data-pointer style={{ '--rv': 0 } as CSSProperties}>
           <span className="info-step">Step 1</span>
-          <h3 className="info-title">Submit your support request</h3>
+          <h2 className="info-title">Submit your support request</h2>
           <p className="info-body info-body-light">Provide your location, preferred timeframe and funding information so relevant providers can assess your request.</p>
           <button type="button" className="info-action" onClick={() => openMatchModal()}>
             Get matched <span aria-hidden="true">→</span>
@@ -161,7 +162,7 @@ export default function Home() {
 
         <div className="info-card" data-reveal data-pointer style={{ '--rv': 1 } as CSSProperties}>
           <span className="info-step">Step 2</span>
-          <h3 className="info-title">Review relevant provider options</h3>
+          <h2 className="info-title">Review relevant provider options</h2>
           <p className="info-body">Your request is compared with provider service areas, funding arrangements and recently confirmed availability.</p>
           <Link to="/find-a-provider" className="link-btn">
             Browse the directory →
@@ -170,7 +171,7 @@ export default function Home() {
 
         <div className="info-card" data-reveal data-pointer style={{ '--rv': 2 } as CSSProperties}>
           <span className="info-step">Step 3</span>
-          <h3 className="info-title">Make an informed choice</h3>
+          <h2 className="info-title">Make an informed choice</h2>
           <p className="info-body">Notified providers may contact you directly. You can compare options, verify credentials and decide whether to enter a service agreement.</p>
           <Link to="/privacy" className="link-btn">
             How we handle your details →
@@ -398,6 +399,7 @@ export default function Home() {
         </div>
       </section>
 
+      </main>
       <PublicFooter />
     </>
   );

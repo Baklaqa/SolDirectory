@@ -48,6 +48,11 @@ export function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => { setMenuOpen(false); }, [pathname]);
+  // The skip link points at #main-content, so give the page's <main> that id (once) wherever it is rendered.
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (main && !main.id) main.id = 'main-content';
+  }, [pathname]);
   const getMatched = () => { setMenuOpen(false); openMatchModal(); };
 
   return (

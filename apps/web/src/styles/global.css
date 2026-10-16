@@ -74,3 +74,7 @@ input, select, textarea {
 .sd-btn-outline { background: #fff; color: #0F4FA8; border-color: #B9CFEF; }
 .sd-btn-outline:hover:not(:disabled) { background: #F2F7FF; border-color: #1769E0; color: #0B3F8F; }
 @media (prefers-reduced-motion: reduce) { .sd-btn { transition: none; } .sd-btn-primary:hover:not(:disabled) { transform: none; } }
+
+/* A link inside running text is underlined, so it is not told apart by colour alone (WCAG 1.4.1). Linked buttons and cards carry a class and are left alone. */
+p a:not([class]), li > a:not([class]):not(:only-child) { text-decoration: underline; text-underline-offset: 2px; }
+.fp-lede a { text-decoration: underline; text-underline-offset: 2px; }
