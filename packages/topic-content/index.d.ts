@@ -205,6 +205,22 @@ export function serviceLocalDetail(
   suburbSlug: string,
   stateRows: { slug: string; suburb: string; count: number }[] | undefined,
   local: Partial<ServiceLocalData> | null | undefined,
+  areaSupports?: { category: string; count: number }[],
+): { analysis: { heading: string; paragraphs: string[] } | null; faqs: { question: string; answer: string }[] };
+export interface AreaLocalData {
+  profile: ServiceLocalData['profile'];
+  suburbsCovered: number;
+  busiest: { slug: string; suburb: string; count: number }[];
+  rank: { position: number; of: number; top: { suburb: string; count: number } } | null;
+  nearby: { slug: string; suburb: string; count: number; km: number }[];
+  languages: { language: string; count: number }[];
+}
+export function registerAreaDetail(
+  kind: { register: string; plain: string },
+  areaName: string,
+  stateName: string,
+  suburbName: string | null,
+  local: Partial<AreaLocalData> | null | undefined,
 ): { analysis: { heading: string; paragraphs: string[] } | null; faqs: { question: string; answer: string }[] };
 export function serviceLocalSections(
   service: string,

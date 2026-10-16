@@ -3,7 +3,9 @@ import 'dotenv/config';
 /**
  * Checks the service x suburb pages against the gap audit (A1, A2). Read-only; needs the API running.
  *
- *   npx tsx src/scripts/auditServicePages.ts --base http://localhost:4000 [--sample 80]
+ *   npx tsx src/scripts/auditServicePages.ts --base http://localhost:4000 [--sample 80] [--pages service|register]
+ *
+ * --pages register audits the register suburb pages (/ndis-providers/vic/preston) the same way instead of the service x suburb pages.
  *
  * 1. Indexing: a sample of pages is fetched as a crawler sees it, and each page's robots tag is compared with the current
  *    phase (indexed if and only if it is in the sitemap).
@@ -58,17 +60,32 @@ async function main() {
     TAS: 'Tasmania', ACT: 'Australian Capital Territory', NT: 'Northern Territory',
   };
 
-  const pages: { service: string; state: string; suburb: string; slug: string; count: number; indexed: boolean }[] = [];
-  for (const service of REAL_SERVICES) {
-    for (const s of await computeServiceSuburbs(service)) {
-      pages.push({ service, state: s.state, suburb: s.suburb, slug: s.slug, count: s.count, indexed: s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(s.state, s.suburb, s.count) });
+  const pages: { service: string; state: string; suburb: string; slug: string; count: number; indexed: boolean; path?: string; localHeadings?: string[] }[] = [];
+  if (arg('pages') === 'register') {
+    const { computeHub } = await import('../controllers/register.controller.js');
+    const { MIN_SUBURB_LISTINGS } = await import('../services/registerNormalise.js');
+    for (const [type, path] of [['ndis', 'ndis-providers'], ['aged_care', 'aged-care-providers']] as const) {
+      for (const s of (await computeHub(type)).suburbs) {
+        pages.push({
+          service: '', state: s.state, suburb: s.suburb, slug: s.slug, count: s.count,
+          indexed: s.count >= MIN_SUBURB_LISTINGS && isIndexableSuburb(s.state, s.suburb, s.count),
+          path: `/seo-shell/${path}/${s.state.toLowerCase()}/${s.slug}`,
+          localHeadings: [`Who is listed in ${s.suburb}`],
+        });
+      }
+    }
+  } else {
+    for (const service of REAL_SERVICES) {
+      for (const s of await computeServiceSuburbs(service)) {
+        pages.push({ service, state: s.state, suburb: s.suburb, slug: s.slug, count: s.count, indexed: s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(s.state, s.suburb, s.count) });
+      }
     }
   }
   const rand = rng(20261016);
   const pick = (list: typeof pages, n: number) => [...list].sort(() => rand() - 0.5).slice(0, n);
   const indexedSample = pick(pages.filter((p) => p.indexed), sampleSize);
   const otherSample = pick(pages.filter((p) => !p.indexed && p.count >= MIN_INDEXABLE_SERVICE_LOCATION), Math.max(10, Math.floor(sampleSize / 4)));
-  const urlFor = (p: (typeof pages)[number]) => `${base}/seo-shell/services/${slugify(p.service)}/${p.state.toLowerCase()}/${p.slug}`;
+  const urlFor = (p: (typeof pages)[number]) => `${base}${p.path ?? `/seo-shell/services/${slugify(p.service)}/${p.state.toLowerCase()}/${p.slug}`}`;
 
   // 1. Indexing
   let wrong = 0;
@@ -98,7 +115,7 @@ async function main() {
     const blocksWithoutLocal: string[] = [];
     for (const sec of sections(html)) {
       // The sections added for A2: where the suburb ranks, the closest suburbs (with the nearest-town note and languages line), who lists the service here, and the questions.
-      const isLocal = [`${p.suburb} at a glance`, `${p.service} near ${p.suburb}`, `Who lists ${p.service.toLowerCase()} in ${p.suburb}`, `Questions about ${p.service.toLowerCase()} in ${p.suburb}`].includes(sec.heading);
+      const isLocal = p.localHeadings ? p.localHeadings.includes(sec.heading) : [`${p.suburb} at a glance`, `${p.service} near ${p.suburb}`, `Who lists ${p.service.toLowerCase()} in ${p.suburb}`, `Questions about ${p.service.toLowerCase()} in ${p.suburb}`].includes(sec.heading);
       const parts = [sec.heading, ...sec.lines].flatMap((line) => line.split(/(?<=[.!?])\s+/)).filter((x) => x.length >= 40 && /[.!?]$/.test(x)).map(norm);
       all.push(...parts);
       if (!isLocal) withoutLocal.push(...parts);

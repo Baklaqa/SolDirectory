@@ -314,7 +314,7 @@ export function serviceLocalSections(service, suburbName, stateName, local, inde
  * something its neighbours do not. `stateRows` is the state's suburbs for the service ({ slug, suburb, count }); `local` is the
  * ServiceLocalData from the API. Returns { analysis: { heading, paragraphs } | null, faqs: [{ question, answer }] }.
  */
-export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, stateRows, local) {
+export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, stateRows, local, areaSupports) {
   const p = local?.profile;
   if (!p || !p.total) return { analysis: null, faqs: [] };
   const lower = String(service).toLowerCase();
@@ -332,10 +332,11 @@ export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, s
     [p.reach?.district, '6 to 25 areas'],
     [p.reach?.regional, '26 to 100 areas'],
     [p.reach?.wide, 'more than 100 areas'],
-  ].filter(([c]) => c > 0).map(([c, label]) => `${n(c)} cover ${label}`);
+  ].filter(([c]) => c > 0).map(([c, label]) => `${n(c)} ${Number(c) === 1 ? 'covers' : 'cover'} ${label}`);
   const moreThanOneState = p.multiState > 0 ? ` ${plural(p.multiState, 'is', 'are')} listed in more than one state.` : '';
-  const top = (p.topSupports ?? []).slice(0, 5).map((t) => `${t.category.toLowerCase()} (${n(t.count)} of ${n(p.total)})`);
+  const top = (p.topSupports ?? []).slice(0, 5).map((t) => `${lowerFirst(t.category)} (${n(t.count)} of ${n(p.total)})`);
 
+  const rows = (stateRows ?? []).filter((r) => r && Number(r.count) > 0);
   const paragraphs = [`${plural(p.total, 'register listing', 'register listings')} for ${lower} cover ${suburbName}: ${registers}.`];
   if (tiers.length) paragraphs.push(`Reach varies. ${join(tiers).replace(/^./, (c) => c.toUpperCase())}.${moreThanOneState}`);
   if (top.length) paragraphs.push(`Listings that include ${lower} here also list ${join(top)}.`);
@@ -348,9 +349,22 @@ export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, s
   }
   if ((p.localNames ?? []).length) paragraphs.push(`Listings that cover 5 or fewer areas include ${join(p.localNames)}.`);
   if (p.withWebsite) paragraphs.push(`${n(p.withWebsite)} of the ${n(p.total)} listings link to their own website.`);
+  // Where this service sits among all the supports listed in the suburb, and how the suburb compares with its closest neighbours.
+  const supportsHere = (areaSupports ?? []).filter((s) => s && Number(s.count) > 0).sort((a, b) => b.count - a.count || String(a.category).localeCompare(String(b.category)));
+  const own = supportsHere.find((s) => s.category === service);
+  if (own && supportsHere.length > 1) {
+    const position = 1 + supportsHere.filter((s) => s.count > own.count).length;
+    const lead = supportsHere[0];
+    paragraphs.push(`Register listings in ${suburbName} cover ${n(supportsHere.length)} different supports. ${service} is number ${n(position)} by listings${lead.category === service ? '' : `; the most listed is ${lowerFirst(lead.category)}, with ${n(lead.count)}`}.`);
+  }
+  const closest = (local?.nearby ?? []).slice(0, 6);
+  const mineCount = rows.find((r) => r && r.slug === suburbSlug)?.count;
+  if (closest.length >= 3 && mineCount) {
+    const fewer = closest.filter((s) => s.count < mineCount).length;
+    paragraphs.push(`${suburbName} has more ${lower} listings than ${fewer} of its ${n(closest.length)} closest suburbs.`);
+  }
 
   const faqs = [];
-  const rows = (stateRows ?? []).filter((r) => r && Number(r.count) > 0);
   const mine = rows.find((r) => r.slug === suburbSlug);
   const rank = mine ? 1 + rows.filter((r) => r.count > mine.count).length : 0;
   faqs.push({
@@ -392,11 +406,81 @@ export function serviceLocalDetail(service, suburbName, stateName, suburbSlug, s
   return { analysis: { heading: `Who lists ${lower} in ${suburbName}`, paragraphs }, faqs };
 }
 
+/**
+ * The "who is listed here" analysis and the questions and answers for a register suburb or state page (/ndis-providers/vic/preston,
+ * /aged-care-providers/vic). `kind` is { register, plain }; `suburbName` is null on a state page; `local` is the AreaLocal from the API.
+ * Every sentence comes from the listings in the area, so each page says something its neighbours do not.
+ * Returns { analysis: { heading, paragraphs } | null, faqs: [{ question, answer }] }.
+ */
+export function registerAreaDetail(kind, areaName, stateName, suburbName, local) {
+  const p = local?.profile;
+  if (!p || !p.total) return { analysis: null, faqs: [] };
+  const plain = kind.plain;
+  const n = (x) => Number(x).toLocaleString('en-AU');
+  const plural = (c, one, many) => `${n(c)} ${Number(c) === 1 ? one : many}`;
+  const join = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}` : items[0] ?? '');
+  const far = (km) => (km < 1 ? 'under 1 km' : `about ${Math.round(km)} km`);
+  const where = suburbName ?? stateName;
+
+  const tiers = [
+    [p.reach?.local, '5 or fewer areas'],
+    [p.reach?.district, '6 to 25 areas'],
+    [p.reach?.regional, '26 to 100 areas'],
+    [p.reach?.wide, 'more than 100 areas'],
+  ].filter(([c]) => c > 0).map(([c, label]) => `${n(c)} ${Number(c) === 1 ? 'covers' : 'cover'} ${label}`);
+  const reach = `${join(tiers).replace(/^./, (c) => c.toUpperCase())}.${p.multiState > 0 && suburbName ? ` ${plural(p.multiState, 'is', 'are')} listed in more than one state.` : ''}`;
+  const top = (p.topSupports ?? []).slice(0, 6).map((t) => `${lowerFirst(t.category)} (${n(t.count)} of ${n(p.total)})`);
+
+  const paragraphs = [];
+  const faqs = [];
+  const near = (local?.nearby ?? []).slice(0, 4);
+  const busiest = local?.busiest ?? [];
+
+  if (suburbName) {
+    if (local.rank) {
+      const r = local.rank;
+      paragraphs.push(`Among the ${n(r.of)} ${stateName} suburbs with ${plain} listings, ${suburbName} ${r.position === 1 ? 'is the busiest' : `is number ${n(r.position)}`}, with ${plural(p.total, 'listing', 'listings')}.${r.position === 1 ? '' : ` The most is ${r.top.suburb}, with ${n(r.top.count)}.`}`);
+    }
+    if (near.length) paragraphs.push(`The closest suburbs with ${plain} listings are ${join(near.map((s) => `${s.suburb} (${plural(s.count, 'listing', 'listings')}, ${far(s.km)})`))}.`);
+  } else {
+    paragraphs.push(`${plural(p.total, `${plain} provider is`, `${plain} providers are`)} listed for ${stateName}, spread across ${n(local.suburbsCovered)} suburbs that have their own page.${busiest.length ? ` The busiest are ${join(busiest.map((b) => `${b.suburb} (${n(b.count)})`))}.` : ''}`);
+  }
+  if (tiers.length) paragraphs.push(`Reach varies. ${reach}`);
+  if (top.length) paragraphs.push(`The supports listed most often are ${join(top)}.`);
+  if (p.typicalSupports || p.specialists) {
+    const focus = [
+      p.typicalSupports ? `The typical listing here records ${plural(p.typicalSupports, 'support', 'supports')}` : '',
+      p.specialists ? `${n(p.specialists)} of the ${n(p.total)} ${p.specialists === 1 ? 'records' : 'record'} only one` : '',
+    ].filter(Boolean);
+    paragraphs.push(`${focus.join('; ')}.`);
+  }
+  if ((p.localNames ?? []).length) paragraphs.push(`Listings that cover 5 or fewer areas include ${join(p.localNames)}.`);
+  if (p.withWebsite) paragraphs.push(`${n(p.withWebsite)} of the ${n(p.total)} listings link to their own website.`);
+  const langs = (local?.languages ?? []).filter((l) => l && l.language && l.count > 0);
+  const langText = langs.length ? `Some listings say on their own websites that they support ${join(langs.map((l) => `${l.language} (${plural(l.count, 'listing', 'listings')})`))}.` : '';
+  if (langText) paragraphs.push(langText);
+
+  if (suburbName) {
+    if (near.length) faqs.push({ question: `Which suburbs near ${suburbName} also have ${plain} providers?`, answer: `The closest are ${join(near.slice(0, 3).map((s) => `${s.suburb} (${plural(s.count, 'listing', 'listings')}, ${far(s.km)})`))}.` });
+  } else if (busiest.length) {
+    faqs.push({ question: `Which ${stateName} suburbs have the most ${plain} providers?`, answer: `${join(busiest.map((b) => `${b.suburb} (${n(b.count)})`))}.` });
+  }
+  if (top.length) faqs.push({ question: `What supports do ${plain} providers in ${where} list most often?`, answer: `${join(top.slice(0, 5))}.` });
+  if (tiers.length) faqs.push({ question: `Do ${plain} providers in ${where} only work locally?`, answer: `Not all of them. ${reach}` });
+  if (suburbName && (p.localNames ?? []).length) faqs.push({ question: `Which ${plain} listings in ${suburbName} cover only a few areas?`, answer: `${plural(p.reach?.local ?? 0, 'listing covers', 'listings cover')} 5 or fewer areas, including ${join(p.localNames)}.` });
+  if (langText) faqs.push({ question: `Do any ${plain} listings in ${where} mention languages other than English?`, answer: `${langText} Ask a provider directly to confirm.` });
+
+  return { analysis: { heading: `Who is listed in ${where}`, paragraphs }, faqs };
+}
+
 export const REGISTER_CORRECTION = {
   schedule: 'We re-import the register every month.',
   response: 'We reply to every request within 5 business days.',
   individuals: 'If you are an individual, such as a sole trader, listed under your own name, you can ask us to change or remove that listing.',
 };
+
+/** Lowercases the first letter only, so "Housing (SDA & SIL)" becomes "housing (SDA & SIL)" and keeps its acronyms. */
+const lowerFirst = (s) => String(s ?? '').replace(/^./, (ch) => ch.toLowerCase());
 
 export function serviceLocalSnapshot(service, suburbName, suburbSlug, stateName, rows) {
   const list = (rows ?? []).filter((r) => r && Number(r.count) > 0);

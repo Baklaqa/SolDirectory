@@ -4,10 +4,10 @@ import { PublicHeader, PublicFooter } from '../PublicLayout';
 import Pagination from '../../../components/ui/Pagination';
 import Combobox, { type ComboItem } from '../../../components/ui/Combobox';
 import ProviderMap from '../../../components/ProviderMap';
-import { getRegisterHub, searchRegister, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
+import { getAreaLocal, getRegisterHub, searchRegister, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
 import { MIN_INDEXABLE, absoluteUrl, registerPath, stateBySlug, type RegisterKind } from '../../../lib/registerMeta';
 import { applySeoTags, setJsonLd } from '../../../lib/seo';
-import { isIndexableSuburb, metaDescription, registerAreaFaqs } from '@soldirectory/topic-content';
+import { isIndexableSuburb, metaDescription, registerAreaDetail, registerAreaFaqs, type AreaLocalData } from '@soldirectory/topic-content';
 import RegisterCard from './RegisterCard';
 import LocationWorkers from './LocationWorkers';
 import { Breadcrumbs, GetMatchedCta, VerifyNote, formatCount, titleCase, trimTo } from './RegisterParts';
@@ -39,6 +39,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   const [data, setData] = useState<RegisterSearchResult | null>(null);
   const [facets, setFacets] = useState<{ category: string; count: number }[]>([]);
   const [hub, setHub] = useState<RegisterHub | null>(null);
+  const [areaLocal, setAreaLocal] = useState<AreaLocalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [suggestions, setSuggestions] = useState<RegisterListItem[]>([]);
@@ -91,6 +92,15 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     return () => { alive = false; clearTimeout(timer); };
   }, [kind.type, state, suburbSlug, category, text]);
 
+  // Who is listed in this area: reach, supports, nearest suburbs, rank. Page 1 of an unfiltered list only, as in the crawler HTML.
+  useEffect(() => {
+    setAreaLocal(null);
+    if (!state || category || q || page > 1) return undefined;
+    let alive = true;
+    getAreaLocal(kind.type, state.code, suburbSlug).then((r) => { if (alive) setAreaLocal(r); }).catch(() => {});
+    return () => { alive = false; };
+  }, [kind.type, state, suburbSlug, category, q, page]);
+
   // Suburb links for internal navigation (cached server-side).
   useEffect(() => {
     let alive = true;
@@ -126,6 +136,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   }, [data, hub, suburbSlug, state]);
 
   const areaName = suburbSlug ? `${suburbName}, ${state?.code ?? ''}` : state?.name ?? '';
+  const areaDetail = registerAreaDetail(kind, areaName, state?.name ?? '', suburbSlug ? suburbName : null, areaLocal);
   const filtered = !!(category || q);
   const total = data?.total ?? 0;
   const basePath = registerPath(kind, stateSlug, suburbSlug);
@@ -182,10 +193,10 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     });
     setJsonLd('register-faq', total > 0 && !filtered ? {
       '@type': 'FAQPage',
-      mainEntity: registerAreaFaqs(kind, areaName, total).map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+      mainEntity: [...registerAreaFaqs(kind, areaName, total), ...areaDetail.faqs].map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
     } : null);
     return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-area', null); setJsonLd('register-faq', null); };
-  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data]);
+  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data, areaLocal]);
 
   if (!state) {
     return (
@@ -341,10 +352,17 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
           </>
         )}
 
+        {areaDetail.analysis && (
+          <section id="who-is-listed" className="reg-analysis" aria-labelledby="who-is-listed-heading">
+            <h2 className="reg-h2" id="who-is-listed-heading">{areaDetail.analysis.heading}</h2>
+            {areaDetail.analysis.paragraphs.map((t) => <p key={t}>{t}</p>)}
+          </section>
+        )}
+
         {total > 0 && !filtered && (
           <section className="reg-faq" aria-labelledby="reg-faq-heading">
             <h2 className="reg-h2" id="reg-faq-heading">Frequently asked questions</h2>
-            {registerAreaFaqs(kind, areaName, total).map((f) => (
+            {[...registerAreaFaqs(kind, areaName, total), ...areaDetail.faqs].map((f) => (
               <details key={f.question} className="reg-faq-item">
                 <summary>{f.question}</summary>
                 <p>{f.answer}</p>

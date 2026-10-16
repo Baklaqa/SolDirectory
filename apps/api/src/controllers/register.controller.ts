@@ -413,6 +413,38 @@ const kmBetween = (a: [number, number], b: [number, number]): number => {
   return 6371 * 2 * Math.asin(Math.sqrt(h));
 };
 
+const PROFILE_FIELDS = 'type slug name nameLower areaCount states website supportCategories';
+
+/** A summary of a set of register listings: split by register, how widely they reach, what else they list, and the most local by name. `excludeSupport` leaves one support out of the "also list" counts. */
+function profileFromDocs(docs: any[], excludeSupport?: string): ServiceLocal['profile'] {
+  const sizes = docs.map((d) => (d.supportCategories ?? []).length).sort((a: number, b: number) => a - b);
+  const profile: ServiceLocal['profile'] = {
+    total: docs.length,
+    ndis: docs.filter((d) => d.type === 'ndis').length,
+    agedCare: docs.filter((d) => d.type === 'aged_care').length,
+    reach: {
+      local: docs.filter((d) => d.areaCount <= 5).length,
+      district: docs.filter((d) => d.areaCount > 5 && d.areaCount <= 25).length,
+      regional: docs.filter((d) => d.areaCount > 25 && d.areaCount <= 100).length,
+      wide: docs.filter((d) => d.areaCount > 100).length,
+    },
+    multiState: docs.filter((d) => (d.states ?? []).length > 1).length,
+    withWebsite: docs.filter((d) => !!d.website).length,
+    specialists: docs.filter((d) => (d.supportCategories ?? []).length === 1).length,
+    typicalSupports: sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0,
+    localNames: [...docs]
+      .filter((d) => d.areaCount <= 5)
+      .sort((a, b) => a.areaCount - b.areaCount || String(a.nameLower ?? '').localeCompare(String(b.nameLower ?? '')))
+      .slice(0, 4)
+      .map((d) => safeRegisterName(d.name, d.slug)),
+    topSupports: [],
+  };
+  const supportCounts = new Map<string, number>();
+  for (const d of docs) for (const c of d.supportCategories ?? []) if (c !== excludeSupport) supportCounts.set(c, (supportCounts.get(c) ?? 0) + 1);
+  profile.topSupports = [...supportCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 6).map(([category, count]) => ({ category, count }));
+  return profile;
+}
+
 export async function computeServiceLocal(service: string, state: string, suburbSlug: string): Promise<ServiceLocal> {
   const key = `${service}|${state}|${suburbSlug}`;
   const hit = serviceLocalCache.get(key);
@@ -442,39 +474,93 @@ export async function computeServiceLocal(service: string, state: string, suburb
   ]);
   const languages = (langRows as { _id: string; n: number }[]).map((r) => ({ language: r._id, count: r.n }));
 
-  const docs = await RegisterListing.find({ areas: { $elemMatch: { state, suburbSlug } }, supportCategories: service })
-    .select('type slug name nameLower areaCount states website supportCategories').lean();
-  const profile: ServiceLocal['profile'] = {
-    total: docs.length,
-    ndis: docs.filter((d) => d.type === 'ndis').length,
-    agedCare: docs.filter((d) => d.type === 'aged_care').length,
-    reach: {
-      local: docs.filter((d) => d.areaCount <= 5).length,
-      district: docs.filter((d) => d.areaCount > 5 && d.areaCount <= 25).length,
-      regional: docs.filter((d) => d.areaCount > 25 && d.areaCount <= 100).length,
-      wide: docs.filter((d) => d.areaCount > 100).length,
-    },
-    multiState: docs.filter((d) => (d.states ?? []).length > 1).length,
-    withWebsite: docs.filter((d) => !!d.website).length,
-    specialists: docs.filter((d) => (d.supportCategories ?? []).length === 1).length,
-    typicalSupports: (() => {
-      const sizes = docs.map((d) => (d.supportCategories ?? []).length).sort((a, b) => a - b);
-      return sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0;
-    })(),
-    localNames: [...docs]
-      .filter((d) => d.areaCount <= 5)
-      .sort((a, b) => a.areaCount - b.areaCount || String(a.nameLower ?? '').localeCompare(String(b.nameLower ?? '')))
-      .slice(0, 4)
-      .map((d) => safeRegisterName(d.name, d.slug)),
-    topSupports: [],
-  };
-  const supportCounts = new Map<string, number>();
-  for (const d of docs) for (const c of d.supportCategories ?? []) if (c !== service) supportCounts.set(c, (supportCounts.get(c) ?? 0) + 1);
-  profile.topSupports = [...supportCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 6).map(([category, count]) => ({ category, count }));
+  const profile = profileFromDocs(
+    await RegisterListing.find({ areas: { $elemMatch: { state, suburbSlug } }, supportCategories: service }).select(PROFILE_FIELDS).lean(),
+    service,
+  );
 
   const value: ServiceLocal = { nearby, nearestTown, languages, profile };
   serviceLocalCache.set(key, { at: Date.now(), value });
   return value;
+}
+
+// ---------------------------------------------------------------
+// Local detail for a register state or suburb page
+// GET /api/register/area-local?type=&state=&suburb=   (suburb is optional: without it the answer is for the whole state)
+// Same idea as service-local, for the register pages (/ndis-providers/vic/preston): who is listed, how widely they reach, what they list,
+// where the suburb ranks, the closest suburbs, and the busiest suburbs for a state. All from register data and suburb coordinates.
+// ---------------------------------------------------------------
+export interface AreaLocal {
+  profile: ServiceLocal['profile'];
+  /** Suburbs in the state with a page for this register (state pages). */
+  suburbsCovered: number;
+  /** The suburbs with the most listings (state pages). */
+  busiest: { slug: string; suburb: string; count: number }[];
+  /** Where the suburb sits among the state's suburbs for this register (suburb pages). */
+  rank: { position: number; of: number; top: { suburb: string; count: number } } | null;
+  nearby: { slug: string; suburb: string; count: number; km: number }[];
+  languages: { language: string; count: number }[];
+}
+const areaLocalCache = new Map<string, { at: number; value: AreaLocal }>();
+
+export async function computeAreaLocal(type: RegisterType, state: string, suburbSlug: string | null): Promise<AreaLocal> {
+  const key = `${type}|${state}|${suburbSlug ?? ''}`;
+  const hit = areaLocalCache.get(key);
+  if (hit && Date.now() - hit.at < SERVICE_LOCAL_TTL_MS) return hit.value;
+
+  const match = suburbSlug ? { type, areas: { $elemMatch: { state, suburbSlug } } } : { type, states: state };
+  const profile = profileFromDocs(await RegisterListing.find(match).select(PROFILE_FIELDS).lean());
+  const inState = (await computeHub(type)).suburbs.filter((s) => s.state === state);
+
+  let rank: AreaLocal['rank'] = null;
+  let nearby: AreaLocal['nearby'] = [];
+  if (suburbSlug) {
+    const mine = inState.find((s) => s.slug === suburbSlug);
+    if (mine && inState.length > 1) {
+      const top = [...inState].sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb))[0];
+      rank = { position: 1 + inState.filter((s) => s.count > mine.count).length, of: inState.length, top: { suburb: top.suburb, count: top.count } };
+    }
+    const geos = await SuburbGeo.find({ state, suburbSlug: { $in: inState.map((s) => s.slug) }, failed: { $ne: true } }).select('suburbSlug location').lean();
+    const pos = new Map<string, [number, number]>();
+    for (const g of geos) if (g.location?.coordinates?.length === 2) pos.set(g.suburbSlug, g.location.coordinates as [number, number]);
+    const here = pos.get(suburbSlug);
+    if (here) {
+      nearby = inState
+        .filter((s) => s.slug !== suburbSlug && pos.has(s.slug))
+        .map((s) => ({ slug: s.slug, suburb: s.suburb, count: s.count, km: kmBetween(here, pos.get(s.slug)!) }))
+        .filter((s) => s.km <= NEARBY_MAX_KM)
+        .sort((a, b) => a.km - b.km || b.count - a.count)
+        .slice(0, 6);
+    }
+  }
+
+  const langRows = await RegisterListing.aggregate([
+    { $match: { ...match, 'languages.0': { $exists: true } } },
+    { $unwind: '$languages' },
+    { $group: { _id: '$languages', n: { $sum: 1 } } },
+    { $sort: { n: -1, _id: 1 } },
+    { $limit: 5 },
+  ]);
+
+  const value: AreaLocal = {
+    profile,
+    suburbsCovered: suburbSlug ? 0 : inState.length,
+    busiest: suburbSlug ? [] : [...inState].sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb)).slice(0, 5).map((s) => ({ slug: s.slug, suburb: s.suburb, count: s.count })),
+    rank,
+    nearby,
+    languages: (langRows as { _id: string; n: number }[]).map((r) => ({ language: r._id, count: r.n })),
+  };
+  areaLocalCache.set(key, { at: Date.now(), value });
+  return value;
+}
+
+export async function getAreaLocal(req: Request, res: Response) {
+  const type = parseType(req.query.type);
+  const state = parseState(req.query.state);
+  const suburbRaw = str(req.query.suburb).toLowerCase();
+  if (!type || !state || (suburbRaw && !/^[a-z0-9-]{1,80}$/.test(suburbRaw))) return res.status(400).json({ error: 'type and state are required.' });
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json(await computeAreaLocal(type, state, suburbRaw || null));
 }
 
 export async function getServiceLocal(req: Request, res: Response) {

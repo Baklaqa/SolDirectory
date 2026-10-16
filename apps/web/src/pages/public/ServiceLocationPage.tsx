@@ -207,7 +207,7 @@ export default function ServiceLocationPage() {
   const requestedItems = wp?.requested ?? [];
   // An editor's own questions win. Otherwise the questions are built from this suburb's register data (serviceLocalDetail), so each
   // page's answers are different; they are never one generic list repeated on every suburb.
-  const localDetail = serviceLocalDetail(serviceName, suburbName, stateName, suburbSlug, stateSuburbs, localData);
+  const localDetail = serviceLocalDetail(serviceName, suburbName, stateName, suburbSlug, stateSuburbs, localData, areaSupports);
   const faqItems = wp?.faq?.length ? wp.faq : localDetail.faqs.map((f) => ({ q: f.question, a: f.answer }));
 
   // The ToC only lists sections that actually render — "Costs" and

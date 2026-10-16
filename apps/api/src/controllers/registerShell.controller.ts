@@ -9,12 +9,12 @@ import WorkerReview from '../models/WorkerReview.js';
 import { BUSINESS } from '../config/business.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
-import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeLanguageSnapshot, computeServiceLocal, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
+import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeAreaLocal, computeLanguageSnapshot, computeServiceLocal, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { eligibleStates, workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import {
-  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, serviceLocalSnapshot, serviceLocalSections, serviceLocalDetail, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isIndexableSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
+  CONDITION_CONTENT_GROUPS, CONDITION_TOPICS, EDITORIAL_BLOG_POSTS, FUNDING_SEO_DESCRIPTIONS, FUNDING_TOPICS, GUIDE_DOCS, LANGUAGE_RESOURCES, LANGUAGE_RESOURCES_CHECKED, LANGUAGE_SPECIFICS, languageResourceAgencies, metaDescription, registerAreaFaqs, registerAreaDetail, serviceLocalSnapshot, serviceLocalSections, serviceLocalDetail, REGISTER_CORRECTION, INDEX_REGISTER_PROFILES, isIndexableSuburb, LANGUAGE_TOPICS, conditionShellEditorial, fundingShellEditorial, languageShellEditorial,
   relatedArticles,
   relatedToArticle,
   hubCopy,
@@ -269,6 +269,12 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     ? `<h2>${suburbSlug ? `More suburbs in ${esc(STATE_NAMES[code])}` : `Suburbs in ${esc(STATE_NAMES[code])} with the most listings`}</h2>` +
       `<ul>${nearby.map((s) => li(`/${kindPath}/${stateSlug}/${s.slug}`, s.suburb, `(${fmt(s.count)})`)).join('')}</ul>`
     : '';
+  // Who is listed here: real numbers for this area (reach, supports, nearest suburbs, rank), so each page says something its neighbours
+  // do not. Page 1 only, so a later page of the same list does not repeat it.
+  const areaLocal = total > 0 && !filtered && page === 1 ? await computeAreaLocal(kind.type, code, suburbSlug) : null;
+  const detail = registerAreaDetail(kind as any, areaName, STATE_NAMES[code], suburbName, areaLocal);
+  const analysisHtml = detail.analysis ? `<h2>${esc(detail.analysis.heading)}</h2>${detail.analysis.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}` : '';
+  const allFaqs = total > 0 && !filtered ? [...registerAreaFaqs(kind as any, areaName, total), ...detail.faqs] : [];
   const supportsHtml = facets.length && !filtered
     ? `<h2>Supports listed in ${esc(areaName)}</h2><p>Each number is how many listings in this area list that support.</p>` +
       `<ul>${facets.slice(0, 12).map((f) => li(`${base}?category=${encodeURIComponent(f._id)}`, f._id, `(${fmt(f.n)})`)).join('')}</ul>`
@@ -295,7 +301,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     noindex,
     jsonLd: [
       breadcrumbLd(site, crumbs),
-      ...(total > 0 && !filtered ? [{ id: 'register-faq', data: { '@type': 'FAQPage', mainEntity: registerAreaFaqs(kind as any, areaName, total).map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
+      ...(allFaqs.length ? [{ id: 'register-faq', data: { '@type': 'FAQPage', mainEntity: allFaqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
       {
         id: 'register-area',
         data: {
@@ -317,8 +323,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
       (kind.type === 'ndis' && !filtered && facets.some((f) => f._id === 'Housing (SDA & SIL)') ? `<p>SDA is Specialist Disability Accommodation: purpose-built homes for people with very high support needs. SIL is Supported Independent Living: help with daily tasks in a shared or own home. Both are funded through an NDIS plan, and a listing here does not mean a provider has a vacancy.</p>` : '') +
       // The ABN tells apart two providers that trade under the same name, as the visible card does.
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), [d.abn ? `ABN ${d.abn}` : '', d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : ''].filter(Boolean).join(' '))).join('')}</ul>` +
-      `<p>${pager}</p>${workersHtml}${extra}` +
-      (total > 0 && !filtered ? `<h2>Frequently asked questions</h2>${registerAreaFaqs(kind as any, areaName, total).map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
+      `<p>${pager}</p>${workersHtml}${extra}${analysisHtml}` +
+      (allFaqs.length ? `<h2>Frequently asked questions</h2>${allFaqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
       `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>. ${correctionHtml()}</p>` +
       (hubForKind.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hubForKind.asOf))}">${esc(registerDateLabel(hubForKind.asOf))}</time>.</p>` : ''),
   };
@@ -1774,7 +1780,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
   const indexable = registerTotal >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(code, suburbName, registerTotal);
   const localData = await computeServiceLocal(service, code, suburbSlug);
   const localParts = serviceLocalSections(service, suburbName, stateName, localData, indexable);
-  const detail = serviceLocalDetail(service, suburbName, stateName, suburbSlug, suburbs.filter((s) => s.state === code), localData);
+  const detail = serviceLocalDetail(service, suburbName, stateName, suburbSlug, suburbs.filter((s) => s.state === code), localData, areaSupports);
   const localHtml =
     (localParts.nearby
       ? `<h2>${esc(localParts.nearby.heading)}</h2><p>${esc(localParts.nearby.intro)}</p>` +
