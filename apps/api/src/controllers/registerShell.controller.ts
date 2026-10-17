@@ -10,6 +10,7 @@ import { BUSINESS } from '../config/business.js';
 import { censusFor } from '../services/census.js';
 import { MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS, REAL_SERVICES, STATE_CODES, safeRegisterName, type RegisterType } from '../services/registerNormalise.js';
 import { findProvidersOrdered } from '../services/providerOrdering.js';
+import { approvedContentFor } from '../services/pageContent/store.js';
 import { categoryListings, computeAreaSupports, computeCategoryOverview, computeHub, computeAreaLocal, computeLanguageSnapshot, computeServiceLocal, computeServiceSuburbs, serviceLinksFor } from './register.controller.js';
 import { eligibleStates, workersForService, workersInArea } from './workersPublic.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, VISIBLE_PROVIDER, areaRows, conditionRows, publicLogoUrl } from './providersPublic.controller.js';
@@ -166,6 +167,9 @@ interface Page {
 const inline = (text: string) => esc(text).replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (_m, label: string, href: string) => `<a href="${href}">${label}</a>`);
 
 // External links carry the same rel as the visible pages' (noopener noreferrer); internal links need none.
+// Approved copy from the content automation: the intro goes under the H1, the sections after the page's own data-built sections.
+const approvedHtml = (c: { intro: string }) => `<p>${esc(c.intro)}</p>`;
+const approvedSectionsHtml = (c: { sections: { heading: string; body: string }[] }) => c.sections.map((x) => `<h2>${esc(x.heading)}</h2><p>${esc(x.body)}</p>`).join('');
 const li = (href: string, text: string, extra = '') => `<li><a href="${esc(href)}"${/^https?:\/\//i.test(href) ? ' rel="noopener noreferrer"' : ''}>${esc(text)}</a>${extra ? ` ${esc(extra)}` : ''}</li>`;
 
 function breadcrumbLd(site: string, crumbs: { name: string; path: string }[]) {
@@ -246,7 +250,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
   const areaName = suburbName ? `${suburbName}, ${code}` : STATE_NAMES[code];
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   // Phased indexing (gap audit A1): a suburb page is indexed only if the current phase allows it (indexingPolicy.js).
-  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || !isIndexableSuburb(code, suburbName ?? '', total, undefined, !!censusFor(code, suburbSlug))));
+  const approvedHere = total > 0 && !filtered && page === 1 ? await approvedContentFor(base) : null;
+  const noindex = filtered || total === 0 || (!!suburbSlug && (total < MIN_SUBURB_LISTINGS || (!approvedHere && !isIndexableSuburb(code, suburbName ?? '', total, undefined, !!censusFor(code, suburbSlug)))));
 
   const crumbs = [
     { name: 'Home', path: '/' },
@@ -275,7 +280,9 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
   const areaLocal = total > 0 && !filtered && page === 1 ? await computeAreaLocal(kind.type, code, suburbSlug) : null;
   const detail = registerAreaDetail(kind as any, areaName, STATE_NAMES[code], suburbName, areaLocal);
   const analysisHtml = detail.analysis ? `<h2>${esc(detail.analysis.heading)}</h2>${detail.analysis.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}` : '';
-  const allFaqs = total > 0 && !filtered ? [...registerAreaFaqs(kind as any, areaName, total), ...detail.faqs] : [];
+  // Scored copy from the content automation (see serviceLocationPage). Page 1 of the unfiltered list only.
+  const approved = approvedHere;
+  const allFaqs = total > 0 && !filtered ? (approved && approved.content.faqs.length ? approved.content.faqs : [...registerAreaFaqs(kind as any, areaName, total), ...detail.faqs]) : [];
   const supportsHtml = facets.length && !filtered
     ? `<h2>Supports listed in ${esc(areaName)}</h2><p>Each number is how many listings in this area list that support.</p>` +
       `<ul>${facets.slice(0, 12).map((f) => li(`${base}?category=${encodeURIComponent(f._id)}`, f._id, `(${fmt(f.n)})`)).join('')}</ul>`
@@ -296,8 +303,8 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
   return {
     status: 200,
     // "Australian Capital Territory" would push the title past what search results show, so the title says the ACT.
-    title: `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
-    description: metaDescription(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
+    title: approved ? `${approved.content.seoTitle} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
+    description: approved ? metaDescription(approved.content.metaDescription, 160) : metaDescription(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,
     jsonLd: [
@@ -318,13 +325,14 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
     body:
       `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
       `<h1>${esc(kind.label)} providers in ${esc(areaName)}</h1>` +
+      (approved ? approvedHtml(approved.content) : '') +
       `<p>${fmt(total)} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${esc(kind.register)} for ${esc(areaName)}.</p>` +
       (topFacets.length && !filtered ? `<p>The supports listed most often here are ${topFacets.map((f) => `${esc(f._id.toLowerCase())} (${fmt(f.n)})`).join(', ')}.</p>` : '') +
       supportsHtml +
       (kind.type === 'ndis' && !filtered && facets.some((f) => f._id === 'Housing (SDA & SIL)') ? `<p>SDA is Specialist Disability Accommodation: purpose-built homes for people with very high support needs. SIL is Supported Independent Living: help with daily tasks in a shared or own home. Both are funded through an NDIS plan, and a listing here does not mean a provider has a vacancy.</p>` : '') +
       // The ABN tells apart two providers that trade under the same name, as the visible card does.
       `<ul>${docs.map((d) => li(`/${kindPath}/${d.slug}`, registerName(d), [d.abn ? `ABN ${d.abn}` : '', d.supportCategories.length ? `– ${d.supportCategories.slice(0, 3).join(', ')}` : ''].filter(Boolean).join(' '))).join('')}</ul>` +
-      `<p>${pager}</p>${workersHtml}${extra}${analysisHtml}` +
+      `<p>${pager}</p>${workersHtml}${extra}${analysisHtml}${approved ? approvedSectionsHtml(approved.content) : ''}` +
       (allFaqs.length ? `<h2>Frequently asked questions</h2>${allFaqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}` : '') +
       `<p><strong>Check before you engage.</strong> Listings are based on ${esc(kind.register)} data and may be out of date. To confirm a provider’s current status, search the official register at <a href="${esc(kind.officialUrl)}">${esc(kind.officialName)}</a>. A listing does not show whether a provider has capacity to take on new people. ${kind.type === 'aged_care' ? 'Based on Commonwealth of Australia (Department of Health, Disability and Ageing, My Aged Care) provider information.' : 'Based on Commonwealth of Australia (NDIS Quality and Safeguards Commission) data.'} See <a href="/data-sources">data sources and attribution</a>. ${correctionHtml()}</p>` +
       (hubForKind.asOf ? `<p>Register data last imported on <time datetime="${esc(registerDateIso(hubForKind.asOf))}">${esc(registerDateLabel(hubForKind.asOf))}</time>.</p>` : ''),
@@ -1792,13 +1800,18 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
       : '') +
     (localParts.languages ? `<p>${esc(localParts.languages)}</p>` : '') +
     (detail.analysis ? `<h2>${esc(detail.analysis.heading)}</h2>${detail.analysis.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}` : '');
-  const faqHtml = detail.faqs.length
-    ? `<h2>Questions about ${esc(serviceLower)} in ${esc(suburbName)}</h2>${detail.faqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}`
+  // Copy written by the content automation that scored at or above the minimum (services/pageContent). It adds an intro, sections and
+  // questions to the data-built page and replaces the data-built questions.
+  const approved = await approvedContentFor(path);
+  const pageFaqs = approved && approved.content.faqs.length ? approved.content.faqs : detail.faqs;
+  const faqHtml = pageFaqs.length
+    ? `<h2>Questions about ${esc(serviceLower)} in ${esc(suburbName)}</h2>${pageFaqs.map((f) => `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`).join('')}`
     : '';
 
   const body =
     `<nav aria-label="Breadcrumb">${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${esc(c.path)}">${esc(c.name)}</a>` : esc(c.name))).join(' / ')}</nav>` +
     `<h1>${esc(service)} providers in ${esc(suburbName)}, ${esc(stateName)}</h1>` +
+    (approved ? approvedHtml(approved.content) : '') +
     `<p>This page lists ${esc(serviceLower)} providers and register listings covering ${esc(suburbName)}, ${esc(code)}` +
     `${registerTotal > 0 ? ` — ${fmt(registerTotal)} organisation${registerTotal === 1 ? '' : 's'} on the public NDIS and My Aged Care registers list ${esc(serviceLower)} among their supports for this area` : ''}` +
     `${providerTotal > 0 ? `, and ${fmt(providerTotal)} SolDirectory ${providerTotal === 1 ? 'provider currently offers' : 'providers currently offer'} it here` : ''}.` +
@@ -1806,6 +1819,7 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
     (SVC_DESCRIPTION[service] ? `<h2>About ${esc(serviceLower)}</h2><p>${esc(SVC_DESCRIPTION[service])} People in ${esc(suburbName)} and the surrounding ${esc(stateName)} area can search for a provider below, or send a free request and let providers who cover this area respond directly.</p>` : '') +
     snapshotHtml +
     localHtml +
+    (approved ? approvedSectionsHtml(approved.content) : '') +
     providersHtml +
     `<p>Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.</p>` +
     registerHtml +
@@ -1818,18 +1832,19 @@ async function serviceLocationPage(site: string, serviceSlug: string, stateSlug:
   return {
     status: 200,
     // At most 60 characters in all: 46 for the page part plus " | SolDirectory".
-    title: (() => {
+    title: approved ? `${trimTo(approved.content.seoTitle, 46)} | SolDirectory` : (() => {
       const fullTitle = `${service} providers in ${suburbName}, ${code}`;
       const compactTitle = `${service} in ${suburbName}, ${code}`;
       return `${trimTo(fullTitle.length <= 46 ? fullTitle : compactTitle, 46)} | SolDirectory`;
     })(),
-    description: metaDescription(description, 158),
+    description: approved ? metaDescription(approved.content.metaDescription, 160) : metaDescription(description, 158),
     canonical: path,
     // Reachable and linked, but not indexed, until there are enough listings to add something to the suburb's own page.
-    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(code, suburbName, registerTotal, undefined, !!censusFor(code, suburbSlug)),
+    // Approved, scored copy makes a page indexable once it has the minimum number of listings, whatever the phase.
+    noindex: registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || (!approved && !isIndexableSuburb(code, suburbName, registerTotal, undefined, !!censusFor(code, suburbSlug))),
     jsonLd: [
       breadcrumbLd(site, crumbs),
-      ...(detail.faqs.length ? [{ id: 'service-location-faq', data: { '@type': 'FAQPage', mainEntity: detail.faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
+      ...(pageFaqs.length ? [{ id: 'service-location-faq', data: { '@type': 'FAQPage', mainEntity: pageFaqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } }] : []),
       { id: 'service-location', data: {
         '@type': 'Service', name: `${service} in ${suburbName}, ${code}`, serviceType: service,
         areaServed: { '@type': 'City', name: suburbName, containedInPlace: { '@type': 'State', name: stateName } },

@@ -4,7 +4,7 @@ import { PublicHeader, PublicFooter } from '../PublicLayout';
 import Pagination from '../../../components/ui/Pagination';
 import Combobox, { type ComboItem } from '../../../components/ui/Combobox';
 import ProviderMap from '../../../components/ProviderMap';
-import { getAreaLocal, getRegisterHub, searchRegister, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
+import { getApprovedPageCopy, getAreaLocal, getRegisterHub, searchRegister, type ApprovedPageCopy, type RegisterHub, type RegisterListItem, type RegisterSearchResult } from '../../../api/registerApi';
 import { MIN_INDEXABLE, absoluteUrl, registerPath, stateBySlug, type RegisterKind } from '../../../lib/registerMeta';
 import { applySeoTags, setJsonLd } from '../../../lib/seo';
 import { isIndexableSuburb, metaDescription, registerAreaDetail, registerAreaFaqs, type AreaLocalData } from '@soldirectory/topic-content';
@@ -15,6 +15,7 @@ import '../Home.css';
 import '../Directory.css';
 import './register.css';
 import RelatedArticles from '../../../components/blog/RelatedArticles';
+import ApprovedCopy from '../../../components/topic/ApprovedCopy';
 
 const PAGE_SIZE = 12;
 const NEARBY_SUBURBS = 18;
@@ -40,6 +41,8 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   const [facets, setFacets] = useState<{ category: string; count: number }[]>([]);
   const [hub, setHub] = useState<RegisterHub | null>(null);
   const [areaLocal, setAreaLocal] = useState<AreaLocalData | null>(null);
+  // Scored copy from the content automation, if this page has any (page 1 of the unfiltered list only, as in the crawler HTML).
+  const [approved, setApproved] = useState<ApprovedPageCopy | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [suggestions, setSuggestions] = useState<RegisterListItem[]>([]);
@@ -101,6 +104,14 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     return () => { alive = false; };
   }, [kind.type, state, suburbSlug, category, q]);
 
+  useEffect(() => {
+    setApproved(null);
+    if (!state || category || q || page > 1) return undefined;
+    let alive = true;
+    getApprovedPageCopy(registerPath(kind, stateSlug, suburbSlug)).then((r) => { if (alive) setApproved(r); });
+    return () => { alive = false; };
+  }, [kind, state, stateSlug, suburbSlug, category, q, page]);
+
   // Suburb links for internal navigation (cached server-side).
   useEffect(() => {
     let alive = true;
@@ -139,6 +150,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   const areaDetail = registerAreaDetail(kind, areaName, state?.name ?? '', suburbSlug ? suburbName : null, page === 1 ? areaLocal : null);
   const filtered = !!(category || q);
   const total = data?.total ?? 0;
+  const pageFaqs = approved && approved.faqs.length ? approved.faqs : [...registerAreaFaqs(kind, areaName, total), ...areaDetail.faqs];
   const basePath = registerPath(kind, stateSlug, suburbSlug);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const topFacets = facets.slice(0, 3);
@@ -151,15 +163,15 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   // A page is worth indexing only if it's a real, unfiltered list. Suburb
   // pages also need a few genuine listings — below that it's a near-empty
   // page that exists only to carry a keyword.
-  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || !isIndexableSuburb(state.code, suburbName, total, undefined, !!areaLocal?.census)))));
+  const noindex = !state || failed || (data !== null && (total === 0 || filtered || (!!suburbSlug && (total < MIN_INDEXABLE || (!approved && !isIndexableSuburb(state.code, suburbName, total, undefined, !!areaLocal?.census))))));
 
   useEffect(() => {
     if (!state || loading) return;
     // Keep in step with the server-rendered title (registerShell.controller.ts).
-    const title = `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
+    const title = approved ? `${approved.seoTitle} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
     applySeoTags({
       title,
-      description: metaDescription(
+      description: approved ? metaDescription(approved.metaDescription, 160) : metaDescription(
         `${formatCount(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`,
         158
       ),
@@ -193,10 +205,10 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
     });
     setJsonLd('register-faq', total > 0 && !filtered ? {
       '@type': 'FAQPage',
-      mainEntity: [...registerAreaFaqs(kind, areaName, total), ...areaDetail.faqs].map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+      mainEntity: pageFaqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
     } : null);
     return () => { setJsonLd('register-breadcrumbs', null); setJsonLd('register-area', null); setJsonLd('register-faq', null); };
-  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data, areaLocal]);
+  }, [state, loading, kind, areaName, page, total, filtered, noindex, basePath, stateSlug, suburbSlug, suburbName, data, areaLocal, approved]);
 
   if (!state) {
     return (
@@ -339,6 +351,8 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
           <LocationWorkers stateCode={state.code} stateName={state.name} suburbName={suburbSlug ? suburbName : undefined} />
         )}
 
+        {approved && !filtered && page === 1 && <ApprovedCopy copy={approved} h2Class="reg-h2" />}
+
         {nearby.length > 0 && (
           <>
             <h2 className="reg-h2">{suburbSlug ? `More suburbs in ${state.name}` : `Suburbs in ${state.name} with the most listings`}</h2>
@@ -362,7 +376,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
         {total > 0 && !filtered && (
           <section className="reg-faq" aria-labelledby="reg-faq-heading">
             <h2 className="reg-h2" id="reg-faq-heading">Frequently asked questions</h2>
-            {[...registerAreaFaqs(kind, areaName, total), ...areaDetail.faqs].map((f) => (
+            {pageFaqs.map((f) => (
               <details key={f.question} className="reg-faq-item">
                 <summary>{f.question}</summary>
                 <p>{f.answer}</p>

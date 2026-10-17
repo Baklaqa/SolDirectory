@@ -154,3 +154,23 @@ export function submitClaimRequest(type: RegisterType, slug: string, input: {
     body: JSON.stringify(input),
   });
 }
+
+/** Copy written by the content automation and approved by the API's score gate (api services/pageContent), for a page path. Null when the page has none. */
+export interface ApprovedPageCopy {
+  seoTitle: string;
+  metaDescription: string;
+  intro: string;
+  sections: { heading: string; body: string }[];
+  faqs: { question: string; answer: string }[];
+}
+
+export async function getApprovedPageCopy(path: string): Promise<ApprovedPageCopy | null> {
+  try {
+    const res = await fetch(`${API_URL}/page-content?path=${encodeURIComponent(path)}`);
+    if (!res.ok) return null;
+    const body = await res.json();
+    return (body?.content as ApprovedPageCopy) ?? null;
+  } catch {
+    return null;
+  }
+}

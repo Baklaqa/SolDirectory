@@ -22,4 +22,5 @@ require_once __DIR__ . '/includes/baseline-services.php';
 require_once __DIR__ . '/includes/content-services.php';
 require_once __DIR__ . '/includes/custom-fields-engine.php';
 require_once __DIR__ . '/includes/custom-fields-rest.php';
+require_once __DIR__ . '/includes/page-automation.php';
 require_once __DIR__ . '/includes/admin-ui.php';

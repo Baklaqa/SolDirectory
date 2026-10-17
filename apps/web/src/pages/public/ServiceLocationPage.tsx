@@ -18,7 +18,7 @@ import { MIN_INDEXABLE_SERVICE_LOCATION, REAL_SERVICES, stateBySlug, SUPPORT_CAT
 import Counter from '../../components/Counter';
 import { useMatchModal } from '../../context/MatchModalContext';
 import { getServiceAreaPage, type ServiceAreaPage } from '../../api/wordpressApi';
-import { getAreaSupports, getServiceLocal, getServiceSuburbs } from '../../api/registerApi';
+import { getApprovedPageCopy, getAreaSupports, getServiceLocal, getServiceSuburbs, type ApprovedPageCopy } from '../../api/registerApi';
 import { listPublicProviders, type PublicProviderRow } from '../../api/providerResources';
 import { applySeoTags, setJsonLd } from '../../lib/seo';
 import RegisterNearby from './register/RegisterNearby';
@@ -26,6 +26,7 @@ import LocationWorkers from './register/LocationWorkers';
 import { serviceEditorialFor } from '@soldirectory/service-content';
 import './ServiceLocationPage.css';
 import RelatedArticles from '../../components/blog/RelatedArticles';
+import ApprovedCopy from '../../components/topic/ApprovedCopy';
 
 // REAL DATA, TWO SOURCES, PER THE ARCHITECTURE DECIDED WITH THE USER:
 //
@@ -126,6 +127,16 @@ export default function ServiceLocationPage() {
 
   useEffect(() => { setRegisterTotal(null); }, [serviceSlug, stateSlug, suburbSlug]);
 
+  // Scored copy from the content automation, if this page has any (it is what the crawler HTML shows too).
+  const [approved, setApproved] = useState<ApprovedPageCopy | null>(null);
+  useEffect(() => {
+    setApproved(null);
+    if (!stateSlug) return undefined;
+    let alive = true;
+    getApprovedPageCopy(`/services/${serviceSlug}/${stateSlug}/${suburbSlug}`).then((r) => { if (alive) setApproved(r); });
+    return () => { alive = false; };
+  }, [serviceSlug, stateSlug, suburbSlug]);
+
   useEffect(() => {
     setAreaSupports([]);
     setOtherSuburbs([]);
@@ -208,7 +219,9 @@ export default function ServiceLocationPage() {
   // An editor's own questions win. Otherwise the questions are built from this suburb's register data (serviceLocalDetail), so each
   // page's answers are different; they are never one generic list repeated on every suburb.
   const localDetail = serviceLocalDetail(serviceName, suburbName, stateName, suburbSlug, stateSuburbs, localData, areaSupports);
-  const faqItems = wp?.faq?.length ? wp.faq : localDetail.faqs.map((f) => ({ q: f.question, a: f.answer }));
+  const faqItems = approved?.faqs.length
+    ? approved.faqs.map((f) => ({ q: f.question, a: f.answer }))
+    : wp?.faq?.length ? wp.faq : localDetail.faqs.map((f) => ({ q: f.question, a: f.answer }));
 
   // The ToC only lists sections that actually render — "Costs" and
   // "What to expect" used to be listed unconditionally although no such
@@ -264,13 +277,13 @@ export default function ServiceLocationPage() {
     const compactTitle = `${serviceName} in ${suburbName}, ${stateAbbr}`;
     applySeoTags({
       // 46 characters for the page part plus " | SolDirectory" keeps the whole title within 60.
-      title: wp?.seo.title || `${fitTitle(fullTitle.length <= 46 ? fullTitle : compactTitle, 46)} | SolDirectory`,
-      description: metaDescription(wp?.seo.description || introParagraph, 160),
+      title: approved ? `${fitTitle(approved.seoTitle, 46)} | SolDirectory` : wp?.seo.title || `${fitTitle(fullTitle.length <= 46 ? fullTitle : compactTitle, 46)} | SolDirectory`,
+      description: approved ? metaDescription(approved.metaDescription, 160) : metaDescription(wp?.seo.description || introParagraph, 160),
       ogImage: wp?.seo.ogImage,
       canonicalUrl: `${window.location.origin}${stateSlug
         ? `/services/${serviceSlug}/${stateSlug}/${suburbSlug}`
         : `/services/${serviceSlug}/${suburbSlug}`}`,
-      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || !isIndexableSuburb(stateAbbr, suburbName, registerTotal, undefined, !!localData?.census),
+      noindex: !stateSlug || wp?.seo.noindex || registerTotal < MIN_INDEXABLE_SERVICE_LOCATION || (!approved && !isIndexableSuburb(stateAbbr, suburbName, registerTotal, undefined, !!localData?.census)),
     });
     setJsonLd('service-location', {
       '@type': 'Service',
@@ -294,7 +307,7 @@ export default function ServiceLocationPage() {
       setJsonLd('service-location-faq', null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wpLoading, registerTotal, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems, localData]);
+  }, [wpLoading, registerTotal, wp, serviceName, suburbName, stateAbbr, stateName, introParagraph, stateSlug, serviceSlug, suburbSlug, faqItems, localData, approved]);
 
   const heroProviderLabel = providersLoading
     ? `Checking providers serving ${suburbName}`
@@ -408,6 +421,8 @@ export default function ServiceLocationPage() {
             <p className="svc-p">
               Members taking new people are shown first, then other members, each alphabetically. Paying never changes the order, and a listing is not an endorsement; compare suitability, safeguards, availability, fees and service terms directly.
             </p>
+
+            {approved && <ApprovedCopy copy={approved} h2Class="svc-h2-sm" pClass="svc-p" />}
 
             {localSnapshot && (
               <>

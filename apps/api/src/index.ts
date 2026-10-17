@@ -25,6 +25,8 @@ import notificationsRoutes from './routes/notifications.routes.js';
 import sitemapRoutes from './routes/sitemap.routes.js';
 import registerRoutes from './routes/register.routes.js';
 import emailRoutes from './routes/email.routes.js';
+import automationRoutes from './routes/automation.routes.js';
+import { publicContent } from './controllers/automation.controller.js';
 import adminClaimsRoutes from './routes/admin.claims.routes.js';
 import adminRegisterRoutes from './routes/admin.register.routes.js';
 import adminReviewsRoutes from './routes/admin.reviews.routes.js';
@@ -96,6 +98,8 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/search-alerts', searchAlertsRoutes);
 app.use('/api/register', registerRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/automation', automationRoutes);
+app.get('/api/page-content', (req, res, next) => { publicContent(req, res).catch(next); });
 // Crawler-readable HTML for the register pages; nginx routes /ndis-providers/* here (deploy/nginx-soldirectory.conf).
 app.get('/seo-shell/*', (req, res, next) => { registerShell(req, res).catch(next); });
 app.use('/sitemap.xml', sitemapRoutes);

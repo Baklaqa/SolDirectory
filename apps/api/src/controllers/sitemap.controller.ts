@@ -7,7 +7,8 @@ import { computeHub, computeServiceSuburbs } from './register.controller.js';
 import { MIN_INDEXABLE_PROVIDERS, areaRows } from './providersPublic.controller.js';
 import { eligibleStates } from './workersPublic.controller.js';
 import { censusFor } from '../services/census.js';
-import { REAL_SERVICES, REGISTER_TYPES, STATE_CODES, type RegisterType, MIN_INDEXABLE_SERVICE_LOCATION } from '../services/registerNormalise.js';
+import { approvedPaths } from '../services/pageContent/store.js';
+import { REAL_SERVICES, REGISTER_TYPES, STATE_CODES, type RegisterType, MIN_INDEXABLE_SERVICE_LOCATION, MIN_SUBURB_LISTINGS } from '../services/registerNormalise.js';
 
 // Real sitemap — every URL here is either a genuinely static public
 // route, a real provider slug from the database, a public-register page
@@ -149,13 +150,15 @@ async function buildRegisterUrls(): Promise<UrlEntry[]> {
   if (registerCache && Date.now() - registerCache.at < REGISTER_CACHE_MS) return registerCache.urls;
 
   const urls: UrlEntry[] = [];
+  // Pages whose copy the content automation wrote and the site scored at or above the minimum are indexed whatever the phase.
+  const approved = await approvedPaths();
   for (const type of REGISTER_TYPES) {
     const base = REGISTER_PATH[type];
     const hub = await computeHub(type);
     // A state with no listings is a noindex empty page — don't advertise it.
     for (const state of STATE_CODES) if (hub.states[state]) urls.push({ path: `${base}/${state.toLowerCase()}` });
     // Phased indexing (gap audit A1, packages/topic-content/indexingPolicy.js): only the suburb hubs the current phase allows.
-    for (const s of hub.suburbs) if (isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug))) urls.push({ path: `${base}/${s.state.toLowerCase()}/${s.slug}` });
+    for (const s of hub.suburbs) if ((s.count >= MIN_SUBURB_LISTINGS && approved.has(`${base}/${s.state.toLowerCase()}/${s.slug}`)) || isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug))) urls.push({ path: `${base}/${s.state.toLowerCase()}/${s.slug}` });
 
     // Gap audit A3: the individual register profile pages are thin copies of the public register, so they are noindex and not listed here.
     if (!INDEX_REGISTER_PROFILES) continue;
@@ -182,11 +185,12 @@ async function buildServiceAreaUrls(): Promise<UrlEntry[]> {
   if (serviceAreaCache && Date.now() - serviceAreaCache.at < SERVICE_CACHE_MS) return serviceAreaCache.urls;
 
   const urls: UrlEntry[] = [];
+  const approved = await approvedPaths();
   for (const service of REAL_SERVICES) {
     const serviceSlug = slugifyService(service);
     const suburbs = await computeServiceSuburbs(service);
     // Only the indexed tier: pages with a few listings stay reachable but are noindex (MIN_INDEXABLE_SERVICE_LOCATION).
-    for (const s of suburbs) if (s.count >= MIN_INDEXABLE_SERVICE_LOCATION && isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug))) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
+    for (const s of suburbs) if (s.count >= MIN_INDEXABLE_SERVICE_LOCATION && (approved.has(`/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}`) || isIndexableSuburb(s.state, s.suburb, s.count, undefined, !!censusFor(s.state, s.slug)))) urls.push({ path: `/services/${serviceSlug}/${s.state.toLowerCase()}/${s.slug}` });
   }
   serviceAreaCache = { urls, at: Date.now() };
   return urls;

@@ -27,6 +27,7 @@ Source: "SolDirectory Compliance and Website Gap Audit" (Saf, Talha, Zain). Code
 | F3 | WCAG test evidence | **Done in part.** Automated scan, keyboard pass and reflow test, fixes, and a written report: `apps/web/ACCESSIBILITY_TEST_2026-10-16.md`. A screen reader pass (NVDA, VoiceOver) is **not** done. | Someone with a screen reader runs the script in the report. |
 | G1 | robots.txt blocks /providers/ | **Confirmed fine.** Public member profiles are at `/directory/<slug>`. `/providers/<slug>` is the login-only profile view. `/providers` (no slash, the for-providers page) is not blocked. | Nothing. |
 | H1 | Developer access | **Process, not code.** Checklist below. | Do it when the build ends. |
+| I1 | n8n content automation (17 October 2026) | **Built and tested locally; needs deploy and a key.** A key-protected API (`/api/automation/*`) gives n8n the facts for any of the 29,694 pages (service x suburb, register state and suburb), scores a rewrite out of 100 with a deterministic checker (hard failures: invented numbers, banned claims, contact details, markup; default minimum 80), stores approved copy, and mirrors pages to WordPress. Approved copy shows on the page, in the crawler HTML and in FAQPage markup, and makes the page indexable and listed in the sitemap (still needing the minimum listings). The brief for your colleague is `deploy/N8N_SUBURB_REWRITE_PROMPT.md`. Tested on real local data with a mock WordPress; the PHP plugin addition and the live WordPress sync are **untested against real WordPress**. | Steps in "Content automation" below. |
 
 ## Live nginx (C1 to C3)
 
@@ -73,3 +74,14 @@ The generated file also sets `Permissions-Policy`. If the live file already sets
 | Stripe checkout and GST | **Found a gap and added a fix.** Checkout charged the plain plan price ($249) with no tax line, but the pages and the provider agreement say "$249 + GST = $273.90" and promise a tax invoice showing the GST. Checkout now adds a GST tax rate when `STRIPE_GST_TAX_RATE_ID` is set; `npm run stripe:gst-rate -w apps/api` creates the rate in Stripe; Admin > Operations shows "GST on invoices: Missing" until it is set. I did not call Stripe. **You do:** run the script with your Stripe key, put the id in the server `.env`, and add the ABN under Stripe's business settings so invoices are valid tax invoices. Test one checkout in Stripe test mode first. |
 | Emails | Not tested (no mail server is configured locally). Send one of each template to yourself from a staging server. |
 | Guides and blogs accuracy | See `deploy/GUIDE_FACT_CHECK_2026-10-16.md`: 124 outside links (0 broken), six time-sensitive claims checked against official pages, one overstated sentence fixed. |
+
+## Content automation (I1): turn it on
+
+1. Deploy as usual. In `apps/api/.env` on the server set `AUTOMATION_API_KEY` to a long random value (`openssl rand -hex 32`) and, if you want a different bar, `AUTOMATION_MIN_SCORE` (default 80). Restart the API. Until the key is set every automation call returns 503.
+2. Copy the plugin folder `apps/cms/wp-content/plugins/soldirectory-content` to the WordPress server (it adds `includes/page-automation.php`: the `register_area_page` post type and REST-writable `sd_*` meta). Without it WordPress drops the meta silently.
+3. Create the WordPress application password if you have not (Users > Profile > Application Passwords) and set `WORDPRESS_URL`, `WORDPRESS_APP_USER`, `WORDPRESS_APP_PASSWORD`.
+4. Create a draft post for every page once: `npm run sync:pages-wp -w apps/api -- --dry-run`, then `npm run sync:pages-wp -w apps/api -- --baseline` (about 29,700 posts, in batches of 100; safe to stop and re-run; `--max 2000` stops early).
+5. Give your colleague the base URL, the key (by a password manager, not chat) and `deploy/N8N_SUBURB_REWRITE_PROMPT.md`.
+6. After each monthly register import run `POST /api/automation/stale-check`, so copy that quotes an old count stops showing.
+
+Nothing on the site changes until a rewrite is approved, so deploying this is safe on its own.

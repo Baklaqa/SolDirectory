@@ -18,6 +18,8 @@
     "fetch:register-contact-info": "tsx src/scripts/fetchRegisterContactInfo.ts",
     "fetch:register-languages": "tsx src/scripts/fetchRegisterLanguages.ts",
     "sync:register-wp": "tsx src/scripts/syncRegisterListingsToWordPress.ts",
+    "sync:pages-wp": "tsx src/scripts/syncPageContentToWordPress.ts",
+    "test:page-score": "tsx src/scripts/testPageScore.ts",
     "audit:seo": "tsx src/scripts/auditPublicSeo.ts",
     "audit:links": "tsx src/scripts/auditInternalLinks.ts",
     "email:test": "tsx src/scripts/testEmail.ts",
