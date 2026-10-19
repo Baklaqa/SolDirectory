@@ -6,7 +6,8 @@
  *   4. providers  the "provider" post for every SolDirectory member
  *
  * Usage (from apps/api):
- *   npx tsx src/scripts/syncAllToWordPress.ts --dry-run        # counts only
+ *   npx tsx src/scripts/syncAllToWordPress.ts --status         # is the full resync finished? how much is left? (read-only)
+ *   npx tsx src/scripts/syncAllToWordPress.ts --dry-run        # counts only (for a resync, use --status: a dry run does not know about the saved run)
  *   npx tsx src/scripts/syncAllToWordPress.ts                  # everything that has no post yet
  *   npx tsx src/scripts/syncAllToWordPress.ts --resync         # push EVERYTHING again, carrying on where an interrupted run stopped
  *   npx tsx src/scripts/syncAllToWordPress.ts --resync --restart   # throw the unfinished run away and start a new full one
@@ -76,8 +77,36 @@ async function resyncStart(): Promise<Date> {
 
 const providerFilter = { $or: [{ tradingName: { $nin: [null, ''] } }, { legalEntityName: { $nin: [null, ''] } }] };
 
+/** Read-only: is the full resync finished, and if not, how much is left? Changes nothing. */
+async function status() {
+  const run = await WpSyncRun.findOne({ name: 'resync' }).lean<{ startedAt: Date; finishedAt?: Date } | null>();
+  if (!run) { log('No full resync has been started. Start one with: npm run sync:all-wp -w apps/api -- --resync'); return; }
+  const since = { $or: [{ wpSyncedAt: { $exists: false } }, { wpSyncedAt: { $lt: run.startedAt } }] };
+  const [pagesTotal, pagesLeft, listingsTotal, listingsLeft, providersTotal, providersLeft] = await Promise.all([
+    PageContent.countDocuments({ status: { $in: ['baseline', 'approved', 'stale', 'unpublished'] } }),
+    PageContent.countDocuments({ status: { $in: ['baseline', 'approved', 'stale', 'unpublished'] }, ...since }),
+    RegisterListing.estimatedDocumentCount(),
+    RegisterListing.countDocuments(since),
+    Provider.countDocuments(providerFilter),
+    Provider.countDocuments({ ...providerFilter, ...since }),
+  ]);
+  const eligible = (await listEligiblePages()).length;
+  const row = (name: string, left: number, total: number) => `  ${name.padEnd(10)} ${String(total - left).padStart(7)} of ${String(total).padStart(7)} pushed   ${left === 0 ? 'done' : `${left} left`}`;
+  log(`Full resync started ${run.startedAt.toISOString()}.`);
+  console.log(row('pages', pagesLeft, pagesTotal));
+  console.log(row('listings', listingsLeft, listingsTotal));
+  console.log(row('providers', providersLeft, providersTotal));
+  const noPostYet = Math.max(0, eligible - pagesTotal);
+  if (noPostYet) console.log(`  ${noPostYet} page(s) have no post yet (the next run creates them).`);
+  const done = pagesLeft + listingsLeft + providersLeft + noPostYet === 0;
+  if (run.finishedAt) log(`COMPLETE: finished ${run.finishedAt.toISOString()}.`);
+  else if (done) log('Everything is pushed, but the run is not marked finished: run the resync command once more and it will close the run.');
+  else log('NOT FINISHED. Run the same --resync command again to carry on.');
+}
+
 async function main() {
   await connectDB();
+  if (args.includes('--status')) { await status(); process.exit(0); }
   const startedAt = resync && !dryRun ? await resyncStart() : new Date();
   const notDoneSince = { $or: [{ wpSyncedAt: { $exists: false } }, { wpSyncedAt: { $lt: startedAt } }] };
 
