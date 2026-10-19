@@ -10,6 +10,17 @@ export interface DocumentAssetDoc extends Document {
   size: number;
   status: 'complete';
   uploadedAt: Date;
+  /** The security check done before the file was stored (services/documentSecurity.ts). Only files that passed are ever stored. */
+  scan?: { engine: string; sha256: string; scannedAt: Date };
+  /** What the automatic read of the policy found (services/policyReview.ts). */
+  analysis?: {
+    status: 'ok' | 'gaps' | 'unreadable';
+    readAt: Date;
+    words: number;
+    found: string[];
+    missing: { key: string; label: string; advice: string; essential: boolean }[];
+    note?: string;
+  };
 }
 
 const documentAssetSchema = new Schema<DocumentAssetDoc>({
@@ -22,6 +33,18 @@ const documentAssetSchema = new Schema<DocumentAssetDoc>({
   size: { type: Number, required: true },
   status: { type: String, enum: ['complete'], required: true },
   uploadedAt: { type: Date, default: Date.now },
+  scan: { type: new Schema({ engine: String, sha256: String, scannedAt: Date }, { _id: false }), default: undefined },
+  analysis: {
+    type: new Schema({
+      status: { type: String, enum: ['ok', 'gaps', 'unreadable'] },
+      readAt: Date,
+      words: Number,
+      found: [String],
+      missing: [new Schema({ key: String, label: String, advice: String, essential: Boolean }, { _id: false })],
+      note: String,
+    }, { _id: false }),
+    default: undefined,
+  },
 });
 
 documentAssetSchema.index({ ownerId: 1, kind: 1 });

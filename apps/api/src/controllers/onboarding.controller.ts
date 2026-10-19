@@ -9,19 +9,21 @@ import { generateUniqueProviderSlug } from '../utils/slugify.js';
 import { getActiveProviderForUser } from '../utils/getActiveProvider.js';
 import { syncProviderToWordPress } from '../services/wordpressSync.service.js';
 import { applyProviderChecks } from '../services/providerChecks.js';
+import { scanDocument } from '../services/documentSecurity.js';
+import { reviewPolicyFile } from '../services/policyReview.js';
+import { EmailService } from '../services/email.service.js';
+import { siteOrigin } from '../services/emailTokens.js';
 
 const STEP_KEYS = ['org', 'insurance', 'areas', 'team', 'policy', 'declaration', 'billing'];
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 const POLICY_KIND = 'incident_policy';
-const ALLOWED_DOCUMENT_TYPES = new Set([
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]);
+// PDF and Word (.docx) only. The old .doc format is not accepted: it is the format macros and file-parser attacks have used most.
+const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const ALLOWED_DOCUMENT_TYPES = new Set(['application/pdf', DOCX]);
 
 function validatePolicyDocument(input: { kind: string; contentType: string; filename: string; size: number }) {
   if (input.kind !== POLICY_KIND) return 'Unsupported document kind';
-  if (!ALLOWED_DOCUMENT_TYPES.has(input.contentType)) return 'Upload a PDF, DOC, or DOCX document';
+  if (!ALLOWED_DOCUMENT_TYPES.has(input.contentType)) return 'Upload a PDF or a Word (.docx) document. For an older .doc file, save it as a PDF or .docx first.';
   if (!input.filename || input.filename.length > 180) return 'Filename is required and must be under 180 characters';
   if (!Number.isInteger(input.size) || input.size < 1 || input.size > MAX_DOCUMENT_BYTES) {
     return 'Document must be no larger than 10 MB';
@@ -29,17 +31,22 @@ function validatePolicyDocument(input: { kind: string; contentType: string; file
   return null;
 }
 
-const EXTENSION_TYPES: Record<string, string> = {
-  pdf: 'application/pdf',
-  doc: 'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-};
+const EXTENSION_TYPES: Record<string, string> = { pdf: 'application/pdf', docx: DOCX };
 
-/** The first bytes of a real PDF, Word 97-2003 or Word document. Stops a renamed file of another kind being stored as a policy. */
+/** The first bytes of a real PDF or Word document. Stops a renamed file of another kind being stored as a policy. */
 function looksLikeDocument(type: string, body: Buffer): boolean {
   if (type === 'application/pdf') return body.subarray(0, 5).toString('latin1') === '%PDF-';
-  if (type === 'application/msword') return body.length > 4 && body[0] === 0xd0 && body[1] === 0xcf && body[2] === 0x11 && body[3] === 0xe0;
   return body.length > 4 && body[0] === 0x50 && body[1] === 0x4b && body[2] === 0x03 && body[3] === 0x04;
+}
+
+// A provider can upload a few times while they fix their policy, but not without limit.
+const recentUploads = new Map<string, number[]>();
+function tooManyUploads(userId: string): boolean {
+  const now = Date.now();
+  const recent = (recentUploads.get(userId) ?? []).filter((t) => now - t < 10 * 60_000);
+  recent.push(now);
+  recentUploads.set(userId, recent);
+  return recent.length > 12;
 }
 
 /**
@@ -63,6 +70,22 @@ export async function uploadDocument(req: AuthedRequest, res: Response) {
   if (validationError) return res.status(400).json({ error: validationError });
   if (!looksLikeDocument(contentType, body)) return res.status(400).json({ error: 'That file does not look like a PDF or Word document. Please choose the original file.' });
 
+  if (tooManyUploads(req.user!.id)) return res.status(429).json({ error: 'That is a lot of uploads in a short time. Please wait a few minutes and try again.' });
+
+  // Checked before anything is stored: a file that fails here is never written anywhere.
+  const scan = await scanDocument(body, contentType as 'application/pdf' | typeof DOCX);
+  if (!scan.ok && scan.blocked) {
+    const name = provider.tradingName || provider.legalEntityName || 'A provider';
+    await logActivity('document_blocked', `${name}: an uploaded document was refused (${scan.blocked.kind}: ${scan.blocked.detail})`).catch(() => {});
+    if (scan.blocked.kind === 'malware') {
+      EmailService.notifyAdmin('An uploaded file was flagged as harmful', `${name} tried to upload a file that was refused: ${scan.blocked.detail}.`, `${siteOrigin()}/admin/providers/${provider._id}`).catch(() => {});
+    }
+    return res.status(scan.blocked.kind === 'unavailable' ? 503 : 422).json({ error: scan.blocked.message, blocked: scan.blocked.kind });
+  }
+
+  // Read the policy now, so the provider sees straight away what it covers and what it does not.
+  const analysis = await reviewPolicyFile(body, contentType);
+
   const key = `providers/${provider._id}/${kind}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
   const storage = getStorageService();
   const previous = await DocumentAsset.findOne({ ownerId: provider._id, kind }).select('s3Key').lean();
@@ -78,11 +101,23 @@ export async function uploadDocument(req: AuthedRequest, res: Response) {
   }
   const asset = await DocumentAsset.findOneAndUpdate(
     { ownerId: provider._id, kind },
-    { ownerId: provider._id, ownerType: 'Provider', kind, contentType, s3Key: key, originalFilename: filename, size: body.length, status: 'complete', uploadedAt: new Date() },
+    {
+      ownerId: provider._id, ownerType: 'Provider', kind, contentType, s3Key: key, originalFilename: filename, size: body.length, status: 'complete', uploadedAt: new Date(),
+      scan: { engine: scan.engine, sha256: scan.sha256, scannedAt: new Date() },
+      analysis,
+    },
     { upsert: true, new: true },
   );
   if (previous?.s3Key && previous.s3Key !== key) storage.deleteObject(previous.s3Key).catch(() => {});
-  res.status(201).json({ status: 'complete', document: { filename: asset.originalFilename, size: asset.size, uploadedAt: asset.uploadedAt } });
+  // After the declaration, a new policy changes the result: re-check, and email the provider if it did.
+  if (provider.attestation) await applyProviderChecks(provider);
+  res.status(201).json({ status: 'complete', document: { filename: asset.originalFilename, size: asset.size, uploadedAt: asset.uploadedAt }, review: publicReview(analysis) });
+}
+
+/** What the provider sees of the automatic read of their policy. */
+function publicReview(a: { status: string; found: string[]; missing: { key: string; label: string; advice: string; essential: boolean }[]; note?: string } | undefined | null) {
+  if (!a) return null;
+  return { status: a.status, covered: a.found.length, total: a.found.length + a.missing.length, missing: a.missing, note: a.note ?? null };
 }
 
 /** DELETE /api/onboarding/documents/:kind — the provider removes the document they uploaded (so they can choose another). */
@@ -99,7 +134,7 @@ export async function deleteDocument(req: AuthedRequest, res: Response) {
 export async function getOnboarding(req: AuthedRequest, res: Response) {
   const provider = await getActiveProviderForUser(req.user!.id);
   if (!provider) return res.status(403).json({ error: 'No provider profile for this account' });
-  const policy = await DocumentAsset.findOne({ ownerId: provider._id, kind: POLICY_KIND, status: 'complete' }).select('originalFilename size uploadedAt').lean();
+  const policy = await DocumentAsset.findOne({ ownerId: provider._id, kind: POLICY_KIND, status: 'complete' }).select('originalFilename size uploadedAt analysis').lean();
   // Previously only returned the step-completion array — the
   // frontend had nothing to pre-fill actual field values with, so a
   // page refresh mid-onboarding looked like data loss even though
@@ -116,7 +151,7 @@ export async function getOnboarding(req: AuthedRequest, res: Response) {
       attestedAt: provider.attestation.attestedAt,
     } : null,
     verification: provider.verification ? { status: provider.verification.status, checkedAt: provider.verification.checkedAt, checks: provider.verification.checks } : null,
-    policyDocument: policy ? { filename: policy.originalFilename, size: policy.size, uploadedAt: policy.uploadedAt } : null,
+    policyDocument: policy ? { filename: policy.originalFilename, size: policy.size, uploadedAt: policy.uploadedAt, review: publicReview(policy.analysis as any) } : null,
     provider: {
       legalEntityName: provider.legalEntityName,
       abn: provider.abn,

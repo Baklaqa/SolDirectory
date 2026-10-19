@@ -160,3 +160,17 @@
 .ob-check-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; border: 1px solid #F1D79C; background: #FFF6E5; }
 .ob-check-fail { border-color: #F0C9CD; background: #FFF6F7; }
 .ob-check-fix { flex: none; border: 0; background: none; font: inherit; font-weight: 600; color: var(--color-primary, #1769E0); cursor: pointer; text-decoration: underline; }
+
+/* What the automatic read of the policy found */
+.ob-review { margin-top: 12px; border: 1px solid var(--color-border, #E8EEF7); border-radius: 10px; padding: 14px 16px; background: #fff; }
+.ob-review-gaps, .ob-review-unreadable { border-color: #F1D79C; background: #FFFAF0; }
+.ob-review-title { margin: 0 0 10px; font-size: 14.5px; font-weight: 600; color: var(--color-text, #10233F); }
+.ob-review-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ob-review-list li { font-size: 14px; }
+.ob-review-tag { margin-left: 8px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: #FDE8EA; color: #9B1C2B; }
+.ob-review-tag-soft { background: var(--color-page-bg, #F5F8FC); color: var(--color-text-muted, #5A6B84); }
+.ob-review-advice { display: block; margin-top: 2px; color: var(--color-text-muted, #5A6B84); }
+.ob-review-note { margin: 0 0 10px; font-size: 13px; color: var(--color-text-muted, #5A6B84); }
+.ob-review-replace { display: inline-block; font-size: 13.5px; font-weight: 600; color: var(--color-primary, #1769E0); cursor: pointer; text-decoration: underline; }
+.ob-review-more { margin: 0 0 10px; font-size: 14px; }
+.ob-review-more summary { cursor: pointer; color: var(--color-primary, #1769E0); font-weight: 600; margin-bottom: 8px; }

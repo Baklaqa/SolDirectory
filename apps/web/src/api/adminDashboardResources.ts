@@ -92,7 +92,7 @@ export interface OperationsData {
   generatedAt: string;
   alerts: { severity: 'critical' | 'warning' | 'info'; message: string; link?: string; linkLabel?: string }[];
   system: {
-    database: boolean; email: boolean; adminAlerts: boolean; senderIdentity: boolean; sms: boolean; gstTaxRate: boolean; payments: boolean; maps: boolean;
+    database: boolean; email: boolean; adminAlerts: boolean; senderIdentity: boolean; sms: boolean; gstTaxRate: boolean; payments: boolean; maps: boolean; virusScanner: boolean;
     registerLeadEmails: boolean; uptimeSeconds: number; nodeVersion: string;
   };
   jobs: {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { approveProviderChecksAdmin, downloadProviderDocument, getProviderAdmin, runProviderChecksAdmin, setProviderAccountStatus } from '../../api/adminResources';
+import { approveProviderChecksAdmin, downloadProviderDocument, getPolicyReviewAdmin, getProviderAdmin, runProviderChecksAdmin, setProviderAccountStatus, type AdminPolicyReview } from '../../api/adminResources';
 import { ApiError } from '../../api/client';
 import { useToast } from '../../components/ui/Toast';
 import './AdminProviders.css';
@@ -31,9 +31,11 @@ export default function AdminProviderDetail() {
   const [provider, setProvider] = useState<AdminProviderDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [policy, setPolicy] = useState<AdminPolicyReview | null>(null);
   const showToast = useToast();
 
   useEffect(() => {
+    getPolicyReviewAdmin(id).then(setPolicy).catch(() => setPolicy(null));
     getProviderAdmin(id)
       .then((data) => setProvider(data as unknown as AdminProviderDetailData))
       .catch((err) => showToast(err instanceof ApiError ? err.message : 'Could not load this provider.'))
@@ -139,6 +141,18 @@ export default function AdminProviderDetail() {
                     <li key={c.key + c.message}>{c.result === 'pass' ? '✓' : c.result === 'warn' ? '!' : '✗'} <strong>{c.label}:</strong> {c.message}</li>
                   ))}
                 </ul>
+              )}
+              {policy && (
+                <div style={{ marginTop: 10 }}>
+                  <p><strong>Policy document:</strong> {policy.filename} ({Math.max(1, Math.round(policy.size / 1024))} KB), uploaded {new Date(policy.uploadedAt).toLocaleDateString('en-AU')}.
+                    {' '}{policy.scan ? `Security scan passed (${policy.scan.engine === 'clamav+built-in' ? 'virus scanner and built-in checks' : 'built-in checks only; no virus scanner is connected'}).` : 'Uploaded before security scans were kept.'}</p>
+                  {policy.review && (
+                    <p>
+                      {policy.review.status === 'unreadable' ? `Could not be read automatically. ${policy.review.note ?? ''}`
+                        : `Read automatically (${policy.review.words} words): ${policy.review.found.length} of ${policy.review.found.length + policy.review.missing.length} points covered.${policy.review.missing.length ? ` Missing: ${policy.review.missing.map((m) => `${m.label}${m.essential ? '' : ' (good to add)'}`).join('; ')}.` : ''}`}
+                    </p>
+                  )}
+                </div>
               )}
               {provider.verification?.approvedAt && <p>Approved by {provider.verification.approvedBy} on {new Date(provider.verification.approvedAt).toLocaleDateString('en-AU')}.</p>}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>

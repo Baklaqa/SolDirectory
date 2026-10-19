@@ -158,3 +158,10 @@ export async function downloadProviderDocumentAdmin(req: AuthedRequest, res: Res
     res.status(502).json({ error: 'The document could not be read from storage.' });
   }
 }
+
+/** GET /api/admin/providers/:id/policy-review — the uploaded policy with its security check and what the automatic read found. */
+export async function getPolicyReviewAdmin(req: AuthedRequest, res: Response) {
+  const asset = await DocumentAsset.findOne({ ownerId: req.params.id, ownerType: 'Provider', kind: 'incident_policy' })
+    .select('originalFilename size uploadedAt scan analysis').lean();
+  res.json(asset ? { filename: asset.originalFilename, size: asset.size, uploadedAt: asset.uploadedAt, scan: asset.scan ?? null, review: asset.analysis ?? null } : null);
+}

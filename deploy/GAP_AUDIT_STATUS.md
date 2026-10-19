@@ -102,3 +102,22 @@ Nothing on the site changes until a rewrite is approved, so deploying this is sa
 **Interrupted runs carry on.** Each post records when it was pushed, and a `--resync` run is remembered in the database until every step has finished. If the connection drops, run the same command again: it says "Continuing the full resync that began ..." and skips what is done. `--restart` is the only way to start over. For a long run use `nohup npm run sync:all-wp -w apps/api -- --resync > /var/log/wp-sync.log 2>&1 &` and watch `tail -f /var/log/wp-sync.log` (it prints rate and minutes left).
 
 Deliberately **not** copied: participants and their enquiries, independent workers' profiles, accounts, payments and anything private. The site (code, and Mongo for listings and pages) stays the source of truth; WordPress is a read-only mirror, so edits made in wp-admin to these posts are overwritten.
+
+## Provider documents: security and policy reading (19 October 2026)
+
+**Upload.** The incident and complaints policy is uploaded through the API (`POST /api/onboarding/documents`), as a PDF or Word `.docx` up to 10 MB (old `.doc` files are not accepted). It is stored in `apps/api/uploads/` (or S3 if all four `S3_*` settings are given), never served as a web page, and opened only by an administrator. nginx must allow 12 MB on `/api/` (`client_max_body_size 12m;`). Back up `apps/api/uploads/` with the database.
+
+**Security, before anything is stored** (`services/documentSecurity.ts`; a file that fails is never written anywhere):
+- Built-in checks, always on: a PDF with JavaScript, launch actions, embedded files or forms scripts; a Word file with macros, embedded objects or programs, an external template, a macro content type, or a zip bomb; a program renamed as a document; the EICAR test file. These are refused with a plain message telling the provider to save a plain PDF or .docx.
+- Antivirus, optional but recommended: **ClamAV**. The built-in checks are not an antivirus and cannot recognise known malware. Admin > Operations shows "Virus scanner for uploads: ClamAV connected" once it is running. Install on the server:
+
+```bash
+sudo apt update && sudo apt install -y clamav-daemon
+sudo systemctl stop clamav-freshclam && sudo freshclam && sudo systemctl start clamav-freshclam
+sudo systemctl enable --now clamav-daemon
+ls -l /var/run/clamav/clamd.ctl        # the socket the API finds by itself
+```
+
+  ClamAV needs about 1 GB of free memory. To prove it works, upload the standard EICAR test file renamed `test.pdf`: it must be refused. Set `CLAMAV_REQUIRED=true` in `apps/api/.env` to refuse every upload while ClamAV is not answering (the default carries on with the built-in checks). Every record notes which engine scanned the file.
+
+**Reading the policy** (`services/policyReview.ts`). The text is read out of the PDF or Word file and compared with the points the NDIS Commission expects, taken from the Complaints Management and Resolution Rules (Part 2), the Commission's Effective Complaints Handling Guidelines and its reportable incidents guidance (24 hours for a death, serious injury, abuse or neglect, unlawful sexual or physical contact or sexual misconduct; 5 business days for unauthorised use of a restrictive practice). 12 points are "needed", 8 are "good to add". The provider sees what is missing and what to add straight after the upload; the same result goes into the onboarding checks, so a registered provider with gaps is emailed the list with a link back to the policy step, and a corrected policy brings the "all confirmed" email. It is a guide, not a legal review: a point in unusual wording can be reported missing, so a policy with gaps is "in review" for your team (Approve button on the admin provider page), never a failure. A scanned (image-only) file is reported as unreadable with advice. Re-check the point list against the Commission's current guidance each year.

@@ -10,6 +10,7 @@ import 'dotenv/config';
  * NDIS register passes, a bad ABN needs fixing, expired insurance is refused, each result is emailed once, an administrator can open
  * the document, re-run the checks and approve, and a provider cannot use the administrator routes. Exits 1 if anything is wrong.
  */
+import { POLICY_GAPS, POLICY_GOOD, makePdf } from './testDocs.js';
 const arg = (name: string): string | undefined => {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
@@ -29,7 +30,7 @@ async function api(path: string, token: string | null, init: RequestInit = {}) {
   return { status: res.status, body, headers: res.headers };
 }
 const json = (b: unknown): RequestInit => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-const PDF = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n');
+const PDF = makePdf(POLICY_GOOD);
 
 async function main() {
   const { connectDB } = await import('../config/db.js');
@@ -59,13 +60,18 @@ async function main() {
   check((await api('/onboarding/documents?kind=incident_policy&filename=p.pdf', null, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: new Uint8Array(PDF) })).status === 401, 'an upload without a sign-in is refused with 401');
   check((await upload('fake.pdf', Buffer.from('not a pdf'))).status === 400, 'a file that is not really a PDF is refused');
   check((await upload('malware.exe', PDF, 'application/octet-stream')).status === 400, 'a file of another type is refused');
+  const js = await upload('trap.pdf', makePdf(POLICY_GOOD, '/OpenAction << /S /JavaScript /JS (app.alert(1)) >>'));
+  check(js.status === 422 && js.body?.blocked === 'active_content', 'a PDF with JavaScript in it is refused before anything is stored', `status ${js.status} ${JSON.stringify(js.body)}`);
+  check((await api('/onboarding', token)).body?.policyDocument === null, 'a refused file leaves no document behind');
   const up = await upload('Incident Policy.pdf', PDF);
   check(up.status === 201 && up.body?.document?.filename === 'Incident Policy.pdf', 'a real PDF uploads in one signed-in request', `status ${up.status}`);
+  check(up.body?.review?.status === 'ok' && up.body.review.missing.length === 0 && up.body.review.covered === up.body.review.total, 'the policy is read on upload and a complete one has nothing missing', JSON.stringify(up.body?.review?.missing?.map((m: any) => m.key)));
   const onb = await api('/onboarding', token);
   check(onb.body?.policyDocument?.filename === 'Incident Policy.pdf', 'the page can show the uploaded document again after a refresh');
 
   // Details, then the declaration
   const name = String(listing.name);
+  await step('policy', { incidentPolicyEscalation: 'Workers report to the team leader, who escalates to the manager and then the CEO within 24 hours.' });
   await step('org', { legalEntityName: name, abn: listing.abn, tradingName: '' });
   await step('insurance', { registrationGroups: [listing.supportCategories[0]] });
   const future = new Date(Date.now() + 200 * 86_400_000).toISOString().slice(0, 10);
@@ -87,6 +93,16 @@ async function main() {
   await step('org', { legalEntityName: name, abn: listing.abn, tradingName: '' });
   check((await api('/onboarding', token)).body?.verification?.status === 'checked', 'fixing the ABN brings the result back to checked');
 
+  // A policy with gaps: the provider is told exactly what is missing, and uploading a better one clears it
+  const confirmedBefore = await passedMails();
+  const gaps = await upload('thin-policy.pdf', makePdf(POLICY_GAPS));
+  check(gaps.status === 201 && gaps.body?.review?.status === 'gaps' && gaps.body.review.missing.some((m: any) => m.key === 'i_time' && m.essential && m.advice), 'a policy with gaps is accepted, and the upload says what is missing and what to add');
+  const thin = (await api('/onboarding', token)).body?.verification;
+  check(thin?.status === 'in_review' && thin.checks.some((c: any) => c.key === 'policyContent' && c.result === 'warn' && c.fixStep === 'policy'), 'missing policy points are reported to the provider as something to look at, pointing at the policy step');
+  check((await EmailLog.countDocuments({ to: owner.email, subject: /double-check/i })) === 1, 'the provider is emailed what the policy is missing');
+  const better = await upload('Incident Policy v2.pdf', PDF);
+  check(better.status === 201 && (await api('/onboarding', token)).body?.verification?.status === 'checked' && (await passedMails()) === confirmedBefore + 1, 'uploading a complete policy brings the result back to checked and tells the provider');
+
   // A provider who says they are registered under an ABN the register does not show: a note for the team, not a failure
   const noMatch = await step('declaration', decl).then(async () => {
     await step('org', { legalEntityName: 'Zzyzx Unlisted Services', abn: '51824753556', tradingName: '' });
@@ -97,7 +113,7 @@ async function main() {
   // Administrator
   check((await api(`/admin/providers/${providerId}/checks/run`, token, json({}))).status === 403, 'a provider cannot use the administrator checks route');
   const doc = await api(`/admin/providers/${providerId}/documents/incident_policy`, adminToken);
-  check(doc.status === 200 && String(doc.headers.get('content-type')).includes('pdf') && /Incident Policy\.pdf/.test(String(doc.headers.get('content-disposition'))), 'an administrator can open the uploaded policy');
+  check(doc.status === 200 && String(doc.headers.get('content-type')).includes('pdf') && /Incident Policy/.test(String(doc.headers.get('content-disposition'))), 'an administrator can open the uploaded policy');
   check((await api(`/admin/providers/${providerId}/documents/incident_policy`, token)).status === 403, 'a provider cannot open documents through the administrator route');
   check((await api(`/admin/providers/${providerId}/checks/run`, adminToken, json({}))).status === 200, 'an administrator can run the checks again');
   const approved = await api(`/admin/providers/${providerId}/checks/approve`, adminToken, json({ note: 'Confirmed by phone' }));

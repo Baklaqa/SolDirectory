@@ -44,6 +44,12 @@ export async function downloadProviderDocument(providerId: string, kind: string)
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
+export interface AdminPolicyReview {
+  filename: string; size: number; uploadedAt: string;
+  scan: { engine: string; sha256: string; scannedAt: string } | null;
+  review: { status: 'ok' | 'gaps' | 'unreadable'; found: string[]; missing: { key: string; label: string; essential: boolean }[]; note?: string; words: number } | null;
+}
+export const getPolicyReviewAdmin = (id: string) => adminGet<AdminPolicyReview | null>(`/admin/providers/${id}/policy-review`);
 export const runProviderChecksAdmin = (id: string) => adminPost<{ status: string; checks: unknown[] }>(`/admin/providers/${id}/checks/run`);
 export const approveProviderChecksAdmin = (id: string, note?: string) => adminPost<{ status: string }>(`/admin/providers/${id}/checks/approve`, { note });
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listProvidersAdmin, getProviderAdmin, setProviderAccountStatus, setProviderListingPaused, runProviderChecksAdmin, approveProviderChecksAdmin, downloadProviderDocumentAdmin } from '../controllers/admin.providers.controller.js';
+import { listProvidersAdmin, getProviderAdmin, setProviderAccountStatus, setProviderListingPaused, runProviderChecksAdmin, approveProviderChecksAdmin, downloadProviderDocumentAdmin, getPolicyReviewAdmin } from '../controllers/admin.providers.controller.js';
 import { listWorkersAdmin, getWorkerAdmin, setWorkerAccountStatus } from '../controllers/admin.workers.controller.js';
 import { listUsersAdmin, getUserAdmin, setUserAccountStatus } from '../controllers/admin.users.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
@@ -14,6 +14,7 @@ router.patch('/providers/:id/listing', requireAuth, adminOnly, setProviderListin
 router.post('/providers/:id/checks/run', requireAuth, adminOnly, runProviderChecksAdmin);
 router.post('/providers/:id/checks/approve', requireAuth, adminOnly, approveProviderChecksAdmin);
 router.get('/providers/:id/documents/:kind', requireAuth, adminOnly, downloadProviderDocumentAdmin);
+router.get('/providers/:id/policy-review', requireAuth, adminOnly, getPolicyReviewAdmin);
 
 router.get('/workers', requireAuth, adminOnly, listWorkersAdmin);
 router.get('/workers/:id', requireAuth, adminOnly, getWorkerAdmin);

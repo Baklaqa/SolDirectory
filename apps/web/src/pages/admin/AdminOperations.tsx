@@ -64,6 +64,7 @@ export default function AdminOperations() {
     { label: 'Sender identity', ok: system.senderIdentity, hint: system.senderIdentity ? 'In email footers' : 'Missing' },
     { label: 'Payments', ok: system.payments, hint: system.payments ? 'Stripe on' : 'Off' },
     { label: 'GST on invoices', ok: system.gstTaxRate, hint: system.gstTaxRate ? '10% GST is added at checkout' : 'Payments are not set up, so no GST is added yet' },
+    { label: 'Virus scanner for uploads', ok: system.virusScanner, hint: system.virusScanner ? 'ClamAV connected' : 'Not connected: built-in checks only' },
     { label: 'Maps', ok: system.maps, hint: system.maps ? 'Mapbox on' : 'Off' },
     { label: 'SMS', ok: system.sms, hint: system.sms ? 'Twilio on' : 'Off (optional)' },
     { label: 'Provider-area emails', ok: system.registerLeadEmails, hint: system.registerLeadEmails ? 'Switched on' : 'Switched off' },

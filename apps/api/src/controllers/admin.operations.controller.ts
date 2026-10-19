@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import mongoose from 'mongoose';
+import { clamdReachable } from '../services/documentSecurity.js';
 import type { AuthedRequest } from '../middleware/auth.middleware.js';
 import Lead from '../models/Lead.js';
 import LeadMatch from '../models/LeadMatch.js';
@@ -180,6 +181,8 @@ export async function getOperations(_req: AuthedRequest, res: Response) {
     // GST is added at checkout automatically (found or created in Stripe); the id can still be pinned with STRIPE_GST_TAX_RATE_ID.
     gstTaxRate: !!process.env.STRIPE_GST_TAX_RATE_ID || !!process.env.STRIPE_SECRET_KEY,
     maps: !!process.env.MAPBOX_ACCESS_TOKEN,
+    // Uploaded documents are always checked by the built-in checks; this says whether a real virus scanner (ClamAV) is also connected.
+    virusScanner: await clamdReachable(),
     registerLeadEmails: registerLeadEmailsOn,
     uptimeSeconds: Math.round(process.uptime()),
     nodeVersion: process.version,

@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import { EmailService } from './email.service.js';
 import { siteOrigin } from './emailTokens.js';
 import { REAL_SERVICES } from './registerNormalise.js';
+import { summariseMissing, type PolicyReview } from './policyReview.js';
 
 /**
  * The automatic checks on a provider's details and their declaration (onboarding step "Confirm your details").
@@ -96,6 +97,25 @@ export async function runProviderChecks(provider: ProviderDoc, now = new Date())
   checks.push(policy
     ? { key: 'policy', label: 'Incident and complaints policy', result: 'pass', message: 'Your policy document is uploaded.' }
     : { key: 'policy', label: 'Incident and complaints policy', result: 'fail', message: 'Upload your incident and complaints policy.', fixStep: 'policy' });
+
+  // 3b. What the policy says (read automatically when it was uploaded) and the escalation process described next to it.
+  if (policy) {
+    const asset = await DocumentAsset.findOne({ ownerId: provider._id, kind: 'incident_policy' }).select('analysis').lean();
+    const review = asset?.analysis as PolicyReview | undefined;
+    // A policy uploaded before policies were read has no review yet: nothing is said about it until it is uploaded again.
+    if (review?.status === 'unreadable') {
+      checks.push({ key: 'policyContent', label: 'What your policy covers', result: 'warn', fixStep: 'policy', message: review.note ?? 'We could not read your policy. Please upload a PDF or Word file saved from a document, not a scan.' });
+    } else if (review?.status === 'gaps') {
+      checks.push(att?.registrationStatus === 'not_registered'
+        ? { key: 'policyContent', label: 'What your policy covers', result: 'pass', message: `Your policy could cover more (${summariseMissing(review)}). This is good practice for providers that are not registered.` }
+        : { key: 'policyContent', label: 'What your policy covers', result: 'warn', fixStep: 'policy', message: `Your policy does not seem to cover: ${summariseMissing(review)}. If it is in there under different wording, our team will see that; otherwise add it and upload the policy again.` });
+    } else if (review?.status === 'ok') {
+      checks.push({ key: 'policyContent', label: 'What your policy covers', result: 'pass', message: 'Your policy covers the points we look for.' });
+    }
+  }
+  if (policy && (provider.incidentPolicyEscalation ?? '').trim().length < 20) {
+    checks.push({ key: 'escalation', label: 'Escalation process', result: 'warn', fixStep: 'policy', message: 'Describe your escalation process in the box under the policy upload: who an incident or complaint goes to next, and when.' });
+  }
 
   // 4. Insurance
   if (!att?.insuranceHeld) {

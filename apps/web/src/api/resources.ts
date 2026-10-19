@@ -165,7 +165,15 @@ export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
  * Uploads a document through the site's own API in one signed-in request, and reports progress as it goes.
  * Always settles with a plain-English message: a slow or failed upload ends in an error here, never in a spinner that stays on screen.
  */
-export function uploadProviderDocument(kind: string, file: File, onProgress: (percent: number) => void): Promise<{ filename: string; size: number }> {
+export interface PolicyReviewData {
+  status: 'ok' | 'gaps' | 'unreadable';
+  covered: number;
+  total: number;
+  missing: { key: string; label: string; advice: string; essential: boolean }[];
+  note: string | null;
+}
+
+export function uploadProviderDocument(kind: string, file: File, onProgress: (percent: number) => void): Promise<{ filename: string; size: number; review: PolicyReviewData | null }> {
   return new Promise((resolve, reject) => {
     const token = localStorage.getItem('sd_token');
     const xhr = new XMLHttpRequest();
@@ -177,7 +185,7 @@ export function uploadProviderDocument(kind: string, file: File, onProgress: (pe
     xhr.onload = () => {
       let body: any = {};
       try { body = JSON.parse(xhr.responseText); } catch { /* not JSON: a gateway page */ }
-      if (xhr.status >= 200 && xhr.status < 300) return resolve(body.document);
+      if (xhr.status >= 200 && xhr.status < 300) return resolve({ ...body.document, review: body.review ?? null });
       if (xhr.status === 401) {
         // The same thing the rest of the app does when a sign-in ends: forget it and send the person to the login page.
         localStorage.removeItem('sd_token');

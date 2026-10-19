@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MAX_DOCUMENT_BYTES, removeProviderDocument, saveOnboardingStep, uploadProviderDocument, type OnboardingVerification } from '../api/resources';
+import { MAX_DOCUMENT_BYTES, removeProviderDocument, saveOnboardingStep, uploadProviderDocument, type OnboardingVerification, type PolicyReviewData } from '../api/resources';
 import { ApiError } from '../api/client';
 import { useToast } from '../components/ui/Toast';
 import { listActiveServices, type ActiveService } from '../api/serviceCatalogue';
@@ -40,7 +40,7 @@ const STEP_KEYS = STEPS.map((s) => s.key);
 
 async function fetchOnboarding(): Promise<{
   steps: { key: string; complete: boolean }[]; provider: ProviderData;
-  policyDocument: { filename: string; size: number } | null; attestation: AttestationData | null; verification: OnboardingVerification | null;
+  policyDocument: { filename: string; size: number; review: PolicyReviewData | null } | null; attestation: AttestationData | null; verification: OnboardingVerification | null;
 }> {
   const res = await fetch(`${API_URL}/onboarding`, { headers: authHeaders() });
   if (!res.ok) throw new ApiError((await res.json()).error ?? 'Request failed', res.status);
@@ -50,6 +50,29 @@ async function fetchOnboarding(): Promise<{
 // Registration group options now come from the real service
 // catalogue (fetched below) rather than this hardcoded list.
 const SUBURB_OPTIONS = ['Bankstown', 'Parramatta', 'Liverpool', 'Blacktown', 'Auburn', 'Lidcombe', 'Canterbury', 'Marrickville'];
+
+/** The points a policy is missing: the needed ones first, the good-practice ones tucked behind a toggle so the list stays short. */
+function ReviewLists({ review }: { review: PolicyReviewData }) {
+  const needed = review.missing.filter((m) => m.essential);
+  const extra = review.missing.filter((m) => !m.essential);
+  const item = (m: { key: string; label: string; advice: string }, soft: boolean) => (
+    <li key={m.key}>
+      <strong>{m.label}</strong>{soft ? <span className="ob-review-tag ob-review-tag-soft">good to add</span> : <span className="ob-review-tag">needed</span>}
+      <span className="ob-review-advice">{m.advice}</span>
+    </li>
+  );
+  return (
+    <>
+      {needed.length > 0 && <ul className="ob-review-list">{needed.map((m) => item(m, false))}</ul>}
+      {extra.length > 0 && (
+        <details className="ob-review-more">
+          <summary>{extra.length} more {extra.length === 1 ? 'idea' : 'ideas'} that are good practice</summary>
+          <ul className="ob-review-list">{extra.map((m) => item(m, true))}</ul>
+        </details>
+      )}
+    </>
+  );
+}
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -81,7 +104,7 @@ export default function Onboarding() {
   const [afterHoursCover, setAfterHoursCover] = useState('');
   const [incidentPolicyEscalation, setIncidentPolicyEscalation] = useState('');
   const [plan, setPlan] = useState('starter');
-  const [policyFile, setPolicyFile] = useState<{ name: string; size?: number; status: 'uploading' | 'uploaded' | 'error'; progress: number; message?: string } | null>(null);
+  const [policyFile, setPolicyFile] = useState<{ name: string; size?: number; status: 'uploading' | 'uploaded' | 'error'; progress: number; message?: string; review?: PolicyReviewData | null } | null>(null);
   // The declaration step.
   const [registrationStatus, setRegistrationStatus] = useState<'' | 'registered' | 'not_registered'>('');
   const [insuranceHeld, setInsuranceHeld] = useState(false);
@@ -111,7 +134,7 @@ export default function Onboarding() {
         setAfterHoursCover(p.afterHoursCover ?? '');
         setIncidentPolicyEscalation(p.incidentPolicyEscalation ?? '');
         setPlan(p.plan ?? 'starter');
-        if (res.policyDocument) setPolicyFile({ name: res.policyDocument.filename, size: res.policyDocument.size, status: 'uploaded', progress: 100 });
+        if (res.policyDocument) setPolicyFile({ name: res.policyDocument.filename, size: res.policyDocument.size, status: 'uploaded', progress: 100, review: res.policyDocument.review });
         if (res.attestation) {
           setRegistrationStatus(res.attestation.registrationStatus);
           setInsuranceHeld(res.attestation.insuranceHeld);
@@ -160,14 +183,14 @@ export default function Onboarding() {
 
   async function handlePolicyUpload(file: File) {
     // Plain checks first, so a wrong file is explained straight away instead of after an upload.
-    if (!/\.(pdf|docx?)$/i.test(file.name)) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: 'Please choose a PDF or Word document (.pdf, .doc or .docx).' }); return; }
+    if (!/\.(pdf|docx)$/i.test(file.name)) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: /\.doc$/i.test(file.name) ? 'Older .doc files are not accepted. Please save the policy as a PDF or a .docx file and upload that.' : 'Please choose a PDF or a Word (.docx) file.' }); return; }
     if (file.size > MAX_DOCUMENT_BYTES) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: `That file is ${formatSize(file.size)}. The limit is 10 MB.` }); return; }
     if (file.size === 0) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: 'That file is empty. Please choose the document again.' }); return; }
     setPolicyFile({ name: file.name, size: file.size, status: 'uploading', progress: 0 });
     setError('');
     try {
-      await uploadProviderDocument('incident_policy', file, (progress) => setPolicyFile((f) => (f ? { ...f, progress } : f)));
-      setPolicyFile({ name: file.name, size: file.size, status: 'uploaded', progress: 100 });
+      const result = await uploadProviderDocument('incident_policy', file, (progress) => setPolicyFile((f) => (f ? { ...f, progress } : f)));
+      setPolicyFile({ name: file.name, size: file.size, status: 'uploaded', progress: 100, review: result.review });
       showToast('Policy document uploaded.');
     } catch (err) {
       setPolicyFile({ name: file.name, size: file.size, status: 'error', progress: 0, message: err instanceof ApiError ? err.message : 'The upload failed. Please try again.' });
@@ -406,7 +429,7 @@ export default function Onboarding() {
                   <p className="ob-step-intro">Upload your incident and complaints policy, and describe your escalation process.</p>
                   <div className="ob-field ob-field-full">
                     <label className="ob-field-label" id="ob-policy-label">Policy document</label>
-                    <p className="ob-field-helper">A PDF or Word file, up to 10 MB.</p>
+                    <p className="ob-field-helper">A PDF or Word (.docx) file, up to 10 MB. We scan it for viruses and read it to see what it covers.</p>
                     {policyFile?.status === 'uploading' && (
                       <div className="ob-upload-progress" role="status" aria-live="polite">
                         <span>Uploading {policyFile.name}… {policyFile.progress}%</span>
@@ -419,19 +442,38 @@ export default function Onboarding() {
                         <button type="button" onClick={handlePolicyRemove}>Remove</button>
                       </div>
                     )}
+                    {policyFile?.status === 'uploaded' && policyFile.review && (
+                      <div className={`ob-review ob-review-${policyFile.review.status}`} role="status">
+                        {policyFile.review.status === 'ok' && (
+                          <>
+                            <p className="ob-review-title">✓ We read your policy. Everything needed is there{policyFile.review.missing.length ? `, and it covers ${policyFile.review.covered} of ${policyFile.review.total} points in all.` : '.'}</p>
+                            <ReviewLists review={policyFile.review} />
+                          </>
+                        )}
+                        {policyFile.review.status === 'unreadable' && <p className="ob-review-title">We could not check your policy. {policyFile.review.note}</p>}
+                        {policyFile.review.status === 'gaps' && (
+                          <>
+                            <p className="ob-review-title">We read your policy. It covers {policyFile.review.covered} of {policyFile.review.total} points. {policyFile.review.missing.some((m) => m.essential) ? 'These are needed and not there yet:' : 'Everything needed is there.'}</p>
+                            <ReviewLists review={policyFile.review} />
+                            <p className="ob-review-note">Add these to your policy, then upload it again. If a point is covered in different words, you can carry on and our team will see it. This is an automatic read to help you spot gaps; it is not legal advice.</p>
+                          </>
+                        )}
+                        <label className="ob-review-replace">Upload an updated policy<input type="file" hidden accept=".pdf,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} /></label>
+                      </div>
+                    )}
                     {policyFile?.status === 'error' && (
                       <div className="ob-upload-error" role="alert">
                         <p>{policyFile.message}</p>
                         <label className="ob-upload-box ob-upload-box-small">
                           Choose a file
-                          <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
+                          <input type="file" hidden accept=".pdf,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
                         </label>
                       </div>
                     )}
                     {!policyFile && (
                       <label className="ob-upload-box" aria-labelledby="ob-policy-label">
                         Upload document
-                        <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
+                        <input type="file" hidden accept=".pdf,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
                       </label>
                     )}
                   </div>
