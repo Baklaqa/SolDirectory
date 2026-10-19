@@ -53,10 +53,10 @@ async function main() {
   await Provider.updateOne({ _id: providerId }, { $unset: { attestation: '', verification: '' }, $set: { onboarding: [] } });
   await EmailLog.deleteMany({ to: owner.email });
   const step = (key: string, data: unknown) => api(`/onboarding/${key}`, token, json({ data }));
-  const upload = (name: string, body: Buffer, type = 'application/pdf') => api(`/onboarding/documents?kind=incident_policy&filename=${encodeURIComponent(name)}`, token, { method: 'POST', headers: { 'Content-Type': type }, body });
+  const upload = (name: string, body: Buffer, type = 'application/pdf') => api(`/onboarding/documents?kind=incident_policy&filename=${encodeURIComponent(name)}`, token, { method: 'POST', headers: { 'Content-Type': type }, body: new Uint8Array(body) });
 
   // Upload
-  check((await api('/onboarding/documents?kind=incident_policy&filename=p.pdf', null, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: PDF })).status === 401, 'an upload without a sign-in is refused with 401');
+  check((await api('/onboarding/documents?kind=incident_policy&filename=p.pdf', null, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: new Uint8Array(PDF) })).status === 401, 'an upload without a sign-in is refused with 401');
   check((await upload('fake.pdf', Buffer.from('not a pdf'))).status === 400, 'a file that is not really a PDF is refused');
   check((await upload('malware.exe', PDF, 'application/octet-stream')).status === 400, 'a file of another type is refused');
   const up = await upload('Incident Policy.pdf', PDF);
