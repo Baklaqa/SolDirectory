@@ -4,7 +4,10 @@
  *   npm run audit:wp-sync -w apps/api
  *
  * Uses the WordPress application password if it is set (so drafts are counted too); otherwise only published posts are counted.
- * Exits with 2 if anything is missing.
+ * A count can hide a problem (extra posts cancel out missing ones), so by default it also reads every post of the three mirrored types
+ * and matches them one by one: posts the site expects but WordPress lacks (missing), posts WordPress has twice (duplicates), and
+ * posts for pages or listings the site no longer has (extras). Pass --quick to skip that and only compare counts.
+ * It changes nothing. Exits with 2 if anything is missing, duplicated or extra.
  */
 import 'dotenv/config';
 import { connectDB } from '../config/db.js';
@@ -26,6 +29,46 @@ async function wpTotal(restBase: string): Promise<number | null> {
   } catch {
     return null;
   }
+}
+
+interface WpPost { id: number; slug: string; status: string; meta?: Record<string, unknown> }
+
+async function allPosts(restBase: string): Promise<WpPost[] | null> {
+  const out: WpPost[] = [];
+  for (let page = 1; ; page += 1) {
+    const res = await fetch(`${WP}/wp-json/wp/v2/${restBase}?per_page=100&page=${page}&status=any&_fields=id,slug,status,meta`, { headers: auth });
+    if (res.status === 400 && page > 1) break; // past the last page
+    if (!res.ok) return null;
+    out.push(...((await res.json()) as WpPost[]));
+    if (page >= (Number(res.headers.get('x-wp-totalpages')) || 1)) break;
+  }
+  return out;
+}
+
+const pageKey = (p: WpPost) => (typeof p.meta?.sd_page_key === 'string' && p.meta.sd_page_key ? p.meta.sd_page_key : null);
+
+/** Matches WordPress posts to the keys the site expects. `keyOf` reads the key from a post (null when it has none). Returns the number of problems. */
+async function deepCheck(label: string, restBase: string, expected: Set<string>, keyOf: (p: WpPost) => string | null): Promise<number> {
+  const posts = await allPosts(restBase);
+  if (!posts) { console.log(`  ${label}: could not read the posts.`); return 1; }
+  const seen = new Map<string, WpPost[]>();
+  const unkeyed: WpPost[] = [];
+  for (const p of posts) {
+    const k = keyOf(p);
+    if (!k) unkeyed.push(p);
+    else seen.set(k, [...(seen.get(k) ?? []), p]);
+  }
+  const missing = [...expected].filter((k) => !seen.has(k));
+  const duplicates = [...seen.entries()].filter(([, v]) => v.length > 1);
+  const extras = [...seen.keys()].filter((k) => !expected.has(k));
+  const show = (xs: string[]) => xs.slice(0, 5).map((x) => `      ${x}`).join('\n');
+  const surplus = duplicates.reduce((n, [, v]) => n + v.length - 1, 0);
+  console.log(`  ${label}: ${posts.length} posts. Missing ${missing.length}, duplicated ${duplicates.length} (${surplus} surplus posts), for pages the site no longer has ${extras.length}, without a key ${unkeyed.length}.`);
+  if (missing.length) console.log(`    missing, for example:\n${show(missing)}`);
+  if (duplicates.length) console.log(`    duplicated, for example:\n${show(duplicates.map(([k, v]) => `${k}  (post ids ${v.map((p) => p.id).join(', ')})`))}`);
+  if (extras.length) console.log(`    no longer on the site, for example:\n${show(extras)}`);
+  if (unkeyed.length) console.log(`    without a key (older hand-made posts are normal), slugs: ${unkeyed.slice(0, 5).map((p) => p.slug).join(', ')}`);
+  return missing.length + duplicates.length + extras.length;
 }
 
 async function main() {
@@ -50,8 +93,16 @@ async function main() {
     if (r.wp === null || (gap !== null && gap > 0)) missing += 1;
     console.log(`${r.name.padEnd(21)} ${String(r.expected ?? '-').padStart(7)}   ${String(r.wp ?? '?').padStart(9)}   ${status}   (${r.note})`);
   }
-  console.log(missing ? '\nNot in step. Run: npx tsx src/scripts/syncAllToWordPress.ts' : '\nWordPress is in step with the site.');
-  process.exit(missing ? 2 : 0);
+  let problems = 0;
+  if (!process.argv.includes('--quick')) {
+    console.log('\nPost by post (this reads every post, so it takes a minute or two):');
+    problems += await deepCheck('service-area-pages', 'service-area-pages', new Set(eligible.filter((p) => p.kind === 'service').map((p) => p.key)), pageKey);
+    problems += await deepCheck('register-area-pages', 'register-area-pages', new Set(eligible.filter((p) => p.kind === 'register').map((p) => p.key)), pageKey);
+    const listings = await RegisterListing.find({}).select('type slug').lean<{ type: string; slug: string }[]>();
+    problems += await deepCheck('register-listings', 'register-listings', new Set(listings.map((l) => `${l.type}:${l.slug}`)), (p) => (p.meta?.mongo_slug ? `${p.meta.register_type}:${p.meta.mongo_slug}` : null));
+  }
+  console.log(missing || problems ? '\nNot in step. To add what is missing run: npx tsx src/scripts/syncAllToWordPress.ts' : '\nWordPress is in step with the site, post by post.');
+  process.exit(missing || problems ? 2 : 0);
 }
 
 main().catch((err) => { console.error('[audit-wp-sync] Fatal error:', err); process.exit(1); });
