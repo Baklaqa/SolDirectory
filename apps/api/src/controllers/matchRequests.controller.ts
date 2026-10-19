@@ -214,6 +214,19 @@ function tooManySubmissions(key: string): boolean {
   return false;
 }
 
+const slugOf = (v: string) => v.trim().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+/** The register page to send someone to: their suburb if it has listings, else their state, else the register home. */
+async function registerBrowseUrl(lead: { suburb?: string; state?: string; fundingType?: string }, siteUrl: string): Promise<string> {
+  const aged = lead.fundingType === 'Aged Care';
+  const base = `${siteUrl}/${aged ? 'aged-care-providers' : 'ndis-providers'}`;
+  const state = (lead.state ?? '').toUpperCase();
+  if (!state) return base;
+  const slug = lead.suburb ? slugOf(lead.suburb) : '';
+  if (slug && (await RegisterListing.exists({ type: aged ? 'aged_care' : 'ndis', areas: { $elemMatch: { state, suburbSlug: slug } } }))) return `${base}/${state.toLowerCase()}/${slug}`;
+  return `${base}/${state.toLowerCase()}`;
+}
+
 export async function submitMatchRequest(req: Request, res: Response) {
   const { draftId, ...form } = req.body ?? {};
   // A hidden field real people never fill in.
@@ -356,15 +369,6 @@ export async function submitMatchRequest(req: Request, res: Response) {
     },
     browseUrl: `${siteUrl}/find-a-provider${lead.suburb ? `?suburb=${encodeURIComponent(lead.suburb)}` : ''}`,
   }).catch(() => {});
-  // Nobody fits: tell the person straight away and point them at the register listings to contact directly.
-  if (!preferred && matchedProviders.length === 0) {
-    EmailService.sendNoMatch(email, {
-      need: lead.need,
-      suburb: lead.suburb,
-      registerUrl: `${siteUrl}/ndis-providers`,
-      trackingUrl: trackUrl(String(lead._id)),
-    }).catch(() => {});
-  }
   // Tell whoever runs the site about every new enquiry, and loudly when nobody could be matched.
   if (preferred) {
     // Tell the named business (when we can reach it) and let the site owner know what happened.
@@ -376,8 +380,22 @@ export async function submitMatchRequest(req: Request, res: Response) {
     void notifyAdminOfEnquiry(lead, requestNumber, matchedProviders.length, { name: preferred.name, note });
   } else {
     void notifyAdminOfEnquiry(lead, requestNumber, matchedProviders.length);
-    // Businesses on the public register near the enquiry (off unless REGISTER_LEAD_EMAILS=1). Fire-and-forget like the rest.
-    notifyRegisterListings(lead).catch(() => {});
+    // Businesses on the public register near the enquiry are told there is a request in their area and invited to join (off unless
+    // REGISTER_LEAD_EMAILS=1). This runs in the background. When no member provider matched, the person then gets a "your request is
+    // still open" email, sent after the thank-you one, that says how many nearby businesses were really told (none, if the notices
+    // are off or nobody nearby could be emailed), so it never promises more than happened.
+    void (async () => {
+      const notice = await notifyRegisterListings(lead).catch(() => ({ sent: 0 }));
+      if (matchedProviders.length > 0) return;
+      await EmailService.sendNoMatch(email, {
+        name,
+        need: lead.need,
+        suburb: lead.suburb,
+        browseUrl: await registerBrowseUrl(lead, siteUrl),
+        trackingUrl: trackUrl(String(lead._id)),
+        nearbyTold: notice.sent,
+      }).catch(() => {});
+    })();
   }
 
   res.status(201).json({

@@ -195,7 +195,8 @@ const MAX_NOTICES_PER_30_DAYS = 4;
 /**
  * Tells register listings near a new enquiry about it. Deliberately narrow:
  *  - OFF unless REGISTER_LEAD_EMAILS=1, so nothing is sent to businesses until you switch it on;
- *  - only when the service is known (from the page the visitor opened the form on) and maps to a register category;
+ *  - near the enquiry (REGISTER_NOTICE_RADIUS_KM, default 20 km), on the register that fits the funding type; when the service is
+ *    known (from the page the visitor opened the form on) only listings that offer it;
  *  - only listings whose published email was verified against their own website, that have not opted out, and have
  *    not joined (joined providers get their normal lead emails instead);
  *  - at most REGISTER_NOTICES_PER_LEAD (default 10) per enquiry, each listing at most once every 3 days and 4 times a month;
@@ -204,9 +205,10 @@ const MAX_NOTICES_PER_30_DAYS = 4;
 export async function notifyRegisterListings(lead: LeadDoc): Promise<{ sent: number; reason?: string }> {
   if (process.env.REGISTER_LEAD_EMAILS !== '1') return { sent: 0, reason: 'disabled' };
   try {
+    // The form no longer asks for the support, so it is often unknown (only a visitor who opened the form from a service page has one).
+    // Without it, nearby businesses on the right register are told there is a request in their area, whatever they offer.
     const category = categoryForNeed(lead.need, lead.serviceContext);
-    if (!category) return { sent: 0, reason: 'service unknown' };
-    const types = AGED_CARE_CATEGORIES.has(category) ? ['aged_care'] : lead.fundingType === 'Aged Care' ? ['aged_care', 'ndis'] : ['ndis'];
+    const types = category && AGED_CARE_CATEGORIES.has(category) ? ['aged_care'] : lead.fundingType === 'Aged Care' ? (category ? ['aged_care', 'ndis'] : ['aged_care']) : ['ndis'];
 
     // Which suburbs count as "near": everything within the radius of where the enquiry is, or at least the suburb itself.
     const nearby: { state: string; suburbSlug: string }[] = [];
@@ -230,7 +232,7 @@ export async function notifyRegisterListings(lead: LeadDoc): Promise<{ sent: num
       emailOptOut: { $ne: true },
       contactVerified: true,
       email: { $exists: true, $ne: '' },
-      supportCategories: category,
+      ...(category ? { supportCategories: category } : {}),
       $or: [...slugsByState].map(([state, slugs]) => ({ areas: { $elemMatch: { state, suburbSlug: { $in: [...slugs] } } } })),
     }).select('_id type slug name email').limit(300).lean();
     if (!candidates.length) return { sent: 0, reason: 'no listings nearby' };
@@ -257,7 +259,7 @@ export async function notifyRegisterListings(lead: LeadDoc): Promise<{ sent: num
       const unsub = unsubscribeUrl('listing', String(listing._id));
       const ok = await EmailService.sendTemplate(
         listing.email as string,
-        registerLeadNoticeTemplate({ listingName: listing.name, category, suburb: lead.suburb, listingUrl: `${siteOrigin()}/${path}/${listing.slug}`, unsubscribeUrl: unsub }),
+        registerLeadNoticeTemplate({ listingName: listing.name, category, suburb: lead.suburb, radiusKm: REGISTER_RADIUS_KM(), listingUrl: `${siteOrigin()}/${path}/${listing.slug}#claim-heading`, joinUrl: `${siteOrigin()}/signup?role=provider`, unsubscribeUrl: unsub }),
         { unsubscribeUrl: unsub },
       );
       if (ok) { sent++; await RegisterLeadNotice.updateOne({ leadId: lead._id, listingId: listing._id }, { $set: { delivered: true } }); }

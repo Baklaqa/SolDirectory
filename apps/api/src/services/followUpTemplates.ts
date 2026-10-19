@@ -137,17 +137,19 @@ export function registerRequestedNoticeTemplate(input: { listingName: string; su
   return { subject: 'A person has asked SolDirectory to send you their request', html };
 }
 
-export function registerLeadNoticeTemplate(input: { listingName: string; category: string; suburb: string; listingUrl: string; unsubscribeUrl: string }): Email {
+export function registerLeadNoticeTemplate(input: { listingName: string; category?: string; suburb: string; radiusKm?: number; listingUrl: string; joinUrl?: string; unsubscribeUrl: string }): Email {
+  const support = input.category ? input.category.toLowerCase() : 'disability or aged care support';
   const html = renderEmailLayout({
-    preheader: `Someone near ${input.suburb} is looking for ${input.category.toLowerCase()}`,
-    heading: `New enquiry near ${escapeHtml(input.suburb)}`,
+    preheader: `Someone near ${input.suburb} is looking for ${support}`,
+    heading: `A request for support near ${escapeHtml(input.suburb)}`,
     bodyHtml: `
       <p>Hello ${escapeHtml(input.listingName)},</p>
-      <p>A person near <strong>${escapeHtml(input.suburb)}</strong> has just asked SolDirectory for <strong>${escapeHtml(input.category.toLowerCase())}</strong>. Your organisation is listed on the public register for this support in the area.</p>
-      <p>We have not shared the person's details. To receive enquiries like this, with their contact details, open your free listing and manage it.</p>`,
-    ctaLabel: 'Manage your listing',
-    ctaUrl: input.listingUrl,
+      <p>A person in <strong>${escapeHtml(input.suburb)}</strong>${input.radiusKm ? ` (within about ${input.radiusKm} km of your listed area)` : ''} has just asked SolDirectory for <strong>${escapeHtml(support)}</strong>, and no provider who has joined SolDirectory has space for them yet. Your organisation is on the public register in the area${input.category ? ' for this support' : ''}.</p>
+      <p>We have not shared the person's details. Providers who join SolDirectory get their own dashboard, are matched to new requests in the areas they serve, and can unlock a person's contact details (up to 3 providers per request). It is free to create an account.</p>
+      <p>Prefer to keep your register details up to date first? You can also <a href="${escapeHtml(input.listingUrl)}" style="color:#1769E0; font-weight:700;">claim your listing</a>. We check it against your website or ABN, so it can take a few days.</p>`,
+    ctaLabel: 'Create your free provider account',
+    ctaUrl: input.joinUrl ?? input.listingUrl,
     footerHtml: footer(input.unsubscribeUrl, 'We sent this to the business email address published for your register listing.'),
   });
-  return { subject: `New ${input.category.toLowerCase()} enquiry near ${input.suburb}`, html };
+  return { subject: `A request for ${support} near ${input.suburb}`, html };
 }

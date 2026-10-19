@@ -439,21 +439,36 @@ export function checkExpiringTemplate(input: { firstName?: string; checkName: st
   return { subject: `Your ${input.checkName} expires on ${when}`, html };
 }
 
-export function noMatchTemplate(input: { need?: string; suburb?: string; registerUrl: string; trackingUrl?: string }): { subject: string; html: string } {
-  const what = input.need && !/^not sure yet$/i.test(input.need) ? escapeHtml(input.need) : 'the support you asked for';
+/**
+ * Sent a moment after the "thanks, we have your request" email, when no member provider could be matched. It explains what that means
+ * (not that there is no support near them), what SolDirectory is doing about it (only what really happened: `nearbyTold` is how many
+ * register businesses nearby were actually emailed, 0 if none), and what they can do now.
+ */
+export function noMatchTemplate(input: { name?: string; need?: string; suburb?: string; browseUrl: string; trackingUrl?: string; nearbyTold?: number }): { subject: string; html: string } {
+  const what = input.need && !/^not sure yet$/i.test(input.need) ? ` for ${escapeHtml(input.need)}` : '';
   const where = input.suburb ? ` in ${escapeHtml(input.suburb)}` : '';
+  const area = input.suburb ? escapeHtml(input.suburb) : 'you';
+  const first = (input.name ?? '').trim().split(/\s+/)[0];
+  const told = Math.max(0, input.nearbyTold ?? 0);
+  const link = (href: string, label: string) => `<a href="${escapeHtml(href)}" style="color:${PRIMARY}; font-weight:700;">${label}</a>`;
+  const next = told > 0
+    ? `<p><strong>What we have done:</strong> we have let ${told === 1 ? 'one registered provider' : `${told} registered providers`} near ${area} know that someone in their area is looking for support. We did not share your name or contact details. If one of them joins SolDirectory and takes up your request, we will email you straight away.</p>`
+    : `<p><strong>What happens next:</strong> your request stays open. When a provider near ${area} joins SolDirectory, or tells us they have space, we will email you straight away.</p>`;
   const html = renderEmailLayout({
-    preheader: 'No provider on SolDirectory has confirmed capacity for your request yet',
-    heading: 'We couldn’t find a match yet',
+    preheader: 'Nobody has confirmed space yet. Here is what we are doing, and what you can do now.',
+    heading: 'Your request is still open',
     bodyHtml: `
-      <p>No provider on SolDirectory has confirmed capacity for ${what}${where} right now. We’ll keep your request open and let you know if one does.</p>
-      <p>In the meantime, registered providers list this support near you. You can contact them directly: <a href="${escapeHtml(input.registerUrl)}" style="color:${PRIMARY}; font-weight:700;">see registered providers</a>.</p>
-      ${input.trackingUrl ? `<p>You can close your request at any time: <a href="${escapeHtml(input.trackingUrl)}" style="color:${PRIMARY}; font-weight:700;">your request</a>.</p>` : ''}
-      <p>Questions? Reply to this email or call ${escapeHtml(BUSINESS.phone)}.</p>`,
-    ctaLabel: 'See registered providers',
-    ctaUrl: input.registerUrl,
+      <p>${first ? `Hi ${escapeHtml(first)},` : 'Hello,'}</p>
+      <p>Thanks again for sending your request${what}${where}. We checked straight away, and none of the providers who have joined SolDirectory near ${area} has told us they have space for you yet.</p>
+      <p>That does not mean there is no support near you. Many providers are listed on the public NDIS register but have not joined SolDirectory, so they cannot see your request unless we reach out to them.</p>
+      ${next}
+      <p><strong>What you can do now:</strong> you do not have to wait for us. You can look through the registered providers near you and contact them directly. When you get in touch, ask whether they have space for you and how soon they could start.</p>
+      ${input.trackingUrl ? `<p>You can ${link(input.trackingUrl, 'see or close your request')} at any time. If you no longer need support, closing it means no more providers can open it.</p>` : ''}
+      <p>Questions? Email ${escapeHtml(BUSINESS.email)} or call ${escapeHtml(BUSINESS.phone)}.</p>`,
+    ctaLabel: input.suburb ? `See providers near ${input.suburb}` : 'See registered providers',
+    ctaUrl: input.browseUrl,
   });
-  return { subject: 'We couldn’t find a match yet', html };
+  return { subject: 'Your request is open: what happens next', html };
 }
 
 export function outcomeCheckTemplate(input: { need?: string; started: string; looking: string; notNeeded: string }): { subject: string; html: string } {
