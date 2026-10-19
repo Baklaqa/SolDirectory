@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProviderAdmin, setProviderAccountStatus } from '../../api/adminResources';
+import { approveProviderChecksAdmin, downloadProviderDocument, getProviderAdmin, runProviderChecksAdmin, setProviderAccountStatus } from '../../api/adminResources';
 import { ApiError } from '../../api/client';
 import { useToast } from '../../components/ui/Toast';
 import './AdminProviders.css';
@@ -18,6 +18,11 @@ interface AdminProviderDetailData {
   weeklyCapacityHours?: number;
   rosterSize?: number;
   onboarding?: { key: string; complete: boolean }[];
+  attestation?: { registrationStatus: string; insuranceHeld: boolean; insuranceExpiry?: string; workerScreening: boolean; codeOfConduct: boolean; truthful: boolean; attestedAt: string; attestedBy?: string };
+  verification?: {
+    status: 'checked' | 'in_review' | 'needs_attention'; checkedAt: string; approvedBy?: string; approvedAt?: string; approvalNote?: string;
+    checks: { key: string; label: string; result: 'pass' | 'warn' | 'fail'; message: string }[];
+  };
   userId?: { name: string; email: string; mobile?: string };
 }
 
@@ -34,6 +39,30 @@ export default function AdminProviderDetail() {
       .catch((err) => showToast(err instanceof ApiError ? err.message : 'Could not load this provider.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function reload() {
+    const data = await getProviderAdmin(id);
+    setProvider(data as unknown as AdminProviderDetailData);
+  }
+
+  async function rerunChecks() {
+    setUpdating(true);
+    try { await runProviderChecksAdmin(id); await reload(); showToast('Checks run again.'); }
+    catch (err) { showToast(err instanceof ApiError ? err.message : 'Could not run the checks.'); }
+    finally { setUpdating(false); }
+  }
+
+  async function approveChecks() {
+    setUpdating(true);
+    try { await approveProviderChecksAdmin(id); await reload(); showToast('Approved. The provider has been emailed that their details are confirmed.'); }
+    catch (err) { showToast(err instanceof ApiError ? err.message : 'Could not approve.'); }
+    finally { setUpdating(false); }
+  }
+
+  async function openPolicy() {
+    try { await downloadProviderDocument(id, 'incident_policy'); }
+    catch (err) { showToast(err instanceof ApiError ? err.message : 'Could not open the document.'); }
+  }
 
   async function toggleStatus() {
     if (!provider) return;
@@ -87,6 +116,38 @@ export default function AdminProviderDetail() {
           <h2 className="admin-detail-card-title">Coverage</h2>
           <p>{provider.serviceSuburbs?.length ? provider.serviceSuburbs.join(', ') : 'No suburbs set'}</p>
           <p>{provider.travelRadiusKm ? `${provider.travelRadiusKm}km radius` : 'No radius set'}</p>
+        </div>
+        <div className="admin-detail-card admin-detail-card-wide">
+          <h2 className="admin-detail-card-title">Onboarding checks</h2>
+          {!provider.attestation ? (
+            <p>This provider has not made the declaration yet.</p>
+          ) : (
+            <>
+              <p>
+                {provider.verification && (
+                  <span className={`admin-status-pill admin-status-pill-${provider.verification.status === 'checked' ? 'active' : 'suspended'}`}>
+                    {provider.verification.status === 'checked' ? 'Checked' : provider.verification.status === 'in_review' ? 'Needs a look' : 'Provider to fix'}
+                  </span>
+                )}{' '}
+                Declared {new Date(provider.attestation.attestedAt).toLocaleDateString('en-AU')}
+                {provider.attestation.attestedBy ? ` by ${provider.attestation.attestedBy}` : ''}: {provider.attestation.registrationStatus === 'registered' ? 'NDIS registered' : 'not NDIS registered'},
+                insurance {provider.attestation.insuranceHeld ? `to ${provider.attestation.insuranceExpiry ? new Date(provider.attestation.insuranceExpiry).toLocaleDateString('en-AU') : 'no date'}` : 'not held'}.
+              </p>
+              {provider.verification && (
+                <ul className="admin-onboarding-list">
+                  {provider.verification.checks.map((c) => (
+                    <li key={c.key + c.message}>{c.result === 'pass' ? '✓' : c.result === 'warn' ? '!' : '✗'} <strong>{c.label}:</strong> {c.message}</li>
+                  ))}
+                </ul>
+              )}
+              {provider.verification?.approvedAt && <p>Approved by {provider.verification.approvedBy} on {new Date(provider.verification.approvedAt).toLocaleDateString('en-AU')}.</p>}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+                <button className="admin-toggle-btn admin-toggle-btn-activate" disabled={updating} onClick={rerunChecks}>Run the checks again</button>
+                {provider.verification?.status === 'in_review' && <button className="admin-toggle-btn admin-toggle-btn-activate" disabled={updating} onClick={approveChecks}>Approve: I have looked at this</button>}
+                <button className="admin-toggle-btn admin-toggle-btn-activate" onClick={openPolicy}>Open the policy document</button>
+              </div>
+            </>
+          )}
         </div>
         <div className="admin-detail-card">
           <h2 className="admin-detail-card-title">Onboarding</h2>

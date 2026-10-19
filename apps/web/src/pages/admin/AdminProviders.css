@@ -48,3 +48,5 @@
   .admin-providers-filter-group { align-items: flex-start; }
   .admin-providers-filter { flex-wrap: wrap; }
 }
+
+.admin-detail-card-wide { grid-column: 1 / -1; }

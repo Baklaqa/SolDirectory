@@ -97,12 +97,19 @@ function LegacyServiceLocationRoute() {
   return <ServiceLocationPage />;
 }
 
+/** Sends a signed-out visitor to the login page, and brings them back to this page after they sign in. */
+function LoginRedirect() {
+  const location = useLocation();
+  const back = `${location.pathname}${location.search}`;
+  return <Navigate to={`/login?returnTo=${encodeURIComponent(back)}`} replace />;
+}
+
 function RequireAuth({ children }: { children: ReactElement }) {
   const { user, loading } = useAuth();
   // Prevents a flash of protected content before we know whether a
   // stored token is actually valid — item 36 in the spec.
   if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LoginRedirect />;
   return children;
 }
 
@@ -116,7 +123,7 @@ function RequireAuth({ children }: { children: ReactElement }) {
 function RequireRole({ roles, children }: { roles: Role[]; children: ReactElement }) {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LoginRedirect />;
   if (!roles.includes(user.role)) {
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
@@ -137,7 +144,7 @@ function RequireRole({ roles, children }: { roles: Role[]; children: ReactElemen
 function RequireAdminOrProProvider({ children }: { children: ReactElement }) {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LoginRedirect />;
   const allowed = user.role === 'admin' || (user.role === 'provider' && user.plan === 'pro');
   if (!allowed) {
     return (

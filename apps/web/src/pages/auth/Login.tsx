@@ -67,7 +67,9 @@ export default function Login() {
     setError('');
     try {
       const authedUser = await login(email, password, needsCode ? code : undefined);
-      const returnTo = searchParams.get('returnTo');
+      // Only ever go back to a page on this site (a path), never to an address someone put in the link.
+      const wanted = searchParams.get('returnTo');
+      const returnTo = wanted && wanted.startsWith('/') && !wanted.startsWith('//') ? wanted : null;
       navigate(returnTo || ROLE_DESTINATION[authedUser.role]);
     } catch (err) {
       if (err instanceof ApiError && err.code === 'TWO_FACTOR_REQUIRED') {

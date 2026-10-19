@@ -139,3 +139,24 @@
   .ob-step-content, .ob-skel-intro, .ob-skel-stepper, .ob-skel-panel, .ob-saved-indicator { animation: none !important; }
   .ob-continue-btn:hover { transform: none !important; }
 }
+
+/* Document upload states */
+.ob-field-helper { margin: 0 0 8px; font-size: 13px; color: var(--color-text-muted, #5A6B84); }
+.ob-upload-progress { border: 1px solid var(--color-border, #E8EEF7); border-radius: 10px; padding: 14px 16px; font-size: 14px; }
+.ob-upload-bar { height: 8px; border-radius: 99px; background: var(--color-border, #E8EEF7); margin-top: 10px; overflow: hidden; }
+.ob-upload-bar > div { height: 100%; background: var(--color-primary, #1769E0); transition: width 150ms linear; }
+.ob-upload-error { border: 1px solid #F0C9CD; background: #FFF6F7; border-radius: 10px; padding: 14px 16px; }
+.ob-upload-error p { margin: 0 0 10px; font-size: 14px; color: #B4232F; }
+.ob-upload-box-small { height: 44px; display: inline-flex; padding: 0 18px; }
+
+/* Declaration step */
+.ob-fieldset { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
+.ob-radio, .ob-check { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; line-height: 1.45; margin: 10px 0; cursor: pointer; }
+.ob-radio input, .ob-check input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+.ob-indent { margin-left: 28px; margin-top: 8px; max-width: 260px; }
+
+/* Check results on the finished screen */
+.ob-checks { list-style: none; margin: 18px auto 22px; padding: 0; max-width: 560px; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+.ob-check-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; border: 1px solid #F1D79C; background: #FFF6E5; }
+.ob-check-fail { border-color: #F0C9CD; background: #FFF6F7; }
+.ob-check-fix { flex: none; border: 0; background: none; font: inherit; font-weight: 600; color: var(--color-primary, #1769E0); cursor: pointer; text-decoration: underline; }

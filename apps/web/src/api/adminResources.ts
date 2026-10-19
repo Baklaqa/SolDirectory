@@ -23,6 +23,30 @@ async function adminPatch<T>(path: string, body: unknown): Promise<T> {
   return res.json();
 }
 
+async function adminPost<T>(path: string, body: unknown = {}): Promise<T> {
+  const res = await fetch(`${ADMIN_API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...adminAuthHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new ApiError((await res.json().catch(() => ({}))).error ?? 'Request failed', res.status);
+  return res.json();
+}
+
+/** Opens a document a provider uploaded. It needs the sign-in header, so it is fetched and saved as a file rather than linked to. */
+export async function downloadProviderDocument(providerId: string, kind: string): Promise<void> {
+  const res = await fetch(`${ADMIN_API_URL}/admin/providers/${providerId}/documents/${kind}`, { headers: adminAuthHeaders() });
+  if (!res.ok) throw new ApiError((await res.json().catch(() => ({}))).error ?? 'The document could not be opened.', res.status);
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'document';
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+export const runProviderChecksAdmin = (id: string) => adminPost<{ status: string; checks: unknown[] }>(`/admin/providers/${id}/checks/run`);
+export const approveProviderChecksAdmin = (id: string, note?: string) => adminPost<{ status: string }>(`/admin/providers/${id}/checks/approve`, { note });
+
 // --- Providers ---
 
 export interface AdminProviderRow {

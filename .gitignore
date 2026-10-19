@@ -53,3 +53,6 @@ apps/cms/wordpress
 seo-report/
 apps/web/scripts/content-audit/corpus.json
 apps/web/scripts/content-audit/quality_rows.json
+
+# Provider documents stored on the server disk (see services/s3.service.ts); never commit them
+apps/api/uploads/

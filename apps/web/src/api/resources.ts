@@ -1,4 +1,4 @@
-import { ApiError, api, apiFetch, setToken } from './client';
+import { ApiError, SESSION_ENDED_EVENT, api, apiFetch, setToken } from './client';
 import type {
   WorkerMasked,
   WorkerProfile,
@@ -152,8 +152,51 @@ export function getOnboarding() {
   return api.get('/onboarding');
 }
 
+export interface OnboardingCheck { key: string; label: string; result: 'pass' | 'warn' | 'fail'; message: string; fixStep?: string }
+export interface OnboardingVerification { status: 'checked' | 'in_review' | 'needs_attention'; checks: OnboardingCheck[] }
+
 export function saveOnboardingStep(stepKey: string, data: Record<string, unknown>) {
-  return api.post(`/onboarding/${stepKey}`, { data });
+  return api.post<{ status: 'saved'; verification: OnboardingVerification | null }>(`/onboarding/${stepKey}`, { data });
+}
+
+export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Uploads a document through the site's own API in one signed-in request, and reports progress as it goes.
+ * Always settles with a plain-English message: a slow or failed upload ends in an error here, never in a spinner that stays on screen.
+ */
+export function uploadProviderDocument(kind: string, file: File, onProgress: (percent: number) => void): Promise<{ filename: string; size: number }> {
+  return new Promise((resolve, reject) => {
+    const token = localStorage.getItem('sd_token');
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${(import.meta as any).env?.VITE_API_URL ?? '/api'}/onboarding/documents?kind=${encodeURIComponent(kind)}&filename=${encodeURIComponent(file.name)}`);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.timeout = 90_000;
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => {
+      let body: any = {};
+      try { body = JSON.parse(xhr.responseText); } catch { /* not JSON: a gateway page */ }
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(body.document);
+      if (xhr.status === 401) {
+        // The same thing the rest of the app does when a sign-in ends: forget it and send the person to the login page.
+        localStorage.removeItem('sd_token');
+        window.dispatchEvent(new Event(SESSION_ENDED_EVENT));
+        return reject(new ApiError('Your sign-in has ended. Please sign in again.', 401));
+      }
+      const message = xhr.status === 413 ? 'That file is too large. The limit is 10 MB.'
+        : xhr.status === 502 || xhr.status === 503 || xhr.status === 504 ? 'The upload could not be completed just now. Please try again in a minute.'
+        : body?.error ?? 'The upload failed. Please try again.';
+      reject(new ApiError(message, xhr.status));
+    };
+    xhr.onerror = () => reject(new ApiError('We could not reach the server. Check your connection and try again.', 0));
+    xhr.ontimeout = () => reject(new ApiError('The upload took too long. Check your connection and try again.', 0));
+    xhr.send(file);
+  });
+}
+
+export function removeProviderDocument(kind: string) {
+  return apiFetch<{ removed: boolean }>(`/onboarding/documents/${encodeURIComponent(kind)}`, { method: 'DELETE' });
 }
 
 export function getUploadUrl(kind: string, contentType: string, filename: string, size: number) {

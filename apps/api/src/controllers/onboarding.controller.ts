@@ -8,8 +8,9 @@ import { geocodeAddress } from '../services/geocoding.service.js';
 import { generateUniqueProviderSlug } from '../utils/slugify.js';
 import { getActiveProviderForUser } from '../utils/getActiveProvider.js';
 import { syncProviderToWordPress } from '../services/wordpressSync.service.js';
+import { applyProviderChecks } from '../services/providerChecks.js';
 
-const STEP_KEYS = ['org', 'insurance', 'areas', 'team', 'policy', 'billing'];
+const STEP_KEYS = ['org', 'insurance', 'areas', 'team', 'policy', 'declaration', 'billing'];
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 const POLICY_KIND = 'incident_policy';
 const ALLOWED_DOCUMENT_TYPES = new Set([
@@ -28,15 +29,94 @@ function validatePolicyDocument(input: { kind: string; contentType: string; file
   return null;
 }
 
+const EXTENSION_TYPES: Record<string, string> = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+/** The first bytes of a real PDF, Word 97-2003 or Word document. Stops a renamed file of another kind being stored as a policy. */
+function looksLikeDocument(type: string, body: Buffer): boolean {
+  if (type === 'application/pdf') return body.subarray(0, 5).toString('latin1') === '%PDF-';
+  if (type === 'application/msword') return body.length > 4 && body[0] === 0xd0 && body[1] === 0xcf && body[2] === 0x11 && body[3] === 0xe0;
+  return body.length > 4 && body[0] === 0x50 && body[1] === 0x4b && body[2] === 0x03 && body[3] === 0x04;
+}
+
+/**
+ * POST /api/onboarding/documents?kind=incident_policy&filename=policy.pdf   (body: the file itself)
+ * One signed-in request: the API checks the file and stores it, so there is no second step against a storage service for the provider
+ * to get stuck on. Replaces any earlier document of the same kind.
+ */
+export async function uploadDocument(req: AuthedRequest, res: Response) {
+  const provider = await getActiveProviderForUser(req.user!.id);
+  if (!provider) return res.status(403).json({ error: 'No provider profile for this account' });
+  const kind = String(req.query.kind ?? '');
+  const filename = String(req.query.filename ?? '').slice(0, 180);
+  const body = req.body as Buffer;
+  if (!Buffer.isBuffer(body) || body.length === 0) return res.status(400).json({ error: 'No file was received. Please choose the document again.' });
+
+  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+  const declared = String(req.headers['content-type'] ?? '').split(';')[0].trim();
+  // Some browsers send no type, or a generic one, for Word files: the file name decides then.
+  const contentType = ALLOWED_DOCUMENT_TYPES.has(declared) ? declared : EXTENSION_TYPES[ext] ?? declared;
+  const validationError = validatePolicyDocument({ kind, contentType, filename, size: body.length });
+  if (validationError) return res.status(400).json({ error: validationError });
+  if (!looksLikeDocument(contentType, body)) return res.status(400).json({ error: 'That file does not look like a PDF or Word document. Please choose the original file.' });
+
+  const key = `providers/${provider._id}/${kind}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const storage = getStorageService();
+  const previous = await DocumentAsset.findOne({ ownerId: provider._id, kind }).select('s3Key').lean();
+  try {
+    // A storage problem must come back as a clear message in seconds, never as a request that hangs until the web server gives up (504).
+    await Promise.race([
+      storage.putObject(key, body, contentType),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('storage did not answer in 20 seconds')), 20_000)),
+    ]);
+  } catch (error) {
+    console.error('[onboarding] document upload could not be stored:', (error as Error).message);
+    return res.status(503).json({ error: 'We could not save your document just now. Please try again in a minute.' });
+  }
+  const asset = await DocumentAsset.findOneAndUpdate(
+    { ownerId: provider._id, kind },
+    { ownerId: provider._id, ownerType: 'Provider', kind, contentType, s3Key: key, originalFilename: filename, size: body.length, status: 'complete', uploadedAt: new Date() },
+    { upsert: true, new: true },
+  );
+  if (previous?.s3Key && previous.s3Key !== key) storage.deleteObject(previous.s3Key).catch(() => {});
+  res.status(201).json({ status: 'complete', document: { filename: asset.originalFilename, size: asset.size, uploadedAt: asset.uploadedAt } });
+}
+
+/** DELETE /api/onboarding/documents/:kind — the provider removes the document they uploaded (so they can choose another). */
+export async function deleteDocument(req: AuthedRequest, res: Response) {
+  const provider = await getActiveProviderForUser(req.user!.id);
+  if (!provider) return res.status(403).json({ error: 'No provider profile for this account' });
+  const kind = String(req.params.kind);
+  if (kind !== POLICY_KIND) return res.status(400).json({ error: 'Unsupported document kind' });
+  const asset = await DocumentAsset.findOneAndDelete({ ownerId: provider._id, kind });
+  if (asset?.s3Key) getStorageService().deleteObject(asset.s3Key).catch(() => {});
+  res.json({ removed: !!asset });
+}
+
 export async function getOnboarding(req: AuthedRequest, res: Response) {
   const provider = await getActiveProviderForUser(req.user!.id);
   if (!provider) return res.status(403).json({ error: 'No provider profile for this account' });
+  const policy = await DocumentAsset.findOne({ ownerId: provider._id, kind: POLICY_KIND, status: 'complete' }).select('originalFilename size uploadedAt').lean();
   // Previously only returned the step-completion array — the
   // frontend had nothing to pre-fill actual field values with, so a
   // page refresh mid-onboarding looked like data loss even though
   // it was saved. Now returns the real top-level fields too.
   res.json({
     steps: provider.onboarding,
+    attestation: provider.attestation ? {
+      registrationStatus: provider.attestation.registrationStatus,
+      insuranceHeld: provider.attestation.insuranceHeld,
+      insuranceExpiry: provider.attestation.insuranceExpiry ? new Date(provider.attestation.insuranceExpiry).toISOString().slice(0, 10) : '',
+      workerScreening: provider.attestation.workerScreening,
+      codeOfConduct: provider.attestation.codeOfConduct,
+      truthful: provider.attestation.truthful,
+      attestedAt: provider.attestation.attestedAt,
+    } : null,
+    verification: provider.verification ? { status: provider.verification.status, checkedAt: provider.verification.checkedAt, checks: provider.verification.checks } : null,
+    policyDocument: policy ? { filename: policy.originalFilename, size: policy.size, uploadedAt: policy.uploadedAt } : null,
     provider: {
       legalEntityName: provider.legalEntityName,
       abn: provider.abn,
@@ -77,6 +157,25 @@ export async function saveStep(req: AuthedRequest, res: Response) {
     if (!hasPolicyDoc) {
       return res.status(400).json({ error: 'Upload the incident and complaints policy before marking this step complete.' });
     }
+  }
+
+  if (stepKey === 'declaration') {
+    const d = (data ?? {}) as Record<string, unknown>;
+    if (d.registrationStatus !== 'registered' && d.registrationStatus !== 'not_registered') {
+      return res.status(400).json({ error: 'Tell us whether your organisation is registered with the NDIS Commission.' });
+    }
+    const expiry = d.insuranceExpiry ? new Date(String(d.insuranceExpiry)) : null;
+    if (d.insuranceHeld !== true) return res.status(400).json({ error: 'Please confirm that you hold current insurance.' });
+    if (!expiry || Number.isNaN(expiry.getTime())) return res.status(400).json({ error: 'Add the date your insurance expires.' });
+    if (expiry.getTime() < Date.now() - 86_400_000) return res.status(400).json({ error: 'That insurance date has passed. Renew your insurance first, then add the new date.' });
+    if (expiry.getTime() > Date.now() + 5 * 366 * 86_400_000) return res.status(400).json({ error: 'That insurance date is too far ahead. Please check it.' });
+    if (d.workerScreening !== true || d.codeOfConduct !== true || d.truthful !== true) {
+      return res.status(400).json({ error: 'Please tick each statement to confirm it.' });
+    }
+    provider.attestation = {
+      registrationStatus: d.registrationStatus, insuranceHeld: true, insuranceExpiry: expiry,
+      workerScreening: true, codeOfConduct: true, truthful: true, attestedAt: new Date(), attestedBy: req.user?.email, ip: req.ip,
+    };
   }
 
   // Write real values onto the provider's actual top-level fields —
@@ -161,6 +260,9 @@ export async function saveStep(req: AuthedRequest, res: Response) {
   }
   await provider.save();
 
+  // Once the declaration has been made, every save re-checks the details. The provider gets one email for each new result: all good, or what to fix.
+  const verification = provider.attestation ? await applyProviderChecks(provider) : null;
+
   // Fire-and-forget — a WordPress outage must never block saving an
   // onboarding step. Only worth attempting once the provider has a
   // real name (buildMetaPayload's own guard skips it otherwise).
@@ -173,7 +275,7 @@ export async function saveStep(req: AuthedRequest, res: Response) {
     allDone ? `${name} completed onboarding` : `${name} completed the "${stepKey}" onboarding step`
   );
 
-  res.json({ status: 'saved' });
+  res.json({ status: 'saved', verification });
 }
 
 export async function getUploadUrl(req: AuthedRequest, res: Response) {

@@ -10,7 +10,7 @@ import ProviderView from '../models/ProviderView.js';
 import ContactRequest from '../models/ContactRequest.js';
 import LeadView from '../models/LeadView.js';
 
-const ONBOARDING_STEP_KEYS = ['org', 'insurance', 'areas', 'team', 'policy', 'billing'];
+const ONBOARDING_STEP_KEYS = ['org', 'insurance', 'areas', 'team', 'policy', 'declaration', 'billing'];
 
 function periodStartDate(period: string): Date | null {
   const now = new Date();

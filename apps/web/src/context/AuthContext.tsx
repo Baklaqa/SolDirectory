@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Role } from '@soldirectory/shared-types';
 import * as api from '../api/resources';
+import { SESSION_ENDED_EVENT, installSessionGuard } from '../api/client';
 
 interface AuthUser {
   id: string;
@@ -27,6 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // When any request says the sign-in has ended, forget the user: pages that need an account then send them to the login page.
+  useEffect(() => {
+    installSessionGuard();
+    const ended = () => setUser(null);
+    window.addEventListener(SESSION_ENDED_EVENT, ended);
+    return () => window.removeEventListener(SESSION_ENDED_EVENT, ended);
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
@@ -36,9 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetch(`${(import.meta as any).env?.VITE_API_URL ?? '/api'}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => setUser(data.user))
-      .catch(() => localStorage.removeItem(TOKEN_KEY))
+      .then(async (res) => {
+        if (res.ok) { setUser((await res.json()).user); return; }
+        // Only a "not signed in" answer ends the session. A server restart or a poor connection (500, 502, no answer) must not log anyone out.
+        if (res.status === 401) localStorage.removeItem(TOKEN_KEY);
+      })
+      .catch(() => { /* offline or the server is restarting: keep the sign-in and try again on the next request */ })
       .finally(() => setLoading(false));
   }, []);
 

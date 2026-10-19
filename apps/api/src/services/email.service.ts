@@ -4,7 +4,7 @@ import {
   providerLeadNotificationTemplate, providerLeadTeaserTemplate, providerLeadFullTemplate,
   adminNotificationTemplate, renderEmailLayout,
   passwordResetTemplate, passwordChangedTemplate, verificationResultTemplate, welcomeTemplate,
-  capacityConfirmationTemplate,
+  capacityConfirmationTemplate, providerChecksPassedTemplate, providerChecksAttentionTemplate,
   subscriptionStartedTemplate, paymentReceivedTemplate, paymentFailedTemplate, subscriptionCancelledTemplate,
   searchAlertVerificationTemplate, searchAlertDigestTemplate, noMatchTemplate, outcomeCheckTemplate, checkExpiringTemplate,
 } from './emailTemplates.js';
@@ -169,6 +169,16 @@ export const EmailService = {
 
   async sendVerificationResult(to: string, approved: boolean, reason?: string) {
     const { subject, html } = verificationResultTemplate({ approved, reason });
+    return sendMail(to, subject, html);
+  },
+
+  async sendProviderChecksPassed(to: string, input: Parameters<typeof providerChecksPassedTemplate>[0]) {
+    const { subject, html } = providerChecksPassedTemplate(input);
+    return sendMail(to, subject, html);
+  },
+
+  async sendProviderChecksAttention(to: string, input: Parameters<typeof providerChecksAttentionTemplate>[0]) {
+    const { subject, html } = providerChecksAttentionTemplate(input);
     return sendMail(to, subject, html);
   },
 

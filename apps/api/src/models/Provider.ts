@@ -74,6 +74,29 @@ export interface ProviderDoc extends Document {
   afterHoursCover: string;
   incidentPolicyEscalation: string;
   onboarding: OnboardingStepSub[];
+  /** The provider's own declaration (onboarding step "Confirm your details"): what they say is true about registration, insurance, screening and conduct. */
+  attestation?: {
+    registrationStatus: 'registered' | 'not_registered';
+    insuranceHeld: boolean;
+    insuranceExpiry?: Date;
+    workerScreening: boolean;
+    codeOfConduct: boolean;
+    truthful: boolean;
+    attestedAt: Date;
+    attestedBy?: string;
+    ip?: string;
+  };
+  /** The result of the automatic checks on the details and the declaration (services/providerChecks.ts). */
+  verification?: {
+    status: 'checked' | 'in_review' | 'needs_attention';
+    checkedAt: Date;
+    checks: { key: string; label: string; result: 'pass' | 'warn' | 'fail'; message: string; fixStep?: string }[];
+    /** Which result the provider was last emailed about, so the same email is never sent twice. */
+    emailedKey?: string;
+    approvedBy?: string;
+    approvedAt?: Date;
+    approvalNote?: string;
+  };
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   plan: 'starter' | 'growth' | 'pro';
@@ -182,6 +205,32 @@ const providerSchema = new Schema<ProviderDoc>(
     afterHoursCover: String,
     incidentPolicyEscalation: String,
     onboarding: [onboardingStepSchema],
+    attestation: {
+      type: new Schema({
+        registrationStatus: { type: String, enum: ['registered', 'not_registered'], required: true },
+        insuranceHeld: { type: Boolean, required: true },
+        insuranceExpiry: Date,
+        workerScreening: { type: Boolean, required: true },
+        codeOfConduct: { type: Boolean, required: true },
+        truthful: { type: Boolean, required: true },
+        attestedAt: { type: Date, required: true },
+        attestedBy: String,
+        ip: String,
+      }, { _id: false }),
+      default: undefined,
+    },
+    verification: {
+      type: new Schema({
+        status: { type: String, enum: ['checked', 'in_review', 'needs_attention'], required: true },
+        checkedAt: { type: Date, required: true },
+        checks: [new Schema({ key: String, label: String, result: { type: String, enum: ['pass', 'warn', 'fail'] }, message: String, fixStep: String }, { _id: false })],
+        emailedKey: String,
+        approvedBy: String,
+        approvedAt: Date,
+        approvalNote: String,
+      }, { _id: false }),
+      default: undefined,
+    },
     stripeCustomerId: { type: String, index: true },
     stripeSubscriptionId: String,
     plan: { type: String, enum: ['starter', 'growth', 'pro'], default: 'starter' },

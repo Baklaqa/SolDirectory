@@ -318,6 +318,44 @@ export function verificationResultTemplate(input: { approved: boolean; reason?: 
   return { subject: input.approved ? "You're verified on SolDirectory" : 'Your SolDirectory verification update', html };
 }
 
+// ---- Provider onboarding checks (services/providerChecks.ts) ----
+
+export function providerChecksPassedTemplate(input: { name: string; registered: boolean; dashboardUrl: string }): { subject: string; html: string } {
+  const html = renderEmailLayout({
+    preheader: 'Your details are confirmed',
+    heading: 'Your details are confirmed',
+    bodyHtml: `
+      <p>Hi ${escapeHtml(input.name)},</p>
+      <p>${input.registered
+        ? 'We checked your details and your declaration against the NDIS Commission register. Everything lines up.'
+        : 'We checked your details and your declaration. Everything is complete.'}</p>
+      <p>There is nothing more you need to do. If your insurance or registration changes, update it under Onboarding so your details stay right.</p>
+    `,
+    ctaLabel: 'Go to your dashboard',
+    ctaUrl: input.dashboardUrl,
+  });
+  return { subject: 'Your SolDirectory details are confirmed', html };
+}
+
+export function providerChecksAttentionTemplate(input: { name: string; items: { message: string; severity: 'warn' | 'fail'; fixUrl: string }[]; onlyConfirming: boolean }): { subject: string; html: string } {
+  const list = input.items.map((i) => `<li style="margin:0 0 12px;">${escapeHtml(i.message)} <a href="${i.fixUrl}">${i.severity === 'fail' ? 'Fix this' : 'Check this'}</a></li>`).join('');
+  const html = renderEmailLayout({
+    preheader: input.onlyConfirming ? 'One thing to double-check' : 'A few things to fix on your profile',
+    heading: input.onlyConfirming ? 'One thing to double-check' : 'A few things to fix',
+    bodyHtml: `
+      <p>Hi ${escapeHtml(input.name)},</p>
+      <p>${input.onlyConfirming
+        ? 'Thanks for finishing your onboarding. Our team will take a look at the point below. If it is wrong, you can correct it now.'
+        : 'Thanks for your onboarding. We checked your details and found something to fix before they can be confirmed.'}</p>
+      <ul style="padding-left:20px; margin:0 0 16px;">${list}</ul>
+      <p>Each link takes you straight to the right step. You will get another email once it is sorted.</p>
+    `,
+    ctaLabel: 'Open onboarding',
+    ctaUrl: input.items[0]?.fixUrl,
+  });
+  return { subject: input.onlyConfirming ? 'One thing to double-check on your SolDirectory profile' : `Action needed: ${input.items.length} thing${input.items.length === 1 ? '' : 's'} to fix on your SolDirectory profile`, html };
+}
+
 export function welcomeTemplate(input: { name: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
     preheader: 'Welcome to SolDirectory',

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { completeUpload, saveOnboardingStep, getUploadUrl } from '../api/resources';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { MAX_DOCUMENT_BYTES, removeProviderDocument, saveOnboardingStep, uploadProviderDocument, type OnboardingVerification } from '../api/resources';
 import { ApiError } from '../api/client';
 import { useToast } from '../components/ui/Toast';
 import { listActiveServices, type ActiveService } from '../api/serviceCatalogue';
@@ -12,6 +12,7 @@ const STEPS = [
   { key: 'areas', title: 'Service areas & capacity', description: 'Where you work and how much you can take on' },
   { key: 'team', title: 'Team & clearances', description: 'Your roster and after-hours cover' },
   { key: 'policy', title: 'Incident & complaints policy', description: 'Required compliance document' },
+  { key: 'declaration', title: 'Confirm your details', description: 'A short declaration' },
   { key: 'billing', title: 'Subscription & leads', description: 'Your current plan' },
 ];
 
@@ -30,7 +31,17 @@ function authHeaders(): Record<string, string> {
   const token = localStorage.getItem('sd_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
-async function fetchOnboarding(): Promise<{ steps: { key: string; complete: boolean }[]; provider: ProviderData }> {
+interface AttestationData {
+  registrationStatus: 'registered' | 'not_registered'; insuranceHeld: boolean; insuranceExpiry: string;
+  workerScreening: boolean; codeOfConduct: boolean; truthful: boolean;
+}
+const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+const STEP_KEYS = STEPS.map((s) => s.key);
+
+async function fetchOnboarding(): Promise<{
+  steps: { key: string; complete: boolean }[]; provider: ProviderData;
+  policyDocument: { filename: string; size: number } | null; attestation: AttestationData | null; verification: OnboardingVerification | null;
+}> {
   const res = await fetch(`${API_URL}/onboarding`, { headers: authHeaders() });
   if (!res.ok) throw new ApiError((await res.json()).error ?? 'Request failed', res.status);
   return res.json();
@@ -42,6 +53,7 @@ const SUBURB_OPTIONS = ['Bankstown', 'Parramatta', 'Liverpool', 'Blacktown', 'Au
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [pageLoading, setPageLoading] = useState(true);
   const [registrationGroupOptions, setRegistrationGroupOptions] = useState<ActiveService[]>([]);
 
@@ -69,7 +81,17 @@ export default function Onboarding() {
   const [afterHoursCover, setAfterHoursCover] = useState('');
   const [incidentPolicyEscalation, setIncidentPolicyEscalation] = useState('');
   const [plan, setPlan] = useState('starter');
-  const [policyFile, setPolicyFile] = useState<{ name: string; status: 'uploading' | 'uploaded' } | null>(null);
+  const [policyFile, setPolicyFile] = useState<{ name: string; size?: number; status: 'uploading' | 'uploaded' | 'error'; progress: number; message?: string } | null>(null);
+  // The declaration step.
+  const [registrationStatus, setRegistrationStatus] = useState<'' | 'registered' | 'not_registered'>('');
+  const [insuranceHeld, setInsuranceHeld] = useState(false);
+  const [insuranceExpiry, setInsuranceExpiry] = useState('');
+  const [workerScreening, setWorkerScreening] = useState(false);
+  const [codeOfConduct, setCodeOfConduct] = useState(false);
+  const [truthful, setTruthful] = useState(false);
+  // What the automatic checks found, and whether the provider has opened a step again to fix something.
+  const [verification, setVerification] = useState<OnboardingVerification | null>(null);
+  const [fixing, setFixing] = useState(false);
 
   const savedTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -89,11 +111,23 @@ export default function Onboarding() {
         setAfterHoursCover(p.afterHoursCover ?? '');
         setIncidentPolicyEscalation(p.incidentPolicyEscalation ?? '');
         setPlan(p.plan ?? 'starter');
+        if (res.policyDocument) setPolicyFile({ name: res.policyDocument.filename, size: res.policyDocument.size, status: 'uploaded', progress: 100 });
+        if (res.attestation) {
+          setRegistrationStatus(res.attestation.registrationStatus);
+          setInsuranceHeld(res.attestation.insuranceHeld);
+          setInsuranceExpiry(res.attestation.insuranceExpiry);
+          setWorkerScreening(res.attestation.workerScreening);
+          setCodeOfConduct(res.attestation.codeOfConduct);
+          setTruthful(res.attestation.truthful);
+        }
+        setVerification(res.verification);
         // First incomplete step becomes the starting point, so a
         // returning provider lands where they left off rather than
-        // always back at step 1.
+        // always back at step 1. A link from an email (?step=insurance) opens that step to fix it.
         const firstIncomplete = STEPS.findIndex((s) => !res.steps.find((rs) => rs.key === s.key)?.complete);
-        setStepIndex(firstIncomplete === -1 ? STEPS.length - 1 : firstIncomplete);
+        const wanted = STEP_KEYS.indexOf(params.get('step') ?? '');
+        if (wanted >= 0) { setStepIndex(wanted); setFixing(true); }
+        else setStepIndex(firstIncomplete === -1 ? STEPS.length - 1 : firstIncomplete);
       })
       .catch((err) => setPageError(err instanceof ApiError ? err.message : 'Unable to load your onboarding progress.'))
       .finally(() => setPageLoading(false));
@@ -102,7 +136,7 @@ export default function Onboarding() {
   const step = STEPS[stepIndex];
   const completedCount = done.filter(Boolean).length;
   const progressPct = Math.round((completedCount / STEPS.length) * 100);
-  const allComplete = completedCount === STEPS.length;
+  const allComplete = completedCount === STEPS.length && !fixing;
 
   // A step is reachable if it's already complete, is the current
   // step, or is the very next step after the last completed one —
@@ -125,22 +159,24 @@ export default function Onboarding() {
   }
 
   async function handlePolicyUpload(file: File) {
-    setPolicyFile({ name: file.name, status: 'uploading' });
+    // Plain checks first, so a wrong file is explained straight away instead of after an upload.
+    if (!/\.(pdf|docx?)$/i.test(file.name)) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: 'Please choose a PDF or Word document (.pdf, .doc or .docx).' }); return; }
+    if (file.size > MAX_DOCUMENT_BYTES) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: `That file is ${formatSize(file.size)}. The limit is 10 MB.` }); return; }
+    if (file.size === 0) { setPolicyFile({ name: file.name, status: 'error', progress: 0, message: 'That file is empty. Please choose the document again.' }); return; }
+    setPolicyFile({ name: file.name, size: file.size, status: 'uploading', progress: 0 });
+    setError('');
     try {
-      const { uploadUrl, key } = await getUploadUrl('incident_policy', file.type, file.name, file.size);
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-      if (!uploadResponse.ok) throw new Error('Object storage rejected the upload');
-      await completeUpload('incident_policy', file.type, file.name, file.size, key);
-      setPolicyFile({ name: file.name, status: 'uploaded' });
+      await uploadProviderDocument('incident_policy', file, (progress) => setPolicyFile((f) => (f ? { ...f, progress } : f)));
+      setPolicyFile({ name: file.name, size: file.size, status: 'uploaded', progress: 100 });
       showToast('Policy document uploaded.');
     } catch (err) {
-      setPolicyFile(null);
-      showToast(err instanceof ApiError ? err.message : 'Upload failed.');
+      setPolicyFile({ name: file.name, size: file.size, status: 'error', progress: 0, message: err instanceof ApiError ? err.message : 'The upload failed. Please try again.' });
     }
+  }
+
+  async function handlePolicyRemove() {
+    setPolicyFile(null);
+    removeProviderDocument('incident_policy').catch(() => {});
   }
 
   function buildStepData(): Record<string, unknown> {
@@ -150,6 +186,7 @@ export default function Onboarding() {
       case 'areas': return { serviceSuburbs, travelRadiusKm, weeklyCapacityHours };
       case 'team': return { rosterSize, afterHoursCover };
       case 'policy': return { incidentPolicyEscalation };
+      case 'declaration': return { registrationStatus, insuranceHeld, insuranceExpiry, workerScreening, codeOfConduct, truthful };
       default: return {};
     }
   }
@@ -159,15 +196,21 @@ export default function Onboarding() {
     setSaving(true);
     setJustSaved(false);
     try {
-      await saveOnboardingStep(step.key, buildStepData());
+      const saved = await saveOnboardingStep(step.key, buildStepData());
+      if (saved.verification) setVerification(saved.verification);
       setDone((d) => { const next = [...d]; next[stepIndex] = true; return next; });
       setJustSaved(true);
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setJustSaved(false), 2500);
-      if (stepIndex < STEPS.length - 1) {
+      if (fixing && done.every((d, i) => d || i === stepIndex)) {
+        setFixing(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (stepIndex < STEPS.length - 1) {
         setDirection('forward');
         setStepIndex(stepIndex + 1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setFixing(false);
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to save your changes. Please try again.');
@@ -217,8 +260,25 @@ export default function Onboarding() {
           <span className="ob-complete-icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="10" /><path d="m7.5 12.5 3 3 6-6.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </span>
-          <h2>You're all set</h2>
-          <p>Your provider onboarding is complete.</p>
+          <h2>{verification?.status === 'needs_attention' ? 'Almost there' : "You're all set"}</h2>
+          <p>
+            {!verification ? 'Your provider onboarding is complete.'
+              : verification.status === 'checked' ? 'We checked your details and everything is confirmed. We have emailed you the result.'
+              : verification.status === 'in_review' ? 'Your onboarding is complete. There is one thing our team will confirm, shown below.'
+              : 'Your onboarding is saved, but a few things need fixing before your details can be confirmed.'}
+          </p>
+          {verification && verification.checks.some((c) => c.result !== 'pass') && (
+            <ul className="ob-checks" aria-label="Things to fix or confirm">
+              {verification.checks.filter((c) => c.result !== 'pass').map((c) => (
+                <li key={c.key + c.message} className={`ob-check-item ob-check-${c.result}`}>
+                  <span>{c.message}</span>
+                  <button type="button" className="ob-check-fix" onClick={() => { const i = STEP_KEYS.indexOf(c.fixStep ?? 'org'); setFixing(true); setStepIndex(i < 0 ? 0 : i); window.scrollTo({ top: 0 }); }}>
+                    {c.result === 'fail' ? 'Fix this' : 'Check this'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <button className="ob-continue-btn" onClick={() => navigate('/dashboard')}>Go to dashboard →</button>
         </div>
       ) : (
@@ -345,16 +405,33 @@ export default function Onboarding() {
                 <>
                   <p className="ob-step-intro">Upload your incident and complaints policy, and describe your escalation process.</p>
                   <div className="ob-field ob-field-full">
-                    <label className="ob-field-label">Policy document</label>
-                    {policyFile ? (
-                      <div className="ob-upload-done">
-                        <span>{policyFile.status === 'uploading' ? 'Uploading…' : `✓ ${policyFile.name}`}</span>
-                        <button type="button" onClick={() => setPolicyFile(null)}>Remove</button>
+                    <label className="ob-field-label" id="ob-policy-label">Policy document</label>
+                    <p className="ob-field-helper">A PDF or Word file, up to 10 MB.</p>
+                    {policyFile?.status === 'uploading' && (
+                      <div className="ob-upload-progress" role="status" aria-live="polite">
+                        <span>Uploading {policyFile.name}… {policyFile.progress}%</span>
+                        <div className="ob-upload-bar" aria-hidden="true"><div style={{ width: `${policyFile.progress}%` }} /></div>
                       </div>
-                    ) : (
-                      <label className="ob-upload-box">
+                    )}
+                    {policyFile?.status === 'uploaded' && (
+                      <div className="ob-upload-done" role="status">
+                        <span>✓ {policyFile.name}{policyFile.size ? ` (${formatSize(policyFile.size)})` : ''} is uploaded</span>
+                        <button type="button" onClick={handlePolicyRemove}>Remove</button>
+                      </div>
+                    )}
+                    {policyFile?.status === 'error' && (
+                      <div className="ob-upload-error" role="alert">
+                        <p>{policyFile.message}</p>
+                        <label className="ob-upload-box ob-upload-box-small">
+                          Choose a file
+                          <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
+                        </label>
+                      </div>
+                    )}
+                    {!policyFile && (
+                      <label className="ob-upload-box" aria-labelledby="ob-policy-label">
                         Upload document
-                        <input type="file" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePolicyUpload(f); }} />
+                        <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handlePolicyUpload(f); }} />
                       </label>
                     )}
                   </div>
@@ -362,6 +439,36 @@ export default function Onboarding() {
                     <label className="ob-field-label" htmlFor="ob-escalation">Escalation process</label>
                     <textarea id="ob-escalation" className="ob-textarea" value={incidentPolicyEscalation} onChange={(e) => setIncidentPolicyEscalation(e.target.value)} rows={3} />
                   </div>
+                </>
+              )}
+
+              {step.key === 'declaration' && (
+                <>
+                  <p className="ob-step-intro">Please confirm the points below. It takes about a minute.</p>
+                  <fieldset className="ob-field ob-field-full ob-fieldset">
+                    <legend className="ob-field-label">Is your organisation registered with the NDIS Quality and Safeguards Commission?</legend>
+                    <label className="ob-radio"><input type="radio" name="ob-reg" checked={registrationStatus === 'registered'} onChange={() => setRegistrationStatus('registered')} /> Yes, we are registered</label>
+                    <label className="ob-radio"><input type="radio" name="ob-reg" checked={registrationStatus === 'not_registered'} onChange={() => setRegistrationStatus('not_registered')} /> No, we are not registered</label>
+                  </fieldset>
+                  <div className="ob-field ob-field-full">
+                    <label className="ob-check"><input type="checkbox" checked={insuranceHeld} onChange={(e) => setInsuranceHeld(e.target.checked)} /> We hold current public liability insurance.</label>
+                    {insuranceHeld && (
+                      <div className="ob-field ob-indent">
+                        <label className="ob-field-label" htmlFor="ob-insurance-expiry">Insurance expires on</label>
+                        <input id="ob-insurance-expiry" type="date" className="ob-input" value={insuranceExpiry} onChange={(e) => setInsuranceExpiry(e.target.value)} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="ob-field ob-field-full">
+                    <label className="ob-check"><input type="checkbox" checked={workerScreening} onChange={(e) => setWorkerScreening(e.target.checked)} /> Everyone who works directly with participants has, or is getting, any worker screening check their work requires.</label>
+                  </div>
+                  <div className="ob-field ob-field-full">
+                    <label className="ob-check"><input type="checkbox" checked={codeOfConduct} onChange={(e) => setCodeOfConduct(e.target.checked)} /> We follow the NDIS Code of Conduct and handle incidents and complaints as our policy says.</label>
+                  </div>
+                  <div className="ob-field ob-field-full">
+                    <label className="ob-check"><input type="checkbox" checked={truthful} onChange={(e) => setTruthful(e.target.checked)} /> The details I have given are true, and I am authorised to give them for this organisation.</label>
+                  </div>
+                  <p className="ob-field-helper">We check your ABN against the NDIS Commission register and email you the result. We may ask for evidence of any of these points.</p>
                 </>
               )}
 
