@@ -101,6 +101,16 @@ async function main() {
   check((await quotaOf(paid[3].providerId)) === q4, 'the refused unlock used no quota');
   check((await UnlockLedger.countDocuments({ leadId: lead._id })) === 3, 'exactly 3 unlock records exist for the request');
 
+  // The request screen (activity): full for an unlocking provider, no contact details and no other provider named for anyone else.
+  const act = await api(`/leads/${leadId}/activity`, tokens[0]);
+  const labels: string[] = (act.body?.events ?? []).map((e: { label: string }) => e.label);
+  check(act.status === 200 && act.body?.state === 'filled' && act.body?.slots?.used === 3 && act.body?.slots?.youUnlocked === true, 'the request screen says the request is filled and that this provider unlocked it', JSON.stringify(act.body?.slots));
+  check(labels.includes('Request filled') && labels[0] === 'Request came in', 'the history starts with the request and shows when it filled', labels.join(' | '));
+  check(!paid.some((a) => JSON.stringify(act.body).includes(String(a.providerId))), 'the history does not name any provider');
+  const outsider = await api(`/leads/${leadId}/activity`, tokens[3]);
+  check(outsider.status === 404 || (!hasContact(outsider.body) && outsider.body?.state === 'filled'), 'a provider that did not unlock sees no contact details on the request screen', `got ${outsider.status}`);
+  check((await api(`/leads/${leadId}/activity`, null)).status === 401, 'the request screen needs a login');
+
   // The free plan cannot unlock.
   let other: any = null;
   for (const l of await Lead.find({ status: { $ne: 'closed' }, _id: { $ne: lead._id } }).limit(200).lean()) {

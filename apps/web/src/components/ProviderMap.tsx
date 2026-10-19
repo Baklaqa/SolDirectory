@@ -28,6 +28,11 @@ interface Props {
    * map (a provider profile page), so pass this only from those call sites.
    */
   address?: string | null;
+  /**
+   * For a single-subject map that only knows a suburb (a request): draw a soft circle of this radius around the point, so it reads as
+   * "somewhere around here" rather than a building.
+   */
+  areaRadiusKm?: number;
 }
 
 // Vite bakes VITE_* vars into the client bundle at build time — this
@@ -42,7 +47,7 @@ const DEFAULT_ZOOM = 3.5;
 
 type MapStatus = 'loading' | 'ready' | 'error';
 
-export default function ProviderMap({ providers, selectedProviderId, onMarkerClick, address }: Props) {
+export default function ProviderMap({ providers, selectedProviderId, onMarkerClick, address, areaRadiusKm }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapboxRef = useRef<MapboxModule | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -137,6 +142,8 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
 
     markersRef.current.forEach((m) => m.remove());
     markersRef.current.clear();
+    for (const id of ['area-fill', 'area-line']) if (map.getLayer(id)) map.removeLayer(id);
+    if (map.getSource('area')) map.removeSource('area');
 
     const withLocation = providers.filter(
       (p): p is MapProviderMarker & { location: { lat: number; lng: number } } => !!p.location
@@ -154,16 +161,29 @@ export default function ProviderMap({ providers, selectedProviderId, onMarkerCli
       markersRef.current.set(p.id, marker);
     }
 
+    if (withLocation.length === 1 && areaRadiusKm) {
+      const { lat, lng } = withLocation[0].location;
+      const ring = Array.from({ length: 65 }, (_, i) => {
+        const a = (i / 64) * 2 * Math.PI;
+        const dLat = (areaRadiusKm / 111.32) * Math.sin(a);
+        const dLng = (areaRadiusKm / (111.32 * Math.cos((lat * Math.PI) / 180))) * Math.cos(a);
+        return [lng + dLng, lat + dLat];
+      });
+      map.addSource('area', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } });
+      map.addLayer({ id: 'area-fill', type: 'fill', source: 'area', paint: { 'fill-color': '#1769E0', 'fill-opacity': 0.14 } });
+      map.addLayer({ id: 'area-line', type: 'line', source: 'area', paint: { 'line-color': '#1769E0', 'line-width': 1.5, 'line-opacity': 0.6 } });
+    }
+
     if (withLocation.length === 1) {
       // fitBounds on a single point zooms in to the maximum level —
       // a fixed, sensible neighborhood-level zoom reads better.
-      map.easeTo({ center: [withLocation[0].location.lng, withLocation[0].location.lat], zoom: 12, duration: 0 });
+      map.easeTo({ center: [withLocation[0].location.lng, withLocation[0].location.lat], zoom: areaRadiusKm ? 11 : 12, duration: 0 });
     } else {
       const bounds = new gl.LngLatBounds();
       withLocation.forEach((p) => bounds.extend([p.location.lng, p.location.lat]));
       map.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 0 });
     }
-  }, [status, providers, selectedProviderId, onMarkerClick]);
+  }, [status, providers, selectedProviderId, onMarkerClick, areaRadiusKm]);
 
   const withLocationCount = providers.filter((p) => p.location).length;
 

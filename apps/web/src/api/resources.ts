@@ -71,6 +71,39 @@ export function listNearbyLeads(): Promise<Lead[]> {
   return api.get<Lead[]>('/leads/browse/nearby');
 }
 
+// Requests matched to this provider that filled up (or were closed) before they unlocked them. Masked details only.
+export type MissedLead = Lead & { unlocksUsed: number; missedBecause: 'filled' | 'closed' };
+export function listMissedLeads(): Promise<MissedLead[]> {
+  return api.get<MissedLead[]>('/leads/missed');
+}
+
+/** What the request screen shows for one request: what this provider may see, the suburb on a map, the places taken, and the history. */
+export interface LeadActivity {
+  lead: Lead;
+  area: { suburb: string; state: string | null; lat: number; lng: number } | null;
+  state: 'open' | 'filled' | 'closed';
+  slots: { used: number; max: number; left: number; youUnlocked: boolean };
+  declined: boolean;
+  origin: 'matched' | 'named' | 'shared' | 'nearby';
+  events: { key: string; label: string; at: string }[];
+}
+export function getLeadActivity(id: string): Promise<LeadActivity> {
+  return api.get<LeadActivity>(`/leads/${id}/activity`);
+}
+
+/** Records that this provider opened the request (the person who made it is told once, the first time any matched provider does). */
+export function markLeadOpened(id: string): Promise<{ viewed: boolean }> {
+  return api.post<{ viewed: boolean }>(`/leads/${id}/view`);
+}
+
+export function declineLead(id: string): Promise<{ id: string; status: string }> {
+  return api.post<{ id: string; status: string }>(`/leads/${id}/decline`);
+}
+
+export function reportLeadProblem(id: string, reason: 'invalid_contact' | 'duplicate'): Promise<{ reported: boolean }> {
+  return api.post<{ reported: boolean }>(`/leads/${id}/report-problem`, { reason });
+}
+
 export function unlockLead(id: string): Promise<Lead> {
   // A fresh idempotency key per user action — a retry of the SAME
   // click should reuse it, but that's a UI-level concern (disable

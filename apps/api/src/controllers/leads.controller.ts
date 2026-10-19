@@ -9,6 +9,7 @@ import { geocodeAddress } from '../services/geocoding.service.js';
 import { scoreMatch, isGenuineMatch } from '../services/matching.service.js';
 import LeadView from '../models/LeadView.js';
 import LeadMatch from '../models/LeadMatch.js';
+import SuburbGeo from '../models/SuburbGeo.js';
 import { getActiveProviderForUser } from '../utils/getActiveProvider.js';
 import { notifySearcherViewed, notifySearcherResponded } from '../services/leadFollowUp.service.js';
 
@@ -308,4 +309,96 @@ export async function declineLead(req: AuthedRequest, res: Response) {
   );
   if (!match) return res.status(404).json({ error: 'This lead was not matched to your account.' });
   res.json({ id: String(match._id), status: match.status });
+}
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Requests that were matched to this provider but that they did not unlock, and that are now full (3 providers have them) or closed by
+ * the person. Shown as the "Missed" tab so a provider can see what they were too late for. Masked details only, as everywhere else
+ * before an unlock; never contact details.
+ */
+export async function listMissedLeads(req: AuthedRequest, res: Response) {
+  const provider = await getActiveProviderForUser(req.user!.id);
+  if (!provider) return res.status(403).json({ error: 'No active provider profile for this account' });
+  const since = new Date(Date.now() - 90 * 86_400_000);
+  const [matches, unlocks] = await Promise.all([
+    LeadMatch.find({ providerId: provider._id, status: { $ne: 'declined' } }).select('leadId').lean(),
+    UnlockLedger.find({ providerId: provider._id }).select('leadId').lean(),
+  ]);
+  const mine = new Set(unlocks.map((u) => String(u.leadId)));
+  const candidateIds = matches.map((m) => m.leadId).filter((id) => !mine.has(String(id)));
+  if (!candidateIds.length) return res.json([]);
+  const leads = await Lead.find({ _id: { $in: candidateIds }, status: { $ne: 'draft' }, createdAt: { $gte: since } }).select(MASKED_PROJECTION).sort({ createdAt: -1 }).limit(200).lean();
+  const counts = await unlockCountsFor(leads.map((l) => l._id));
+  res.json(
+    leads
+      .filter((l) => l.status === 'closed' || (counts.get(String(l._id)) ?? 0) >= MAX_UNLOCKS_PER_LEAD)
+      .map((l) => ({ ...toMaskedShape(l), unlocksUsed: counts.get(String(l._id)) ?? 0, missedBecause: l.status === 'closed' ? 'closed' : 'filled' })),
+  );
+}
+
+/** Where on the map a request is: the centre of its suburb, never an address (a request only ever records a suburb). */
+async function approximateArea(lead: any): Promise<{ suburb: string; state: string | null; lat: number; lng: number } | null> {
+  const coords = lead.location?.coordinates;
+  if (Array.isArray(coords) && coords.length === 2) return { suburb: lead.suburb, state: lead.state ?? null, lat: coords[1], lng: coords[0] };
+  if (!lead.suburb) return null;
+  const geo = await SuburbGeo.findOne({
+    suburb: new RegExp(`^${escapeRegex(String(lead.suburb).trim())}$`, 'i'),
+    ...(lead.state ? { state: String(lead.state).toUpperCase() } : {}),
+    failed: { $ne: true },
+    'location.coordinates.1': { $exists: true },
+  }).lean();
+  const c = geo?.location?.coordinates;
+  return geo && c ? { suburb: geo.suburb, state: geo.state, lat: c[1], lng: c[0] } : null;
+}
+
+/**
+ * GET /api/leads/:id/activity: everything the request screen shows for one request, for the signed-in provider: the details they are
+ * allowed to see, the suburb on a map, how many of the 3 places are taken, and what has happened to it, in order. Other providers
+ * appear only as counts and times, never by name.
+ */
+export async function getLeadActivity(req: AuthedRequest, res: Response) {
+  const provider = await getActiveProviderForUser(req.user!.id);
+  if (!provider) return res.status(403).json({ error: 'No active provider profile for this account' });
+  const lead = await Lead.findById(req.params.id).lean();
+  if (!lead || lead.status === 'draft') return res.status(404).json({ error: 'Lead not found' });
+
+  const [match, ledger, view] = await Promise.all([
+    LeadMatch.findOne({ leadId: lead._id, providerId: provider._id }).lean(),
+    UnlockLedger.find({ leadId: lead._id }).sort({ createdAt: 1, _id: 1 }).select('providerId createdAt').lean(),
+    LeadView.findOne({ leadId: lead._id, providerId: provider._id }).lean(),
+  ]);
+  const mine = ledger.find((u) => String(u.providerId) === String(provider._id));
+
+  // Only a request matched to this provider, unlocked by them, or one they could browse (paid plan) is theirs to look at.
+  if (!match && !mine) {
+    const browsable = provider.plan !== 'starter' && !provider.listingPaused && lead.status === 'matched'
+      && ledger.length < MAX_UNLOCKS_PER_LEAD && isGenuineMatch(scoreMatch(lead as any, provider as any));
+    if (!browsable) return res.status(404).json({ error: 'Lead not found' });
+  }
+
+  const used = ledger.length;
+  const filled = used >= MAX_UNLOCKS_PER_LEAD;
+  const events: { key: string; label: string; at: Date }[] = [{ key: 'came_in', label: 'Request came in', at: lead.createdAt }];
+  if (match?.notifiedAt) events.push({ key: 'notified', label: 'You were told about it', at: match.notifiedAt });
+  if (ledger[0]) {
+    const firstIsMine = !!mine && String(ledger[0]._id) === String(mine._id);
+    events.push({ key: firstIsMine ? 'unlocked' : 'first_response', label: firstIsMine ? 'You unlocked it, the first provider to respond' : 'First provider responded', at: (ledger[0] as any).createdAt });
+  }
+  if (filled) events.push({ key: 'filled', label: 'Request filled', at: (ledger[MAX_UNLOCKS_PER_LEAD - 1] as any).createdAt });
+  if (view?.firstViewedAt) events.push({ key: 'opened', label: 'You opened it', at: view.firstViewedAt });
+  if (mine && String(ledger[0]._id) !== String(mine._id)) events.push({ key: 'unlocked', label: 'You unlocked it', at: (mine as any).createdAt });
+  if (match?.status === 'declined' && match.respondedAt) events.push({ key: 'declined', label: 'You declined it', at: match.respondedAt });
+  events.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+
+  res.json({
+    lead: mine ? toUnlockedShape(lead) : toMaskedShape(lead),
+    area: await approximateArea(lead),
+    state: lead.status === 'closed' ? 'closed' : filled ? 'filled' : 'open',
+    slots: { used, max: MAX_UNLOCKS_PER_LEAD, left: Math.max(0, MAX_UNLOCKS_PER_LEAD - used), youUnlocked: !!mine },
+    declined: match?.status === 'declined',
+    origin: /^Asked for you by name/i.test(match?.matchReason ?? '') ? 'named' : /^Shared by SolDirectory/i.test(match?.matchReason ?? '') ? 'shared' : match ? 'matched' : 'nearby',
+    events: events.map((e) => ({ ...e, at: new Date(e.at).toISOString() })),
+  });
 }
