@@ -88,7 +88,7 @@ async function status() {
     RegisterListing.estimatedDocumentCount(),
     RegisterListing.countDocuments(since),
     Provider.countDocuments(providerFilter),
-    Provider.countDocuments({ ...providerFilter, ...since }),
+    Provider.countDocuments({ $and: [providerFilter, since] }),
   ]);
   const eligible = (await listEligiblePages()).length;
   const row = (name: string, left: number, total: number) => `  ${name.padEnd(10)} ${String(total - left).padStart(7)} of ${String(total).padStart(7)} pushed   ${left === 0 ? 'done' : `${left} left`}`;
@@ -113,7 +113,7 @@ async function main() {
   const eligible = await listEligiblePages();
   const tracked = new Set((await PageContent.find({}).select('key').lean<{ key: string }[]>()).map((d) => d.key));
   const listingsFilter = resync ? notDoneSince : { wpPostId: { $exists: false } };
-  const providersFilter = resync ? { ...providerFilter, ...notDoneSince } : { ...providerFilter, wpPostId: { $exists: false } };
+  const providersFilter = resync ? { $and: [providerFilter, notDoneSince] } : { ...providerFilter, wpPostId: { $exists: false } };
   const articlePaths = await mirrorablePaths();
   log(`To do: ${articlePaths.length} articles to check, ${eligible.length - tracked.size} pages with no post${resync ? `, ${await PageContent.countDocuments({ status: { $in: ['baseline', 'approved', 'stale', 'unpublished'] }, ...notDoneSince })} pages to push again` : ''}, ${await RegisterListing.countDocuments(listingsFilter)} register listings, ${await Provider.countDocuments(providersFilter)} providers.`);
   if (dryRun) { log('--dry-run: not writing anything.'); process.exit(0); }
