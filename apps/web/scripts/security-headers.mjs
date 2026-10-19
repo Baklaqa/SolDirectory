@@ -36,14 +36,15 @@ for (const m of html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script
 
 const policy = [
   "default-src 'self'",
-  `script-src 'self' ${hashes.join(' ')}`.trim(),
+  // analytics.ahrefs.com: Ahrefs Web Analytics (see index.html).
+  `script-src 'self' ${hashes.join(' ')} https://analytics.ahrefs.com`.trim(),
   // React sets style attributes all over the app, and the preloader has an inline <style>.
   "style-src 'self' 'unsafe-inline'",
   // Listing logos come from each business's own website, so images may come from any https host.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   // The map and address search use Mapbox. The API is on the same origin.
-  "connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com",
+  "connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com https://analytics.ahrefs.com",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src 'none'",
