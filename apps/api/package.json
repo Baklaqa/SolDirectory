@@ -22,6 +22,7 @@
     "sync:all-wp": "tsx src/scripts/syncAllToWordPress.ts",
     "sync:wp-status": "tsx src/scripts/syncAllToWordPress.ts --status",
     "audit:wp-sync": "tsx src/scripts/auditWordPressSync.ts",
+    "clean:wp-extras": "tsx src/scripts/cleanWordPressExtras.ts",
     "test:page-score": "tsx src/scripts/testPageScore.ts",
     "audit:seo": "tsx src/scripts/auditPublicSeo.ts",
     "audit:links": "tsx src/scripts/auditInternalLinks.ts",

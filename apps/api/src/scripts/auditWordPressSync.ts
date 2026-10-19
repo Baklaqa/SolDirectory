@@ -34,15 +34,17 @@ async function wpTotal(restBase: string): Promise<number | null> {
 interface WpPost { id: number; slug: string; status: string; meta?: Record<string, unknown> }
 
 async function allPosts(restBase: string): Promise<WpPost[] | null> {
-  const out: WpPost[] = [];
+  // Fixed order (by id): with the default order (by date) posts made in the same second swap places between pages, so some are
+  // listed twice and some not at all. A post is also only counted once however many times it is returned.
+  const out = new Map<number, WpPost>();
   for (let page = 1; ; page += 1) {
-    const res = await fetch(`${WP}/wp-json/wp/v2/${restBase}?per_page=100&page=${page}&status=any&_fields=id,slug,status,meta`, { headers: auth });
+    const res = await fetch(`${WP}/wp-json/wp/v2/${restBase}?per_page=100&page=${page}&orderby=id&order=asc&status=any&_fields=id,slug,status,meta`, { headers: auth });
     if (res.status === 400 && page > 1) break; // past the last page
     if (!res.ok) return null;
-    out.push(...((await res.json()) as WpPost[]));
+    for (const p of (await res.json()) as WpPost[]) out.set(p.id, p);
     if (page >= (Number(res.headers.get('x-wp-totalpages')) || 1)) break;
   }
-  return out;
+  return [...out.values()];
 }
 
 const pageKey = (p: WpPost) => (typeof p.meta?.sd_page_key === 'string' && p.meta.sd_page_key ? p.meta.sd_page_key : null);
@@ -71,7 +73,8 @@ async function deepCheck(label: string, restBase: string, expected: Set<string>,
   if (missing.length) console.log(`    missing, for example:\n${show(missing)}`);
   if (duplicates.length) console.log(`    duplicated, for example:\n${show(duplicates.map(([k, v]) => `${k}  (post ids ${v.map((p) => p.id).join(', ')})`))}`);
   if (extras.length) console.log(`    no longer on the site, for example:\n${show(extras)}`);
-  if (unkeyed.length) console.log(`    without a key (older hand-made posts are normal), slugs: ${unkeyed.slice(0, 5).map((p) => p.slug).join(', ')}`);
+  const numbered = unkeyed.filter((p) => /-\d+$/.test(p.slug));
+  if (unkeyed.length) console.log(`    without a key: ${unkeyed.length}${numbered.length ? `, of which ${numbered.length} have a slug ending in a number (duplicates left by overlapping runs; clean them with: npm run clean:wp-extras -w apps/api)` : ''}. Examples: ${unkeyed.slice(0, 4).map((p) => p.slug || '(no slug)').join(', ')}`);
   return missing.length + duplicates.length + extras.length;
 }
 
