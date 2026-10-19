@@ -64,6 +64,10 @@ async function deepCheck(label: string, restBase: string, expected: Set<string>,
   const show = (xs: string[]) => xs.slice(0, 5).map((x) => `      ${x}`).join('\n');
   const surplus = duplicates.reduce((n, [, v]) => n + v.length - 1, 0);
   console.log(`  ${label}: ${posts.length} posts. Missing ${missing.length}, duplicated ${duplicates.length} (${surplus} surplus posts), for pages the site no longer has ${extras.length}, without a key ${unkeyed.length}.`);
+  if (posts.length > 20 && unkeyed.length > posts.length * 0.9) {
+    console.log('    Almost no post carries its key, so WordPress is not saving the meta the sync sends. Deploy the updated soldirectory-content plugin\n    (includes/page-automation.php) to the WordPress server, then run: npx tsx src/scripts/syncAllToWordPress.ts --resync');
+    return posts.length;
+  }
   if (missing.length) console.log(`    missing, for example:\n${show(missing)}`);
   if (duplicates.length) console.log(`    duplicated, for example:\n${show(duplicates.map(([k, v]) => `${k}  (post ids ${v.map((p) => p.id).join(', ')})`))}`);
   if (extras.length) console.log(`    no longer on the site, for example:\n${show(extras)}`);

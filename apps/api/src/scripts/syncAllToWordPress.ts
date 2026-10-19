@@ -10,6 +10,7 @@
  *   npx tsx src/scripts/syncAllToWordPress.ts                  # everything
  *   npx tsx src/scripts/syncAllToWordPress.ts --only articles  # one step: articles | pages | listings | providers
  *   npx tsx src/scripts/syncAllToWordPress.ts --max 2000       # at most about 2000 posts in each step; run again to carry on
+ *   npx tsx src/scripts/syncAllToWordPress.ts --resync         # push everything again (after fixing the WordPress plugin, to write lost meta)
  *
  * Safe to stop and re-run: each step carries on where it stopped. Then run `npm run audit:wp-sync -w apps/api` to see WordPress against the site.
  * Not copied to WordPress, on purpose: participants, enquiries, independent workers' personal profiles, accounts and payments.
@@ -34,6 +35,8 @@ const only = onlyIdx >= 0 ? args[onlyIdx + 1] : null;
 const maxIdx = args.indexOf('--max');
 const MAX = maxIdx >= 0 ? Number(args[maxIdx + 1]) || 500 : Infinity;
 const want = (step: string) => !only || only === step;
+const resync = args.includes('--resync');
+const startedAt = new Date();
 
 async function pool<T>(items: T[], size: number, fn: (item: T) => Promise<void>, label: string) {
   let next = 0;
@@ -75,7 +78,7 @@ async function main() {
   if (want('pages')) {
     let total = 0;
     for (;;) {
-      const r = await syncPagesToWordPress({ limit: 100, includeBaseline: true });
+      const r = await syncPagesToWordPress({ limit: 100, includeBaseline: true, ...(resync ? { resyncBefore: startedAt } : {}) });
       total += r.considered;
       failures += r.failed.length;
       console.log(`[sync-all-wp] pages: ${total} done, ${r.remaining} left`);
@@ -85,13 +88,13 @@ async function main() {
   }
 
   if (want('listings')) {
-    const docs = await RegisterListing.find({ wpPostId: { $exists: false } }).limit(Number.isFinite(MAX) ? MAX : 0);
+    const docs = await RegisterListing.find(resync ? {} : { wpPostId: { $exists: false } }).limit(Number.isFinite(MAX) ? MAX : 0);
     await pool(docs, 6, (doc) => syncRegisterListingToWordPress(doc), 'listings');
     console.log(`[sync-all-wp] listings: ${docs.length} synced.`);
   }
 
   if (want('providers')) {
-    const docs = await Provider.find({ wpPostId: { $exists: false } }).select('_id').lean<{ _id: unknown }[]>();
+    const docs = await Provider.find(resync ? {} : { wpPostId: { $exists: false } }).select('_id').lean<{ _id: unknown }[]>();
     await pool(docs.slice(0, MAX), 3, (d) => syncProviderToWordPress(String(d._id)), 'providers');
     console.log(`[sync-all-wp] providers: ${Math.min(docs.length, MAX)} checked.`);
   }

@@ -81,3 +81,44 @@ function soldirectory_page_automation_flags($response, $post) {
     $response->set_data($data);
     return $response;
 }
+
+/**
+ * Saving and reading `meta` over REST for these post types.
+ *
+ * WordPress only handles the REST `meta` object for post types that declare 'custom-fields' support, and this plugin leaves that out on
+ * purpose (it adds WordPress's own raw "Custom Fields" box to wp-admin; see post-types.php). Without it a `meta` object sent to
+ * POST /wp/v2/{type} is silently dropped, even when the keys are registered with register_post_meta(). So the API's syncs (the page,
+ * article, register-listing and provider mirrors) wrote posts with no meta at all. This saves the registered, REST-visible keys itself
+ * after each REST create or update, and shows the sd_* keys on reads. Only keys registered for the post type are saved, and only
+ * by a user who can edit that post (the REST route has already checked that).
+ */
+function soldirectory_rest_meta_post_types(): array {
+    return ['service_area_page', 'register_area_page', 'site_article', 'register_listing', 'provider'];
+}
+
+foreach (soldirectory_rest_meta_post_types() as $sd_type) {
+    add_action("rest_after_insert_{$sd_type}", function ($post, $request) {
+        $meta = $request->get_param('meta');
+        if (!is_array($meta) || !$post instanceof WP_Post) return;
+        $registered = get_registered_meta_keys('post', $post->post_type);
+        foreach ($meta as $key => $value) {
+            if (!is_string($key) || !isset($registered[$key]) || empty($registered[$key]['show_in_rest'])) continue;
+            if (!is_scalar($value) && $value !== null) continue;
+            update_post_meta($post->ID, $key, $value === null ? '' : $value);
+        }
+    }, 10, 2);
+
+    add_filter("rest_prepare_{$sd_type}", function ($response, $post) {
+        $data = $response->get_data();
+        $meta = $data['meta'] ?? [];
+        $meta = is_array($meta) ? $meta : (array) $meta;
+        foreach (array_keys(get_registered_meta_keys('post', $post->post_type)) as $key) {
+            if (strpos($key, 'sd_') !== 0) continue;
+            $value = get_post_meta($post->ID, $key, true);
+            if ($value !== '' && $value !== false) $meta[$key] = $value;
+        }
+        $data['meta'] = $meta;
+        $response->set_data($data);
+        return $response;
+    }, 20, 2);
+}

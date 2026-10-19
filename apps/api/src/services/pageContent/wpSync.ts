@@ -63,14 +63,20 @@ async function upsert(key: PageKey, fields: Record<string, unknown>, meta: Recor
   return { id: made.id, created: true };
 }
 
-export async function syncPagesToWordPress(opts: { keys?: string[]; limit?: number; includeBaseline?: boolean }): Promise<SyncResult> {
+/**
+ * `resyncBefore`: push every tracked page again whose last sync is older than this moment (use the time the run started, so one run
+ * visits each page once). Needed after the WordPress plugin is fixed, to write the meta that earlier syncs lost.
+ */
+export async function syncPagesToWordPress(opts: { keys?: string[]; limit?: number; includeBaseline?: boolean; resyncBefore?: Date }): Promise<SyncResult> {
   const limit = opts.limit ?? 100;
   const out: SyncResult = { considered: 0, created: 0, updated: 0, failed: [], published: 0, drafts: 0, remaining: 0 };
 
   // 1. Pages that have stored copy.
   const filter = opts.keys
     ? { key: { $in: opts.keys } }
-    : { status: { $in: ['approved', 'stale', 'unpublished'] }, $or: [{ wpSyncedAt: { $exists: false } }, { $expr: { $lt: ['$wpSyncedAt', '$updatedAt'] } }] };
+    : opts.resyncBefore
+      ? { status: { $in: ['baseline', 'approved', 'stale', 'unpublished'] }, $or: [{ wpSyncedAt: { $exists: false } }, { wpSyncedAt: { $lt: opts.resyncBefore } }] }
+      : { status: { $in: ['approved', 'stale', 'unpublished'] }, $or: [{ wpSyncedAt: { $exists: false } }, { $expr: { $lt: ['$wpSyncedAt', '$updatedAt'] } }] };
   const total = await PageContent.countDocuments(filter);
   const docs = await PageContent.find(filter).limit(limit).lean<PageContentDoc[]>();
   out.remaining = Math.max(0, total - docs.length);
@@ -82,6 +88,19 @@ export async function syncPagesToWordPress(opts: { keys?: string[]; limit?: numb
       if (!key) return;
       const live = d.status === 'approved';
       const facts = await buildFacts(key);
+      if (d.status === 'baseline') {
+        if (!facts) return;
+        const b = await upsert(
+          key,
+          { title: facts.baseline.h1, content: '', status: 'draft' },
+          { sd_page_key: d.key, sd_path: d.path, sd_status: 'baseline', sd_facts_json: JSON.stringify(facts) },
+        );
+        await PageContent.updateOne({ key: d.key }, { $set: { wpPostId: b.id, wpSyncedAt: new Date() } }, { timestamps: false });
+        out.considered += 1;
+        if (b.created) out.created += 1; else out.updated += 1;
+        out.drafts += 1;
+        return;
+      }
       const r = await upsert(
         key,
         { title: d.content.seoTitle || d.path, content: renderHtml(d.content), status: live ? 'publish' : 'draft' },
