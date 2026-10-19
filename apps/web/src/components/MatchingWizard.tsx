@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMatchModal } from '../context/MatchModalContext';
-import { listActiveServices, type ActiveService } from '../api/serviceCatalogue';
 import { ApiError } from '../api/client';
 import { searchPlaces, lookupPostcode, formatPlace, placeSearchEnabled, type PlaceSuggestion } from '../lib/places';
 import { serviceContextFromPath } from '../lib/serviceContext';
@@ -10,7 +9,7 @@ import './MatchingWizard.css';
 
 /**
  * "Get matched" wizard — one question per screen, modelled on the Carevo
- * flow: who → where → what → how soon → funding → (plan management) →
+ * flow: who → where → how soon → funding → (plan management) →
  * contact details. Design rules this component follows:
  *
  *  - Every step says where you are ("Step 3 of 9 · Support needed") and,
@@ -62,21 +61,21 @@ const EMPTY_FORM: MatchFormData = {
   hoursPerWeek: '', language: '', workerGender: '', cultural: '',
 };
 
-// v2: the step order changed, so an older saved draft's step index would
+// v4: the support question was removed, so an older saved draft's step index would
 // point at the wrong question. Old drafts are simply discarded.
-const DRAFT_STORAGE_KEY = 'mw_draft_v3';
+const DRAFT_STORAGE_KEY = 'mw_draft_v4';
 const LEGACY_DRAFT_KEY = 'mw_draft';
 
-type StepId = 'careFor' | 'location' | 'service' | 'timeframe' | 'funding' | 'planManagement' | 'preferences' | 'notice' | 'email' | 'phone' | 'name' | 'additionalDetails';
+type StepId = 'careFor' | 'location' | 'timeframe' | 'funding' | 'planManagement' | 'preferences' | 'notice' | 'email' | 'phone' | 'name' | 'additionalDetails';
 type Phase = 'wizard' | 'review' | 'success';
 
 const STEP_LABELS: Record<StepId, string> = {
-  careFor: 'Who it’s for', location: 'Location', service: 'Support needed', timeframe: 'Timing', funding: 'Funding',
+  careFor: 'Who it’s for', location: 'Location', timeframe: 'Timing', funding: 'Funding',
   planManagement: 'Plan management', preferences: 'Preferences', notice: 'How we use your details', email: 'Email', phone: 'Phone', name: 'Your name', additionalDetails: 'Anything else',
 };
 
 function getSteps(funding: string): StepId[] {
-  const base: StepId[] = ['careFor', 'location', 'service', 'timeframe', 'funding'];
+  const base: StepId[] = ['careFor', 'location', 'timeframe', 'funding'];
   if (funding === 'NDIS') base.push('planManagement');
   // The collection notice comes immediately before the contact details step (APP 5).
   return [...base, 'preferences', 'notice', 'email', 'phone', 'name', 'additionalDetails'];
@@ -148,7 +147,6 @@ export default function MatchingWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState('');
   const [submitError, setSubmitError] = useState('');
-  const [serviceOptions, setServiceOptions] = useState<ActiveService[]>([]);
   // Backend Lead._id for this in-progress enquiry, once autosaved at
   // least once (developer brief: "Save at every step, not only on
   // submit"). Persisted to localStorage below so a page refresh mid-
@@ -156,10 +154,6 @@ export default function MatchingWizard() {
   // it finalizes this SAME document rather than creating a second one.
   const [draftId, setDraftId] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    listActiveServices().then((res) => setServiceOptions(res.items)).catch(() => {});
-  }, []);
 
   // Stop the page behind the popup scrolling while it's open.
   useEffect(() => {
@@ -320,7 +314,6 @@ export default function MatchingWizard() {
       }
       return '';
     }
-    if (id === 'service' && !form.service.trim()) return 'Choose a support, or “I’m not sure yet”.';
     const v = form[id as keyof MatchFormData] as string;
     if (id === 'location' && !v.trim()) return 'Enter a suburb or postcode so we know where to look.';
     if (id === 'careFor' && !v) return 'Choose who this is for.';
@@ -472,7 +465,6 @@ export default function MatchingWizard() {
                     patch={patch}
                     headingRef={headingRef}
                     error={error}
-                    serviceOptions={serviceOptions}
                     consent={consent}
                     setConsent={setConsent}
                   />
@@ -502,7 +494,6 @@ export default function MatchingWizard() {
                 <div className="mw-review-list">
                   <ReviewRow label="Who the support is for" value={labelFor(CARE_FOR_OPTIONS, form.careFor)} onEdit={() => editField('careFor')} />
                   <ReviewRow label="Location" value={form.location} onEdit={() => editField('location')} />
-                  <ReviewRow label="Support needed" value={form.service || '—'} onEdit={() => editField('service')} />
                   <ReviewRow label="Timeframe" value={labelFor(TIMEFRAME_OPTIONS, form.timeframe)} onEdit={() => editField('timeframe')} />
                   <ReviewRow label="Funding" value={labelFor(FUNDING_OPTIONS, form.funding)} onEdit={() => editField('funding')} />
                   {form.funding === 'NDIS' && (
@@ -755,74 +746,6 @@ function OptionGrid({ options, value, onChange, labelledBy, columns }: {
   );
 }
 
-/**
- * Searchable list instead of a wall of cards: type to filter, or pick from
- * the most common services shown by default. Nobody scrolls through 40
- * options to find one.
- */
-function ServiceStep({ value, onChange, options }: {
-  value: string;
-  onChange: (v: string) => void;
-  options: ActiveService[];
-}) {
-  const [query, setQuery] = useState('');
-  const q = query.trim().toLowerCase();
-
-  const matches = useMemo(
-    () => (q ? options.filter((o) => o.name.toLowerCase().includes(q)) : options),
-    [options, q]
-  );
-  const limit = q ? 8 : 6;
-  const shown = matches.slice(0, limit);
-  const hidden = matches.length - shown.length;
-
-  if (value) {
-    return (
-      <div className="mw-selected-chip">
-        <span className="mw-selected-chip-label">Selected</span>
-        <span className="mw-selected-chip-value">{value}</span>
-        <button type="button" className="mw-selected-chip-change" onClick={() => onChange('')}>Change</button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="mw-input-icon-wrap">
-        <IconSearch />
-        <input
-          className="mw-input mw-input-icon"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search supports, e.g. personal care, physiotherapy"
-          aria-label="Search supports"
-          autoComplete="off"
-          autoFocus
-        />
-      </div>
-
-      <p className="mw-list-caption">{q ? `${matches.length} ${matches.length === 1 ? 'result' : 'results'}` : 'Common supports'}</p>
-      <ul className="mw-service-list" role="listbox" aria-label="Supports">
-        {shown.map((s) => (
-          <li key={s.id}>
-            <button type="button" role="option" aria-selected={false} className="mw-service-row" onClick={() => onChange(s.name)}>
-              {s.name}
-            </button>
-          </li>
-        ))}
-        {options.length === 0 && <li className="mw-hint">Loading supports…</li>}
-        {options.length > 0 && matches.length === 0 && <li className="mw-hint">Nothing matches “{query}”. Try a shorter word.</li>}
-        <li>
-          <button type="button" role="option" aria-selected={false} className="mw-service-row mw-service-row-muted" onClick={() => onChange(SERVICE_NOT_SURE)}>
-            I’m not sure yet
-          </button>
-        </li>
-      </ul>
-      {hidden > 0 && <p className="mw-hint">{hidden} more. Keep typing to narrow the list.</p>}
-    </div>
-  );
-}
-
 function Heading({ headingRef, children }: { headingRef: React.RefObject<HTMLHeadingElement>; children: React.ReactNode }) {
   return <h2 id="mw-heading" ref={headingRef} tabIndex={-1} className="mw-question">{children}</h2>;
 }
@@ -879,7 +802,7 @@ function CollectionNotice({ forSomeoneElse, consent, setConsent }: {
 }
 
 function WizardStep({
-  stepId, form, set, patch, headingRef, error, serviceOptions, consent, setConsent,
+  stepId, form, set, patch, headingRef, error, consent, setConsent,
 }: {
   stepId: StepId;
   form: MatchFormData;
@@ -887,22 +810,10 @@ function WizardStep({
   patch: (p: Partial<MatchFormData>) => void;
   headingRef: React.RefObject<HTMLHeadingElement>;
   error: string;
-  serviceOptions: ActiveService[];
   consent: ConsentState;
   setConsent: (next: ConsentState) => void;
 }) {
   const err = error ? <p className="mw-error" role="alert">{error}</p> : null;
-
-  if (stepId === 'service') {
-    return (
-      <>
-        <Heading headingRef={headingRef}>What support do you need?</Heading>
-        <p className="mw-supporting">Pick the closest match. You can add detail later.</p>
-        <ServiceStep value={form.service} onChange={(v) => set('service', v)} options={serviceOptions} />
-        {err}
-      </>
-    );
-  }
 
   if (stepId === 'preferences') {
     return (

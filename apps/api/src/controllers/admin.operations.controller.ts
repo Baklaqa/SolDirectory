@@ -177,7 +177,8 @@ export async function getOperations(_req: AuthedRequest, res: Response) {
     senderIdentity: !!(process.env.SENDER_ADDRESS_LINE && process.env.SENDER_CONTACT_EMAIL),
     sms: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
     payments: !!process.env.STRIPE_SECRET_KEY,
-    gstTaxRate: !!process.env.STRIPE_GST_TAX_RATE_ID,
+    // GST is added at checkout automatically (found or created in Stripe); the id can still be pinned with STRIPE_GST_TAX_RATE_ID.
+    gstTaxRate: !!process.env.STRIPE_GST_TAX_RATE_ID || !!process.env.STRIPE_SECRET_KEY,
     maps: !!process.env.MAPBOX_ACCESS_TOKEN,
     registerLeadEmails: registerLeadEmailsOn,
     uptimeSeconds: Math.round(process.uptime()),

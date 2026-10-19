@@ -72,6 +72,25 @@ async function ensureCustomer(stripe: Stripe, provider: ProviderDoc): Promise<st
   return customer.id;
 }
 
+let gstRateCache: string | null = null;
+
+/**
+ * The Stripe tax rate for GST (10%, added on top of the price). STRIPE_GST_TAX_RATE_ID wins if it is set; otherwise the account's
+ * existing active 10% exclusive "GST" rate is used, and one is created the first time if there is none. Checkout never goes ahead
+ * without it, so a plan is never charged at the plain price when the price shown is "plus GST".
+ */
+export async function gstTaxRateId(stripe: Pick<Stripe, 'taxRates'>): Promise<string> {
+  if (process.env.STRIPE_GST_TAX_RATE_ID) return process.env.STRIPE_GST_TAX_RATE_ID;
+  if (gstRateCache) return gstRateCache;
+  const existing = await stripe.taxRates.list({ active: true, limit: 100 });
+  const found = existing.data.find((r) => r.percentage === 10 && !r.inclusive && /^gst$/i.test(r.display_name) && (!r.country || r.country === 'AU'));
+  const rate = found ?? await stripe.taxRates.create({
+    display_name: 'GST', description: 'Goods and services tax (Australia)', percentage: 10, inclusive: false, country: 'AU', jurisdiction: 'AU', tax_type: 'gst',
+  });
+  gstRateCache = rate.id;
+  return rate.id;
+}
+
 /** Starts a Stripe Checkout subscription for a paid plan. The plan itself is only applied by the webhook. */
 export async function createCheckoutSession(provider: ProviderDoc, planKey: string): Promise<{ url: string }> {
   const stripe = getStripe();
@@ -90,9 +109,14 @@ export async function createCheckoutSession(provider: ProviderDoc, planKey: stri
   const quotaText = plan.quota === null ? 'Unlimited lead unlocks' : `${plan.quota} lead unlocks per month`;
   const meta = { planKey, providerId: String(provider._id) };
   // The plan price is shown and agreed as "plus GST" ($249 + GST = $273.90). A Stripe tax rate (10% GST, added on top) makes the checkout and
-  // the invoice say so; without it Stripe would charge the plain price and print no GST. Create it once with scripts/createStripeGstTaxRate.ts.
-  const gstRate = process.env.STRIPE_GST_TAX_RATE_ID;
-  if (!gstRate) console.warn('[stripe] STRIPE_GST_TAX_RATE_ID is not set: checkout will not add GST, so the charge will not match the "plus GST" price shown to providers.');
+  // the invoice say so. It is found or created automatically; if that fails, checkout stops rather than charging the plain price.
+  let gstRate: string;
+  try {
+    gstRate = await gstTaxRateId(stripe);
+  } catch (err) {
+    console.error('[stripe] could not get the GST tax rate, so checkout was not started:', (err as Error).message);
+    throw new BillingError('Checkout is temporarily unavailable. Please try again shortly or contact support.', 502, 'GST_RATE_UNAVAILABLE');
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -100,15 +124,15 @@ export async function createCheckoutSession(provider: ProviderDoc, planKey: stri
     client_reference_id: String(provider._id),
     line_items: [
       priceId
-        ? { price: priceId, quantity: 1, ...(gstRate ? { tax_rates: [gstRate] } : {}) }
+        ? { price: priceId, quantity: 1, tax_rates: [gstRate] }
         : {
             quantity: 1,
-            ...(gstRate ? { tax_rates: [gstRate] } : {}),
+            tax_rates: [gstRate],
             price_data: {
               currency: (process.env.STRIPE_CURRENCY ?? 'aud').toLowerCase(),
               unit_amount: plan.priceCents,
               recurring: { interval: 'month' },
-              ...(gstRate ? { tax_behavior: 'exclusive' as const } : {}),
+              tax_behavior: 'exclusive' as const,
               product_data: { name: `SolDirectory ${plan.name} plan`, description: quotaText },
             },
           },
