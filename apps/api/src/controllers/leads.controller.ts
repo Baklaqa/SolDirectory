@@ -10,6 +10,7 @@ import { scoreMatch, isGenuineMatch } from '../services/matching.service.js';
 import LeadView from '../models/LeadView.js';
 import LeadMatch from '../models/LeadMatch.js';
 import SuburbGeo from '../models/SuburbGeo.js';
+import { MAX_UNLOCKS_PER_LEAD } from '../services/leadLimits.js';
 import { getActiveProviderForUser } from '../utils/getActiveProvider.js';
 import { notifySearcherViewed, notifySearcherResponded } from '../services/leadFollowUp.service.js';
 
@@ -179,8 +180,7 @@ export async function reportLeadProblem(req: AuthedRequest, res: Response) {
   res.status(201).json({ reported: true });
 }
 
-/** Providers that can unlock one request. Stated in the collection notice and the privacy policy. */
-export const MAX_UNLOCKS_PER_LEAD = 3;
+export { MAX_UNLOCKS_PER_LEAD };
 
 /** How many providers have unlocked each of the given requests. */
 async function unlockCountsFor(leadIds: unknown[]): Promise<Map<string, number>> {
@@ -339,7 +339,7 @@ export async function listMissedLeads(req: AuthedRequest, res: Response) {
 }
 
 /** Where on the map a request is: the centre of its suburb, never an address (a request only ever records a suburb). */
-async function approximateArea(lead: any): Promise<{ suburb: string; state: string | null; lat: number; lng: number } | null> {
+export async function approximateArea(lead: any): Promise<{ suburb: string; state: string | null; lat: number; lng: number } | null> {
   const coords = lead.location?.coordinates;
   if (Array.isArray(coords) && coords.length === 2) return { suburb: lead.suburb, state: lead.state ?? null, lat: coords[1], lng: coords[0] };
   if (!lead.suburb) return null;

@@ -77,14 +77,5 @@
 
 .lx-history-h { margin-top: 10px; }
 .lx-history-note { margin: 0; }
-.lx-timeline { list-style: none; margin: 0; padding: 0 0 0 2px; position: relative; }
-.lx-timeline-step { position: relative; padding: 0 0 18px 24px; display: flex; flex-direction: column; gap: 2px; }
-.lx-timeline-step::before { content: ''; position: absolute; left: 6px; top: 14px; bottom: -2px; width: 1px; background: var(--color-border-strong, #C9D6E8); }
-.lx-timeline-step-last::before { display: none; }
-.lx-timeline-step-last { padding-bottom: 4px; }
-.lx-timeline-dot { position: absolute; left: 0; top: 4px; width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 2px solid var(--color-border-strong, #C9D6E8); }
-.lx-timeline-step-last .lx-timeline-dot { background: var(--color-text, #10233F); border-color: var(--color-text, #10233F); }
-.lx-timeline-label { font-size: 14.5px; color: var(--color-text, #10233F); }
-.lx-timeline-when { font-size: 13px; color: var(--color-text-muted, #5A6B84); }
 
 @media (prefers-reduced-motion: no-preference) { .lx-item, .lx-tab { transition: background-color 0.15s, color 0.15s; } }

@@ -1,0 +1,28 @@
+.ala { margin-top: 18px; border-top: 1px solid var(--color-border, #E8EEF7); padding-top: 16px; }
+.ala-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 12px; }
+.ala-head h4 { margin: 0; font-size: 15px; }
+.ala h5 { margin: 14px 0 8px; font-size: 13.5px; color: var(--color-text, #10233F); }
+.ala-places { font-size: 13px; font-weight: 650; padding: 4px 12px; border-radius: 999px; background: var(--color-primary-tint, #F2F7FF); border: 1px solid #BCD3F5; color: #0F4FA8; }
+.ala-places-filled { background: #EEF8F1; border-color: #BFE3CA; color: #1B6B3A; }
+.ala-places-closed { background: var(--color-page-bg, #F5F8FC); border-color: var(--color-border-strong, #C9D6E8); color: var(--color-text-muted, #5A6B84); }
+.ala-outcome { font-size: 13px; color: var(--color-text-muted, #5A6B84); }
+.ala-note { font-size: 13px; color: var(--color-text-muted, #5A6B84); margin: 6px 0; }
+.ala-bad { color: #B4232F; }
+
+.ala-cols { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 1000px) { .ala-cols { grid-template-columns: minmax(0, 1fr) 300px; } }
+.ala-map .provider-map { height: 200px; }
+
+.ala-table-wrap { overflow-x: auto; }
+.ala-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ala-table th, .ala-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border, #E8EEF7); vertical-align: top; }
+.ala-table thead th { font-size: 12px; color: var(--color-text-muted, #5A6B84); font-weight: 600; white-space: nowrap; }
+.ala-table tbody th { font-weight: 600; }
+.ala-name { display: block; }
+.ala-plan { display: block; font-weight: 400; color: var(--color-text-muted, #5A6B84); text-transform: capitalize; }
+.ala-table small { color: var(--color-text-muted, #5A6B84); }
+.ala-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--color-page-bg, #F5F8FC); border: 1px solid var(--color-border-strong, #C9D6E8); margin: 0 6px 4px 0; }
+.ala-pill-unlocked { background: #EEF8F1; border-color: #BFE3CA; color: #1B6B3A; }
+.ala-pill-opened { background: var(--color-primary-tint, #F2F7FF); border-color: #BCD3F5; color: #0F4FA8; }
+.ala-pill-declined { color: var(--color-text-muted, #5A6B84); }
+.ala-pill-problem { background: #FFF6E5; border-color: #F1D79C; color: #7A5300; }

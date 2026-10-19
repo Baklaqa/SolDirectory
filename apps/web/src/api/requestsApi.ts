@@ -16,7 +16,12 @@ export interface TrackedRequest {
   requestedProvider?: string;
   stage: 1 | 2 | 3 | 4;
   steps: { key: 'received' | 'sent' | 'viewed' | 'responded'; label: string; detail: string; at?: string; done: boolean }[];
-  providers: { name: string; progress: ProviderProgress; at?: string }[];
+  providers: { name: string; progress: ProviderProgress; at?: string; openedAt?: string; unlockedAt?: string }[];
+  /** How many of the places on the request are taken (a provider unlocking the contact details takes one). */
+  places?: { used: number; max: number; left: number };
+  fill?: 'open' | 'filled' | 'closed';
+  /** What happened, in order, with providers named. */
+  history?: { key: string; label: string; at: string }[];
   note?: string;
   searchUrl: string;
   trackingUrl?: string;

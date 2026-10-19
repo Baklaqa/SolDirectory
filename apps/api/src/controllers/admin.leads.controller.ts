@@ -8,6 +8,10 @@ import AdminActivity from '../models/AdminActivity.js';
 import { notifyProviderOfLead } from '../services/leadNotify.js';
 import { trackUrl } from '../services/requestTracking.js';
 import { scoreMatch, MATCH_WEIGHTS } from '../services/matching.service.js';
+import UnlockLedger from '../models/UnlockLedger.js';
+import { adminActivity, loadActivityData } from '../services/requestActivity.js';
+import { MAX_UNLOCKS_PER_LEAD } from '../services/leadLimits.js';
+import { approximateArea } from './leads.controller.js';
 
 const DAY = 86400000;
 export const SHARED_BY_ADMIN = 'Shared by SolDirectory';
@@ -26,7 +30,33 @@ export async function getLeadDeliveries(req: AuthedRequest, res: Response) {
   });
 }
 
-/** GET /api/admin/leads?filter=all|unmatched|named|waiting|answered&q=&page= — every real enquiry, with who has it. */
+/**
+ * GET /api/admin/leads/:id/activity — one enquiry in full for an administrator: the request, the person, the suburb on a map, how many of
+ * the places are taken, every provider that touched it (named, with how it reached them, when they opened it, whether they unlocked it
+ * and any problem they reported) and the history in order.
+ */
+export async function getAdminLeadActivity(req: AuthedRequest, res: Response) {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Enquiry not found.' });
+  const lead: any = await Lead.findOne({ _id: req.params.id, status: { $ne: 'draft' } }).lean();
+  if (!lead) return res.status(404).json({ error: 'Enquiry not found.' });
+  const data = await loadActivityData([lead._id]);
+  const activity = adminActivity(lead, data);
+  res.json({
+    lead: {
+      id: String(lead._id), ref: String(lead._id).slice(-8).toUpperCase(), createdAt: lead.createdAt, status: lead.status,
+      need: lead.need && !/^not sure yet$/i.test(lead.need) ? lead.need : lead.serviceContext || 'Not specified',
+      conditions: lead.conditions ?? [], suburb: lead.suburb, state: lead.state, careFor: lead.careFor, timeframe: lead.timeframe,
+      funding: [lead.fundingType, lead.funding].filter(Boolean).join(' · '), hoursPerWeek: lead.hoursPerWeek, budget: lead.budget,
+      requesterName: lead.requesterName, requesterEmail: lead.requesterEmail, requesterPhone: lead.contactPhone,
+      requestedProvider: lead.preferredListing?.name ?? null, hasAccount: !!lead.requesterUserId, erased: !!lead.erasedAt,
+      outcome: lead.outcome ?? null, consentRecorded: !!lead.consent?.recordedAt,
+    },
+    area: await approximateArea(lead),
+    ...activity,
+  });
+}
+
+/** GET /api/admin/leads?filter=all|unmatched|named|waiting|answered|filled&q=&page= — every real enquiry, with who has it. */
 export async function listAdminLeads(req: AuthedRequest, res: Response) {
   const filter = String(req.query.filter ?? 'all');
   const q = String(req.query.q ?? '').trim().slice(0, 80);
@@ -37,6 +67,15 @@ export async function listAdminLeads(req: AuthedRequest, res: Response) {
   if (q) {
     const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     where.$or = [{ need: rx }, { suburb: rx }, { requesterName: rx }, { requesterEmail: rx }, { 'preferredListing.name': rx }, { serviceContext: rx }];
+  }
+  // "Filled" and "taken up" are decided by unlock records, so they are narrowed in the database (not on the one page of results).
+  if (filter === 'filled') {
+    const full = await UnlockLedger.aggregate<{ _id: unknown }>([{ $group: { _id: '$leadId', n: { $sum: 1 } } }, { $match: { n: { $gte: MAX_UNLOCKS_PER_LEAD } } }]);
+    where._id = { $in: full.map((r) => r._id) };
+  }
+  if (filter === 'answered') {
+    const [unlocked, contacted] = await Promise.all([UnlockLedger.distinct('leadId'), LeadMatch.distinct('leadId', { status: 'contacted' })]);
+    where._id = { $in: [...unlocked, ...contacted] };
   }
   if (filter === 'named') where.preferredListing = { $exists: true, $ne: null };
   if (filter === 'waiting') where.createdAt = { $lte: new Date(Date.now() - DAY) };
@@ -50,6 +89,8 @@ export async function listAdminLeads(req: AuthedRequest, res: Response) {
   const matches = ids.length ? await LeadMatch.find({ leadId: { $in: ids } }).select('leadId providerId status notifiedAt viewedAt respondedAt matchReason').lean() : [];
   const providers = matches.length ? await Provider.find({ _id: { $in: matches.map((m) => m.providerId) } }).select('tradingName legalEntityName').lean() : [];
   const names = new Map(providers.map((p: any) => [String(p._id), p.tradingName || p.legalEntityName]));
+  const unlockRows = ids.length ? await UnlockLedger.aggregate<{ _id: unknown; n: number }>([{ $match: { leadId: { $in: ids } } }, { $group: { _id: '$leadId', n: { $sum: 1 } } }]) : [];
+  const unlockCount = new Map(unlockRows.map((r) => [String(r._id), r.n]));
 
   let items = docs.map((l: any) => {
     const ms = matches.filter((m: any) => String(m.leadId) === String(l._id));
@@ -62,6 +103,9 @@ export async function listAdminLeads(req: AuthedRequest, res: Response) {
       requesterName: l.requesterName, requesterEmail: l.requesterEmail, requesterPhone: l.contactPhone,
       requestedProvider: l.preferredListing?.name ?? null,
       hasAccount: !!l.requesterUserId,
+      status: l.status,
+      unlocksUsed: unlockCount.get(String(l._id)) ?? 0,
+      maxUnlocks: MAX_UNLOCKS_PER_LEAD,
       trackingUrl: trackUrl(String(l._id)),
       matches: ms.map((m: any) => ({
         providerId: String(m.providerId), name: names.get(String(m.providerId)) ?? 'Provider', status: m.status,
@@ -70,8 +114,9 @@ export async function listAdminLeads(req: AuthedRequest, res: Response) {
     };
   });
   if (filter === 'unmatched') items = items.filter((i) => i.matches.length === 0);
-  if (filter === 'waiting') items = items.filter((i) => i.matches.length > 0 && !i.matches.some((m) => m.status === 'viewed' || m.status === 'contacted'));
-  if (filter === 'answered') items = items.filter((i) => i.matches.some((m) => m.status === 'contacted'));
+  if (filter === 'waiting') items = items.filter((i) => i.matches.length > 0 && i.unlocksUsed === 0 && !i.matches.some((m) => m.status === 'viewed' || m.status === 'contacted'));
+  if (filter === 'answered') items = items.filter((i) => i.unlocksUsed > 0 || i.matches.some((m) => m.status === 'contacted'));
+  if (filter === 'filled') items = items.filter((i) => i.unlocksUsed >= MAX_UNLOCKS_PER_LEAD);
 
   res.json({ items, page, limit, total, hasMore: page * limit < total });
 }

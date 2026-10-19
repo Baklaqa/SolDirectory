@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { listAdminLeads, searchSharableProviders, shareLead, type AdminLead, type LeadFilter } from '../../api/adminLeads';
 import { ApiError } from '../../api/client';
+import AdminLeadActivity from '../../components/leads/AdminLeadActivity';
 import { timeAgo } from './adminFormat';
 import './AdminDashboard.css';
 import './AdminOperations.css';
@@ -11,7 +12,8 @@ const FILTERS: { value: LeadFilter; label: string; hint: string }[] = [
   { value: 'unmatched', label: 'Not matched', hint: 'Nobody has it yet — needs a person' },
   { value: 'named', label: 'Asked for a provider', hint: 'The person chose one provider by name' },
   { value: 'waiting', label: 'Waiting', hint: 'Over a day old with no provider having opened it' },
-  { value: 'answered', label: 'Taken up', hint: 'A provider has taken it up' },
+  { value: 'answered', label: 'Taken up', hint: 'A provider has unlocked the contact details' },
+  { value: 'filled', label: 'Filled', hint: 'All three places are taken: no more providers can unlock it' },
 ];
 
 const STATUS_LABEL: Record<string, string> = { notified: 'Waiting', viewed: 'Opened', contacted: 'Taken up', declined: 'Declined' };
@@ -110,14 +112,14 @@ export default function AdminEnquiries() {
         {FILTERS.map((f) => (
           <button key={f.value} type="button" aria-pressed={filter === f.value} className={`ae-chip${filter === f.value ? ' is-on' : ''}`} title={f.hint} onClick={() => setFilter(f.value)}>{f.label}</button>
         ))}
-        <span className="ao-dim ae-total">{loading && items.length === 0 ? 'Loading…' : `${total.toLocaleString('en-AU')} enquir${total === 1 ? 'y' : 'ies'}${filter !== 'all' && filter !== 'named' ? ' (this page of results is filtered)' : ''}`}</span>
+        <span className="ao-dim ae-total">{loading && items.length === 0 ? 'Loading…' : `${total.toLocaleString('en-AU')} enquir${total === 1 ? 'y' : 'ies'}${filter !== 'all' && filter !== 'named' && filter !== 'filled' && filter !== 'answered' ? ' (this page of results is filtered)' : ''}`}</span>
       </div>
 
       {error && <p className="ao-note ao-note-bad" role="alert">{error}</p>}
 
       <ul className="ae-list">
         {items.map((l) => {
-          const progress = l.matches.some((m) => m.status === 'contacted') ? 'taken' : l.matches.some((m) => m.status === 'viewed') ? 'opened' : l.matches.length > 0 ? 'waiting' : 'none';
+          const progress = l.unlocksUsed > 0 || l.matches.some((m) => m.status === 'contacted') ? 'taken' : l.matches.some((m) => m.status === 'viewed') ? 'opened' : l.matches.length > 0 ? 'waiting' : 'none';
           return (
             <li key={l.id} className="ad-panel ae-item">
               <button type="button" className="ae-row" aria-expanded={open === l.id} onClick={() => setOpen(open === l.id ? null : l.id)}>
@@ -127,6 +129,7 @@ export default function AdminEnquiries() {
                 </span>
                 <span className="ae-badges">
                   {l.requestedProvider && <span className="ao-pill ao-pill-running">Named provider</span>}
+                  {l.status === 'closed' ? <span className="ao-pill ao-pill-never_run">Closed</span> : l.unlocksUsed > 0 && <span className={`ao-pill ${l.unlocksUsed >= l.maxUnlocks ? 'ao-pill-ok' : 'ao-pill-running'}`} title="Providers that have unlocked the contact details">{l.unlocksUsed} of {l.maxUnlocks} unlocked</span>}
                   <span className={`ao-pill ${progress === 'taken' ? 'ao-pill-ok' : progress === 'opened' ? 'ao-pill-running' : progress === 'waiting' ? 'ao-pill-overdue' : 'ao-pill-failed'}`}>
                     {progress === 'taken' ? 'Taken up' : progress === 'opened' ? 'Opened' : progress === 'waiting' ? `Waiting (${l.matches.length})` : 'Not matched'}
                   </span>
@@ -168,6 +171,7 @@ export default function AdminEnquiries() {
                       <Share lead={l} onShared={refresh} />
                     </div>
                   </div>
+                  <AdminLeadActivity leadId={l.id} />
                 </div>
               )}
             </li>

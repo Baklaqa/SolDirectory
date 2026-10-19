@@ -36,3 +36,9 @@
   .rp-compact .rp-step { flex-direction: row; padding-bottom: 14px; }
   .rp-compact .rp-step::before { left: 15px; right: auto; top: 32px; bottom: 0; width: 2px; height: auto; }
 }
+
+.rp-places { margin: 12px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--color-primary-tint, #F2F7FF); border: 1px solid var(--color-border, #E8EEF7); font-size: 14px; color: var(--color-text, #10233F); }
+.rp-places-filled { background: #EEF8F1; border-color: #BFE3CA; }
+.rp-places-closed { background: var(--color-page-bg, #F5F8FC); }
+.rp-history { margin-top: 18px; }
+.rp-history h3 { font-size: 15px; margin: 0 0 10px; }

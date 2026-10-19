@@ -1,4 +1,5 @@
 import { exactTime, laterBy, timeAgo } from '../../lib/timeAgo';
+import './LeadTimeline.css';
 
 interface Props {
   events: { key: string; label: string; at: string }[];

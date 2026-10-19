@@ -111,6 +111,31 @@ async function main() {
   check(outsider.status === 404 || (!hasContact(outsider.body) && outsider.body?.state === 'filled'), 'a provider that did not unlock sees no contact details on the request screen', `got ${outsider.status}`);
   check((await api(`/leads/${leadId}/activity`, null)).status === 401, 'the request screen needs a login');
 
+  // The administrator sees every provider by name, with how far each got; a provider cannot open that screen.
+  const adminUser: any = await User.findOne({ role: 'admin', email: /\.demo\.\d+@example\.com\.au$/ }).lean();
+  if (adminUser) {
+    const adminLogin = await api('/auth/login', null, { method: 'POST', body: JSON.stringify({ email: adminUser.email, password: 'password123' }) });
+    const adminActivity = await api(`/admin/leads/${leadId}/activity`, adminLogin.body?.token ?? null);
+    const rows: { name: string; status: string }[] = adminActivity.body?.providers ?? [];
+    check(adminActivity.status === 200 && rows.filter((r) => r.status === 'unlocked').length === 3 && rows.every((r) => !!r.name && r.name !== 'A provider'), 'the administrator sees the three providers that unlocked, by name', `status ${adminActivity.status}, ${rows.map((r) => r.status).join(',')}`);
+    check(adminActivity.body?.fill === 'filled' && (adminActivity.body?.events ?? []).some((e: { label: string }) => /^Request filled/.test(e.label)), 'the administrator history shows the request filled');
+    check((await api(`/admin/leads/${leadId}/activity`, tokens[0])).status === 403, 'a provider cannot open the administrator request screen');
+    const adminList = await api('/admin/leads?filter=filled', adminLogin.body?.token ?? null);
+    check(adminList.status === 200 && (adminList.body?.items ?? []).some((i: { id: string; unlocksUsed: number }) => i.id === leadId && i.unlocksUsed === 3), 'the administrator list counts the unlocks and can filter filled requests');
+  } else {
+    console.log('SKIP  no demo administrator found for the administrator checks');
+  }
+
+  // The person who made the request sees the providers that unlocked it by name, and how many places are taken, but no provider details.
+  const { trackUrl } = await import('../services/requestTracking.js');
+  const track = new URL(trackUrl(leadId));
+  const person = await api(`/requests/${leadId}?t=${track.searchParams.get('t')}`, null);
+  const history: { label: string }[] = person.body?.history ?? [];
+  check(person.status === 200 && person.body?.places?.used === 3 && person.body?.fill === 'filled', 'the person sees that all three places are taken', JSON.stringify(person.body?.places));
+  check(history.filter((h) => /unlocked your contact details/.test(h.label)).length === 3 && history.some((h) => /^Your request is full/.test(h.label)), 'the person history names the providers that unlocked and shows it filled');
+  check(!/contactPhone|requesterEmail|intakeEmail|abn/i.test(JSON.stringify(person.body)), 'the person view carries no provider contact details');
+  check((await api(`/requests/${leadId}?t=wrong`, null)).status === 404, 'a wrong tracking link opens nothing');
+
   // The free plan cannot unlock.
   let other: any = null;
   for (const l of await Lead.find({ status: { $ne: 'closed' }, _id: { $ne: lead._id } }).limit(200).lean()) {

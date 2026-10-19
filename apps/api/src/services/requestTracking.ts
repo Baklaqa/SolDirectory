@@ -1,4 +1,5 @@
 import { signToken, verifyToken, siteOrigin } from './emailTokens.js';
+import { personHistory, type HistoryEvent, type UnlockRow } from './requestActivity.js';
 
 /**
  * Everything the person who made a request can see about it: a plain timeline and the status of each provider.
@@ -30,7 +31,12 @@ export interface TrackedRequest {
   /** Overall position: 1 received, 2 sent, 3 viewed, 4 responded. */
   stage: 1 | 2 | 3 | 4;
   steps: { key: 'received' | 'sent' | 'viewed' | 'responded'; label: string; detail: string; at?: string; done: boolean }[];
-  providers: { name: string; progress: ProviderProgress; at?: string }[];
+  providers: { name: string; progress: ProviderProgress; at?: string; openedAt?: string; unlockedAt?: string }[];
+  /** How many of the places on the request are taken (a provider unlocking the contact details takes one), and whether it is open, filled or closed. */
+  places: { used: number; max: number; left: number };
+  fill: 'open' | 'filled' | 'closed';
+  /** What happened, in order, with providers named. */
+  history: HistoryEvent[];
   note?: string;
   searchUrl: string;
   /** The person closed the request (or deleted their details): no further provider can open it. */
@@ -47,19 +53,34 @@ export function buildTrackedRequest(
   lead: any,
   matches: { providerId: unknown; status: string; notifiedAt?: Date; viewedAt?: Date; respondedAt?: Date }[],
   providerNames: Map<string, string>,
+  unlocks: UnlockRow[] = [],
 ): TrackedRequest {
   const reference = String(lead._id).slice(-8).toUpperCase();
   const need = lead.need && !/^not sure yet$/i.test(lead.need) ? lead.need : lead.serviceContext || 'Support';
   const requested: string | undefined = lead.preferredListing?.name || undefined;
 
-  const providers = matches.map((m) => ({
-    name: providerNames.get(String(m.providerId)) ?? 'A matched provider',
-    progress: PROGRESS[m.status] ?? 'waiting',
-    at: (m.respondedAt ?? m.viewedAt ?? m.notifiedAt)?.toISOString(),
-  }));
+  const unlockedBy = new Map(unlocks.map((u) => [String(u.providerId), u.createdAt]));
+  const providers: TrackedRequest['providers'] = matches.map((m) => {
+    const unlockedAt = unlockedBy.get(String(m.providerId));
+    return {
+      name: providerNames.get(String(m.providerId)) ?? 'A matched provider',
+      progress: unlockedAt ? 'responded' : PROGRESS[m.status] ?? 'waiting',
+      at: (unlockedAt ?? m.respondedAt ?? m.viewedAt ?? m.notifiedAt)?.toISOString(),
+      openedAt: m.viewedAt?.toISOString(),
+      unlockedAt: unlockedAt?.toISOString(),
+    };
+  });
+  // A provider that found the request through "browse nearby" has no match row, but did unlock the details, so the person sees them too.
+  const matchedIds = new Set(matches.map((m) => String(m.providerId)));
+  for (const u of unlocks) {
+    if (!matchedIds.has(String(u.providerId))) providers.push({ name: providerNames.get(String(u.providerId)) ?? 'A provider', progress: 'responded', at: u.createdAt.toISOString(), unlockedAt: u.createdAt.toISOString() });
+  }
   const anySent = matches.length > 0;
   const viewedTimes = matches.map((m) => m.viewedAt ?? (m.status === 'contacted' ? m.respondedAt : undefined)).filter(Boolean) as Date[];
-  const respondedTimes = matches.map((m) => m.respondedAt).filter((d, i) => !!d && matches[i].status === 'contacted') as Date[];
+  const respondedTimes = [
+    ...(matches.map((m) => m.respondedAt).filter((d, i) => !!d && matches[i].status === 'contacted') as Date[]),
+    ...unlocks.map((u) => u.createdAt),
+  ];
   const earliest = (ds: Date[]) => (ds.length ? new Date(Math.min(...ds.map((d) => d.getTime()))).toISOString() : undefined);
   const viewed = viewedTimes.length > 0 || providers.some((p) => p.progress === 'viewed' || p.progress === 'responded');
   const responded = respondedTimes.length > 0 || providers.some((p) => p.progress === 'responded');
@@ -101,5 +122,6 @@ export function buildTrackedRequest(
     closed: lead.status === 'closed',
     erased: !!lead.erasedAt,
     outcome: lead.outcome?.value,
+    ...personHistory(lead, matches as any, unlocks, providerNames),
   };
 }

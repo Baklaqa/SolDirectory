@@ -6,6 +6,7 @@ import Provider from '../models/Provider.js';
 import type { AuthedRequest } from '../middleware/auth.middleware.js';
 import { buildTrackedRequest, verifyTrackToken, verifyPersonToken, trackUrl } from '../services/requestTracking.js';
 import { describeProgress } from '../services/requestSummary.service.js';
+import { forLead, loadActivityData } from '../services/requestActivity.js';
 import UnlockLedger from '../models/UnlockLedger.js';
 import Notification from '../models/Notification.js';
 
@@ -29,12 +30,8 @@ async function notifyWithdrawn(leadId: unknown, need: string | undefined, suburb
 async function loadTracked(leadId: string) {
   const lead = await Lead.findOne({ _id: leadId, status: { $ne: 'draft' } }).lean();
   if (!lead) return null;
-  const matches = await LeadMatch.find({ leadId: lead._id }).select('providerId status notifiedAt viewedAt respondedAt').lean();
-  const providers = matches.length
-    ? await Provider.find({ _id: { $in: matches.map((m) => m.providerId) } }).select('tradingName legalEntityName').lean()
-    : [];
-  const names = new Map(providers.map((p: any) => [String(p._id), p.tradingName || p.legalEntityName || 'A matched provider']));
-  return buildTrackedRequest(lead, matches as any, names);
+  const data = await loadActivityData([lead._id]);
+  return buildTrackedRequest(lead, data.matches as any, data.names, data.unlocks);
 }
 
 /** GET /api/requests/:id?t=<signed token> — the link in the person's emails. No account needed. */
@@ -122,14 +119,11 @@ export async function attachRequest(req: AuthedRequest, res: Response) {
 /** GET /api/requests/mine — the requests saved to the signed-in account, newest first. */
 export async function listMyRequests(req: AuthedRequest, res: Response) {
   const leads = await Lead.find({ requesterUserId: req.user!.id, status: { $ne: 'draft' } }).sort({ createdAt: -1 }).limit(50).lean();
-  const ids = leads.map((l) => l._id);
-  const matches = ids.length ? await LeadMatch.find({ leadId: { $in: ids } }).select('leadId providerId status notifiedAt viewedAt respondedAt').lean() : [];
-  const providers = matches.length ? await Provider.find({ _id: { $in: matches.map((m) => m.providerId) } }).select('tradingName legalEntityName').lean() : [];
-  const names = new Map(providers.map((p: any) => [String(p._id), p.tradingName || p.legalEntityName || 'A matched provider']));
+  const data = await loadActivityData(leads.map((l) => l._id));
   res.set('Cache-Control', 'no-store');
   res.json({
     items: leads.map((lead) => ({
-      ...buildTrackedRequest(lead, matches.filter((m: any) => String(m.leadId) === String(lead._id)) as any, names),
+      ...buildTrackedRequest(lead, forLead(data.matches, lead._id) as any, data.names, forLead(data.unlocks, lead._id)),
       trackingUrl: trackUrl(String(lead._id)),
     })),
   });
@@ -154,20 +148,18 @@ export async function getPersonRequests(req: Request, res: Response) {
     status: { $ne: 'draft' },
     createdAt: { $gte: since },
   }).sort({ createdAt: -1 }).limit(20).lean();
-  const ids = leads.map((l) => l._id);
-  const matches = ids.length ? await LeadMatch.find({ leadId: { $in: ids } }).select('leadId providerId status notifiedAt viewedAt respondedAt').lean() : [];
-  const providers = matches.length ? await Provider.find({ _id: { $in: matches.map((m) => m.providerId) } }).select('tradingName legalEntityName').lean() : [];
-  const names = new Map(providers.map((p: any) => [String(p._id), p.tradingName || p.legalEntityName || 'A matched provider']));
+  const data = await loadActivityData(leads.map((l) => l._id));
 
   res.set('Cache-Control', 'no-store');
   res.json({
     items: leads.map((lead) => {
-      const own = matches.filter((m: any) => String(m.leadId) === String(lead._id));
-      const tracked = buildTrackedRequest(lead, own as any, names);
+      const own = forLead(data.matches, lead._id);
+      const unlocks = forLead(data.unlocks, lead._id);
+      const tracked = buildTrackedRequest(lead, own as any, data.names, unlocks);
       const progress = describeProgress({
         matched: own.length,
         viewed: own.filter((m: any) => m.status === 'viewed' || m.status === 'contacted').length,
-        unlocked: own.filter((m: any) => m.status === 'contacted').length,
+        unlocked: Math.max(unlocks.length, own.filter((m: any) => m.status === 'contacted').length),
         requestedProvider: tracked.requestedProvider,
       });
       return { ...tracked, open: lead.status !== 'closed', statusText: progress.text, statusTone: progress.tone, trackingUrl: trackUrl(String(lead._id)) };
