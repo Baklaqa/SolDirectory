@@ -56,7 +56,7 @@ async function main() {
 
   console.log(`Current phase: ${INDEX_PHASE}. Phase 2 adds suburbs with ${PHASE_2_MIN_LISTINGS}+ listings. Register profile pages indexed: ${INDEX_REGISTER_PROFILES ? 'yes' : 'no'}.\n`);
   console.log('Phase                      register suburb pages   service x suburb pages   total suburb pages');
-  for (const [phase, label] of [[1, '1 centres only'], [2, `2 plus ${PHASE_2_MIN_LISTINGS}+ listings`], [3, '3 plus eligible with Census']] as const) {
+  for (const [phase, label] of [[1, '1 centres only'], [2, `2 plus ${PHASE_2_MIN_LISTINGS}+ listings`], [3, '3 plus eligible with Census'], [4, '4 every eligible page']] as const) {
     const r = row(phase);
     console.log(`${label.padEnd(26)} ${String(r.reg).padStart(21)}   ${String(r.svc).padStart(22)}   ${String(r.reg + r.svc).padStart(18)}${phase === INDEX_PHASE ? '   <- current' : ''}`);
   }

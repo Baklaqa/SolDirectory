@@ -207,6 +207,17 @@ function sendXml(res: Response, xml: string) {
   res.send(xml);
 }
 
+/**
+ * The authored pages and articles (guides, funding, condition and language topics, legal pages, blog posts, location pages) that
+ * the WordPress mirror copies into the "site_article" post type. Not the register or service x suburb pages (the page sync does those),
+ * not provider or worker profiles, and not anything that already comes from WordPress.
+ */
+export async function mirrorablePaths(): Promise<string[]> {
+  const paths = [...STATIC_PUBLIC_ROUTES, ...editorialBlogRoutes()];
+  for (const a of await areaRows()) if (a.count >= MIN_INDEXABLE_PROVIDERS) paths.push(`/directory/in/${a.slug}`);
+  return [...new Set(paths)];
+}
+
 /** GET /sitemap.xml — the index. */
 export async function getSitemap(req: Request, res: Response) {
   const site = siteUrlFor(req);

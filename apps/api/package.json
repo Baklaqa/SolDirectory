@@ -19,6 +19,8 @@
     "fetch:register-languages": "tsx src/scripts/fetchRegisterLanguages.ts",
     "sync:register-wp": "tsx src/scripts/syncRegisterListingsToWordPress.ts",
     "sync:pages-wp": "tsx src/scripts/syncPageContentToWordPress.ts",
+    "sync:all-wp": "tsx src/scripts/syncAllToWordPress.ts",
+    "audit:wp-sync": "tsx src/scripts/auditWordPressSync.ts",
     "test:page-score": "tsx src/scripts/testPageScore.ts",
     "audit:seo": "tsx src/scripts/auditPublicSeo.ts",
     "audit:links": "tsx src/scripts/auditInternalLinks.ts",

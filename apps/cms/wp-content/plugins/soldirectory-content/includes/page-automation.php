@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) exit;
  *
  *   service_area_page   /services/{service}/{state}/{suburb}        (existing post type)
  *   register_area_page  /ndis-providers/{state}[/{suburb}] and /aged-care-providers/...   (new, never publicly routed: the React app serves the page)
+ *   site_article        the authored pages and articles (guides, funding, condition and language topics, legal pages, blog, glossary), copied
+ *                      from the site with the same HTML a crawler sees (apps/api services/wpMirror). New, never publicly routed.
  */
 
 add_action('init', function () {
@@ -26,7 +28,20 @@ add_action('init', function () {
         'menu_icon' => 'dashicons-location-alt',
     ]);
 
+    register_post_type('site_article', [
+        'labels' => ['name' => 'Site Articles', 'singular_name' => 'Site Article'],
+        'public' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'site-articles',
+        'supports' => ['title', 'editor'],
+        'has_archive' => false,
+        'publicly_queryable' => false,
+        'show_in_menu' => true,
+        'menu_icon' => 'dashicons-media-document',
+    ]);
+
     $string_meta = [
+        'sd_kind', 'sd_title_tag', 'sd_canonical', 'sd_robots', 'sd_jsonld_json', 'sd_hash',
         'sd_page_key',            // e.g. service:plan-management:vic:preston
         'sd_path',                // e.g. /services/plan-management/vic/preston
         'sd_status',              // approved | rejected | stale | unpublished | baseline
@@ -39,7 +54,7 @@ add_action('init', function () {
         'sd_score_breakdown_json',
         'sd_approved_at',
     ];
-    foreach (['service_area_page', 'register_area_page'] as $post_type) {
+    foreach (['service_area_page', 'register_area_page', 'site_article'] as $post_type) {
         foreach ($string_meta as $name) {
             register_post_meta($post_type, $name, [
                 'show_in_rest' => true,
