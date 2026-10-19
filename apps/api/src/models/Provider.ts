@@ -98,6 +98,8 @@ export interface ProviderDoc extends Document {
   // manage the provider's logo in the WordPress Media Library, and
   // the WP webhook pushes the resulting URL back here.
   wpPostId?: number;
+  /** When this provider was last pushed to WordPress successfully (lets an interrupted full resync carry on). */
+  wpSyncedAt?: Date;
   logoUrl?: string;
   /** The provider uploaded their own logo (see ProviderLogo). Used only when there's no WordPress logo. */
   hasLogoUpload?: boolean;
@@ -191,6 +193,7 @@ const providerSchema = new Schema<ProviderDoc>(
     leadUnlocksUsedThisPeriod: { type: Number, default: 0 },
     periodResetsAt: Date,
     wpPostId: { type: Number, index: true },
+    wpSyncedAt: Date,
     logoUrl: String,
     hasLogoUpload: { type: Boolean, default: false },
     lastCapacityConfirmedAt: Date,

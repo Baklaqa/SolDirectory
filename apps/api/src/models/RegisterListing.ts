@@ -85,6 +85,8 @@ export interface RegisterListingDoc extends Document {
    * first sync so re-syncs PUT the same post instead of duplicating it.
    */
   wpPostId?: number;
+  /** When this listing was last pushed to WordPress successfully (lets an interrupted full resync carry on). */
+  wpSyncedAt?: Date;
   /**
    * Languages the business's OWN website says it supports (see services/languageDiscovery.ts) — only
    * explicit statements such as "we speak Arabic", never a translation menu or a stray mention. Canonical
@@ -128,6 +130,7 @@ const registerListingSchema = new Schema<RegisterListingDoc>(
     logoUrl: String,
     logoCheckedAt: Date,
     wpPostId: Number,
+    wpSyncedAt: Date,
     languages: [String],
     languagesCheckedAt: Date,
     emailOptOut: { type: Boolean, default: false },

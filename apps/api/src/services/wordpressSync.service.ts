@@ -156,6 +156,7 @@ export async function syncProviderToWordPress(providerId: string): Promise<void>
       provider.wpPostId = result.id;
       await provider.save();
     }
+    await Provider.updateOne({ _id: provider._id }, { $set: { wpSyncedAt: new Date() } }, { timestamps: false });
   } catch (err) {
     console.error(`[WordPressSync] Failed to sync provider ${providerId}:`, err);
   }

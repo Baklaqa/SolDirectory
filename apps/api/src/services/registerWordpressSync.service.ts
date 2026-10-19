@@ -81,9 +81,11 @@ export async function syncRegisterListingToWordPress(listing: RegisterListingDoc
       ? await wpFetch(`/wp-json/wp/v2/register-listings/${listing.wpPostId}`, { method: 'POST', body: JSON.stringify(payload) })
       : await wpFetch('/wp-json/wp/v2/register-listings', { method: 'POST', body: JSON.stringify(payload) });
 
-    if (!listing.wpPostId && result?.id) {
-      await RegisterListing.updateOne({ _id: listing._id }, { $set: { wpPostId: result.id } });
-    }
+    await RegisterListing.updateOne(
+      { _id: listing._id },
+      { $set: { wpSyncedAt: new Date(), ...(!listing.wpPostId && result?.id ? { wpPostId: result.id } : {}) } },
+      { timestamps: false },
+    );
   } catch (err) {
     console.error(`[RegisterWordPressSync] Failed to sync register listing ${listing._id}:`, err);
   }
