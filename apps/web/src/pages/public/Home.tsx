@@ -77,12 +77,9 @@ export default function Home() {
 
   // Each figure appears only when the database can back it (see
   // stats.controller.ts); nothing here is estimated or padded.
-  const supportTypes = stats ? Object.values(stats.providersByService).filter((n) => n > 0).length : 0;
   const reply = stats?.medianFirstReplyMinutes ?? null;
   const figures: { label: string; value: number; suffix?: string; format?: boolean; accent?: boolean }[] = [];
-  if (stats && stats.providersListed > 0) figures.push({ label: 'Providers accepting enquiries', value: stats.providersListed });
   if (stats && stats.suburbsCovered > 0) figures.push({ label: 'Suburbs with a listed provider', value: stats.suburbsCovered });
-  if (supportTypes > 0) figures.push({ label: 'Support types offered', value: supportTypes });
   if (reply !== null) {
     figures.push(
       reply < 120
@@ -241,9 +238,9 @@ export default function Home() {
       {figures.length > 0 && (
         <section className="stats-section home-stats" aria-label="Directory figures">
           <p className="stats-headline">
-            A live snapshot of SolDirectory —{' '}
-            <span className="stats-headline-accent">providers accepting enquiries, plus the public NDIS and My Aged Care registers</span>{' '}
-            we also draw on.
+            A live snapshot of SolDirectory, including{' '}
+            <span className="stats-headline-accent">the public NDIS and My Aged Care registers</span>{' '}
+            we draw on.
           </p>
           <dl className="home-stats-row" data-reveal>
             {figures.map((f) => (
