@@ -42,3 +42,18 @@ Compare each with the business's own website, then Verify or Reject.
 Verifying marks the listing "claimed"; the business still signs up as a
 normal provider. An email goes to `ADMIN_NOTIFY_EMAIL` (or
 `ADMIN_NOTIFICATION_EMAIL`) if set.
+
+## Telling n8n when an import finishes
+
+After a real import (not `--dry-run`) the script calls the n8n webhook so the stale-content check runs straight away
+(`POST /api/automation/stale-check` is then called by the n8n workflow). Set these in `apps/api/.env` on the server:
+
+```
+N8N_REGISTER_IMPORT_WEBHOOK_URL=https://solbusiness.app.n8n.cloud/webhook/soldirectory-register-import
+N8N_WEBHOOK_TOKEN=<the webhook token n8n gave you>
+N8N_STALE_CHECK_LIMIT=500
+```
+
+The request is `POST` with `Authorization: Bearer <token>` and body `{"limit": 500, "reason": "register import completed"}`.
+If either variable is empty nothing is sent. A failed call is retried once and never fails the import; the script prints
+whether n8n was told.

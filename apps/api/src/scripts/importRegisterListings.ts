@@ -222,6 +222,11 @@ async function main() {
     if (result.claimedUnseen) console.log(`[register-import] ${result.claimedUnseen} CLAIMED listing(s) were not in this export. They were left alone: check each against the official register by hand.`);
     for (const line of result.skipped) console.log(`[register-import] ${line}`);
   }
+
+  // Tell the n8n automation the register data has changed, so it runs the stale-content check now (no-op unless the webhook is configured).
+  const { notifyRegisterImportCompleted } = await import('../services/n8nWebhook.js');
+  const hook = await notifyRegisterImportCompleted();
+  console.log(hook.sent ? `[register-import] n8n told (${hook.status}): the stale-content check will run.` : `[register-import] n8n not told: ${hook.reason}`);
 }
 
 main()
