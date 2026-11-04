@@ -4,7 +4,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { MatchModalProvider } from './context/MatchModalContext';
 import MatchingWizard from './components/MatchingWizard';
 import AppRoutes from './routes/AppRoutes';
-import AccessibilityToolbar from './components/AccessibilityToolbar';
+import AccessibilityMenu from './components/AccessibilityMenu';
 import SitePreloader from './components/SitePreloader';
 import CookieConsent from './components/CookieConsent';
 import ScrollToTop from './components/ScrollToTop';
@@ -22,7 +22,7 @@ export default function App() {
             <MatchModalProvider>
               <AppRoutes />
               <MatchingWizard />
-              <AccessibilityToolbar />
+              <AccessibilityMenu />
               <CookieConsent />
             </MatchModalProvider>
           </ToastProvider>

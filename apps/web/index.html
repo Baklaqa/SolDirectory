@@ -23,15 +23,20 @@
     </style>
     <noscript><style>#initial-preloader{display:none}</style></noscript>
     <script>
-      // The visitor's accessibility choices (text size, colours and so on) from the menu are applied here, before the page paints, so a page
-      // does not flash at the normal size first. They are kept in this browser only. See src/lib/accessibilityPrefs.ts.
+      // The visitor's accessibility choices from the menu (text size, colours and so on) are applied here, before the page paints, so a page
+      // does not flash at the normal settings first. They are kept in this browser only. See src/lib/accessibilityPrefs.ts.
       (function () {
         try {
-          var saved = JSON.parse(localStorage.getItem("soldirectory.a11y") || "null");
-          if (!saved) return;
           var root = document.documentElement;
-          if (saved.scale >= 1 && saved.scale <= 2) root.style.setProperty("--a11y-text-scale", String(saved.scale));
-          (saved.classes || []).forEach(function (c) { if (/^a11y-[a-z-]+$/.test(c)) root.classList.add(c); });
+          var saved = JSON.parse(localStorage.getItem("soldirectory-a11y") || "null");
+          if (saved) {
+            (saved.c || []).forEach(function (c) { if (/^a11y-[a-z-]+$/.test(c)) root.classList.add(c); });
+            var vars = saved.v || {};
+            Object.keys(vars).forEach(function (k) {
+              if (/^--a11y-[a-z-]+$/.test(k) && /^[#a-z0-9.%(), -]+$/i.test(String(vars[k]))) root.style.setProperty(k, String(vars[k]));
+            });
+          }
+          if (sessionStorage.getItem("soldirectory-a11y-hide")) root.classList.add("a11y-ui-hidden");
         } catch (e) { /* storage blocked: the page is shown with the normal settings */ }
       })();
     </script>
