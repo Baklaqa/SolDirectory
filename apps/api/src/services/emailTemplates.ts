@@ -5,7 +5,7 @@
 // own <html> document.
 
 import { siteOrigin } from './emailTokens.js';
-import { BUSINESS, BUSINESS_LINE } from '../config/business.js';
+import { BUSINESS } from '../config/business.js';
 
 const NAVY = '#0B2D5C';
 const PRIMARY = '#1769E0';
@@ -21,8 +21,52 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, '&#039;');
 }
 
+/**
+ * Mail apps turn anything that looks like a phone number or an address into a link: the last digits of the ABN ("022 522") become a phone
+ * link and the street address becomes a map link. Putting each word in its own span leaves nothing for them to match, and the text reads
+ * exactly the same. (The head also switches the automatic links off for Apple Mail and the Gmail apps; see renderEmailLayout.)
+ */
+export function noAutoLink(value: string): string {
+  return escapeHtml(value).split(' ').map((word) => `<span>${word}</span>`).join(' ');
+}
+
+/** The footer line about who runs SolDirectory. Plain text, apart from the email address, which is a deliberate link. */
+function businessLineHtml(): string {
+  return `SolDirectory is operated by ${noAutoLink(BUSINESS.operator)} (ABN ${noAutoLink(BUSINESS.abn)}), ${noAutoLink(BUSINESS.address)}. ` +
+    `Phone ${noAutoLink(BUSINESS.phone)}. Email <a href="mailto:${escapeHtml(BUSINESS.email)}" style="color:${PRIMARY}; text-decoration:none;">${escapeHtml(BUSINESS.email)}</a>.`;
+}
+
+/**
+ * The plain-text version sent alongside the HTML. Some people read email as plain text (screen readers, text-only apps, some watches), and
+ * mail that has only an HTML part is more likely to be treated as spam. Links are written out as "label (address)".
+ */
+export function htmlToText(html: string): string {
+  const entities: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#039;': "'", '&nbsp;': ' ', '&middot;': '·' };
+  return html
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<span class="preheader"[\s\S]*?<\/span>/i, '')
+    .replace(/<a\s[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_m, href: string, label: string) => {
+      const text = label.replace(/<[^>]+>/g, '').trim();
+      if (!text) return ''; // the logo, which is a picture inside a link
+      return href.startsWith('mailto:') ? text : `${text} (${href})`;
+    })
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<\/(p|div|h[1-6]|tr|li|table|ul)>/gi, '\n')
+    .replace(/<\/td>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(amp|lt|gt|quot|#039|nbsp|middot);/g, (m) => entities[m] ?? m)
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export function renderEmailLayout(opts: {
-  preheader: string; // hidden preview text shown in inbox lists
+  preheader: string; // hidden preview text shown in inbox lists (plain text: it is escaped here)
   heading: string;
   bodyHtml: string; // pre-built inner HTML — paragraphs, etc.
   ctaLabel?: string;
@@ -40,10 +84,16 @@ export function renderEmailLayout(opts: {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light only" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
   <title>${heading}</title>
+  <style>
+    /* Apple Mail and the Gmail apps still link phone-like numbers and addresses; inside the footer line that is switched off. */
+    a[x-apple-data-detectors], u + #body .nolink a { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+  </style>
 </head>
-<body style="margin:0; padding:0; background:${BG}; font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased;">
-  <span style="display:none; font-size:1px; color:${BG}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">${preheader}</span>
+<body id="body" style="margin:0; padding:0; background:${BG}; font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased;">
+  <span class="preheader" style="display:none; font-size:1px; color:${BG}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">${escapeHtml(preheader)}</span>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG}; padding: 28px 12px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #DDE6F2; box-shadow:0 6px 24px rgba(11,45,92,0.08);">
@@ -62,13 +112,13 @@ export function renderEmailLayout(opts: {
         ${ctaLabel && ctaUrl ? `
         <tr>
           <td style="padding: 8px 32px 34px;">
-            <a href="${ctaUrl}" style="display:inline-block; background:${PRIMARY}; color:#ffffff; text-decoration:none; font-size:15px; font-weight:600; padding:14px 28px; border-radius:10px;">${ctaLabel}</a>
+            <a href="${escapeHtml(ctaUrl)}" style="display:inline-block; background:${PRIMARY}; color:#ffffff; text-decoration:none; font-size:15px; font-weight:600; padding:14px 28px; border-radius:10px;">${escapeHtml(ctaLabel)}</a>
           </td>
         </tr>` : '<tr><td style="height:18px; line-height:18px; font-size:0;">&nbsp;</td></tr>'}
         <tr>
           <td style="padding:22px 32px 26px; background:#F8FAFD; border-top:1px solid #E8EEF7; font-size:12.5px; line-height:1.6; color:${TEXT_MUTED};">
             <strong style="color:${NAVY};">SolDirectory</strong> helps people find NDIS and aged care providers across Australia.<br />
-            ${BUSINESS_LINE}<br />
+            <span class="nolink">${businessLineHtml()}</span><br />
             <a href="${site}" style="color:${PRIMARY}; text-decoration:none;">Visit the website</a> &nbsp;·&nbsp; <a href="${site}/privacy" style="color:${PRIMARY}; text-decoration:none;">Privacy</a> &nbsp;·&nbsp; This is an automated message, so please don't reply to it.${footerHtml ? `<br /><br />${footerHtml}` : ''}
           </td>
         </tr>
@@ -140,7 +190,7 @@ export function leadConfirmationTemplate(input: {
       </table>
       ${input.trackingUrl ? `<p style="margin:6px 0 12px;"><strong style="color:${NAVY};">Follow your request:</strong> <a href="${escapeHtml(input.trackingUrl)}" style="color:${PRIMARY}; font-weight:700;">see who has received and opened it</a>, any time.</p>` : ''}
       <p style="margin:6px 0 12px;">Being contacted does not mean you have agreed to anything. Ask each provider the same questions, compare them, and only sign a service agreement when you are ready.</p>
-      <p style="margin:6px 0 0;">You do not have to wait: you can look at providers in your area now and contact them directly. Questions? Reply to this email or call ${escapeHtml(BUSINESS.phone)}.</p>`,
+      <p style="margin:6px 0 0;">You do not have to wait: you can look at providers in your area now and contact them directly. Questions? Email ${escapeHtml(BUSINESS.email)} or call ${escapeHtml(BUSINESS.phone)}.</p>`,
     ctaLabel: 'Browse providers near you',
     ctaUrl: input.browseUrl ?? input.trackingUrl,
   });
@@ -151,7 +201,7 @@ export function providerMatchedTemplate(input: { need: string; trackingUrl?: str
   const html = renderEmailLayout({
     preheader: 'A provider has been matched to your request',
     heading: 'A provider has been matched to your request',
-    bodyHtml: `<p>Good news — a provider offering <strong>${input.need}</strong> has been matched to your request and may be in touch soon.</p>`,
+    bodyHtml: `<p>Good news — a provider offering <strong>${escapeHtml(input.need)}</strong> has been matched to your request and may be in touch soon.</p>`,
     ctaLabel: input.trackingUrl ? 'View your request' : undefined,
     ctaUrl: input.trackingUrl,
   });
@@ -162,7 +212,7 @@ export function providerResponseTemplate(input: { providerName: string; tracking
   const html = renderEmailLayout({
     preheader: `${input.providerName} has responded to your request`,
     heading: 'A provider has responded to your request',
-    bodyHtml: `<p><strong>${input.providerName}</strong> has responded to your care request. Log in to see their response and next steps.</p>`,
+    bodyHtml: `<p><strong>${escapeHtml(input.providerName)}</strong> has responded to your care request. Log in to see their response and next steps.</p>`,
     ctaLabel: input.trackingUrl ? 'View response' : undefined,
     ctaUrl: input.trackingUrl,
   });
@@ -209,7 +259,7 @@ export function capacityConfirmationTemplate(input: { providerName: string; conf
   const html = renderEmailLayout({
     preheader: 'Confirm you can still take new referrals this week',
     heading: 'Weekly capacity check-in',
-    bodyHtml: `<p>Hi ${input.providerName},</p><p>Please confirm you're still able to take new referrals this week. Only providers who answer receive new requests. If we don't hear from you within 7 days, your profile stays live but you won't be sent new requests, and it loses the “Taking new people” label, until you confirm again.</p>`,
+    bodyHtml: `<p>Hi ${escapeHtml(input.providerName)},</p><p>Please confirm you're still able to take new referrals this week. Only providers who answer receive new requests. If we don't hear from you within 7 days, your profile stays live but you won't be sent new requests, and it loses the “Taking new people” label, until you confirm again.</p>`,
     ctaLabel: 'Confirm capacity',
     ctaUrl: input.confirmUrl,
   });
@@ -220,7 +270,7 @@ export function providerLeadNotificationTemplate(input: { need: string; suburb: 
   const html = renderEmailLayout({
     preheader: 'A new care opportunity is available',
     heading: 'New care opportunity available',
-    bodyHtml: `<p>A new request for <strong>${input.need}</strong> in <strong>${input.suburb}</strong> is available in your leads list.</p>`,
+    bodyHtml: `<p>A new request for <strong>${escapeHtml(input.need)}</strong> in <strong>${escapeHtml(input.suburb)}</strong> is available in your leads list.</p>`,
     ctaLabel: input.dashboardUrl ? 'View opportunity' : undefined,
     ctaUrl: input.dashboardUrl,
   });
@@ -232,7 +282,7 @@ export function providerLeadTeaserTemplate(input: { need: string; suburb: string
     ? `<p><strong>${input.unlocksLeft} of 3</strong> spots are left on this request.</p>`
     : '<p>Up to 3 providers can unlock each request.</p>';
   const html = renderEmailLayout({
-    preheader: `New request: ${escapeHtml(input.need)} in ${escapeHtml(input.suburb)}`,
+    preheader: `New request: ${input.need} in ${input.suburb}`,
     heading: 'A new request matches your profile',
     bodyHtml: `<p>Support: <strong>${escapeHtml(input.need)}</strong><br />Suburb: <strong>${escapeHtml(input.suburb)}</strong></p>${spots}<p>The person’s name and contact details are shown when you unlock the request, which uses one of your monthly unlocks. Only unlock if you can realistically help, and please contact the person within one business day.</p>${input.claimUrl ? `<p><strong>Your organisation has a free SolDirectory listing.</strong> <a href="${escapeHtml(input.claimUrl)}">Manage your listing</a> to update your details and respond to requests.</p>` : ''}`,
     ctaLabel: input.dashboardUrl ? 'View request' : undefined,
@@ -255,7 +305,7 @@ export function providerLeadFullTemplate(input: {
   dashboardUrl?: string;
 }): { subject: string; html: string } {
   const html = renderEmailLayout({
-    preheader: `New ${escapeHtml(input.need)} lead in ${escapeHtml(input.suburb)} with contact details`,
+    preheader: `New ${input.need} lead in ${input.suburb} with contact details`,
     heading: 'New matched lead',
     bodyHtml: `
       <p>A new request for <strong>${escapeHtml(input.need)}</strong> in <strong>${escapeHtml(input.suburb)}</strong> has been matched to your organisation.</p>
@@ -313,7 +363,7 @@ export function verificationResultTemplate(input: { approved: boolean; reason?: 
     heading: input.approved ? "You're verified!" : 'Verification update',
     bodyHtml: input.approved
       ? `<p>Good news — your worker verification has been approved and your profile is now published.</p>`
-      : `<p>Your worker verification was not approved this time.${input.reason ? ` Reason: ${input.reason}` : ''}</p><p>You're welcome to update your documents and resubmit.</p>`,
+      : `<p>Your worker verification was not approved this time.${input.reason ? ` Reason: ${escapeHtml(input.reason)}` : ''}</p><p>You're welcome to update your documents and resubmit.</p>`,
   });
   return { subject: input.approved ? "You're verified on SolDirectory" : 'Your SolDirectory verification update', html };
 }
@@ -338,7 +388,7 @@ export function providerChecksPassedTemplate(input: { name: string; registered: 
 }
 
 export function providerChecksAttentionTemplate(input: { name: string; items: { message: string; severity: 'warn' | 'fail'; fixUrl: string }[]; onlyConfirming: boolean }): { subject: string; html: string } {
-  const list = input.items.map((i) => `<li style="margin:0 0 12px;">${escapeHtml(i.message)} <a href="${i.fixUrl}">${i.severity === 'fail' ? 'Fix this' : 'Check this'}</a></li>`).join('');
+  const list = input.items.map((i) => `<li style="margin:0 0 12px;">${escapeHtml(i.message)} <a href="${escapeHtml(i.fixUrl)}">${i.severity === 'fail' ? 'Fix this' : 'Check this'}</a></li>`).join('');
   const html = renderEmailLayout({
     preheader: input.onlyConfirming ? 'One thing to double-check' : 'A few things to fix on your profile',
     heading: input.onlyConfirming ? 'One thing to double-check' : 'A few things to fix',
@@ -359,7 +409,7 @@ export function providerChecksAttentionTemplate(input: { name: string; items: { 
 export function welcomeTemplate(input: { name: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
     preheader: 'Welcome to SolDirectory',
-    heading: `Welcome, ${input.name}!`,
+    heading: `Welcome, ${escapeHtml(input.name)}!`,
     bodyHtml: `<p>Your SolDirectory account is ready. We're glad you're here.</p>`,
   });
   return { subject: 'Welcome to SolDirectory', html };
@@ -369,7 +419,7 @@ export function welcomeTemplate(input: { name: string }): { subject: string; htm
 
 export function subscriptionStartedTemplate(input: { name: string; planName: string; quotaText: string; leadsUrl?: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
-    preheader: `Your ${escapeHtml(input.planName)} plan is active`,
+    preheader: `Your ${input.planName} plan is active`,
     heading: `Your ${escapeHtml(input.planName)} plan is active`,
     bodyHtml: `
       <p>Hi ${escapeHtml(input.name)},</p>
@@ -384,7 +434,7 @@ export function subscriptionStartedTemplate(input: { name: string; planName: str
 
 export function paymentReceivedTemplate(input: { name: string; planName: string; amount: string; nextBilling?: string; billingUrl?: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
-    preheader: `Payment received — ${escapeHtml(input.amount)}`,
+    preheader: `Payment received — ${input.amount}`,
     heading: 'Payment received',
     bodyHtml: `
       <p>Hi ${escapeHtml(input.name)},</p>
@@ -414,7 +464,7 @@ export function paymentFailedTemplate(input: { name: string; planName: string; b
 
 export function subscriptionCancelledTemplate(input: { name: string; planName: string; plansUrl?: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
-    preheader: `Your ${escapeHtml(input.planName)} plan has ended`,
+    preheader: `Your ${input.planName} plan has ended`,
     heading: `Your ${escapeHtml(input.planName)} plan has ended`,
     bodyHtml: `
       <p>Hi ${escapeHtml(input.name)},</p>
@@ -430,7 +480,7 @@ export function subscriptionCancelledTemplate(input: { name: string; planName: s
 export function checkExpiringTemplate(input: { firstName?: string; checkName: string; expiry: Date; link: string }): { subject: string; html: string } {
   const when = input.expiry.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne' });
   const html = renderEmailLayout({
-    preheader: `Your ${escapeHtml(input.checkName)} expires on ${when}`,
+    preheader: `Your ${input.checkName} expires on ${when}`,
     heading: `Your ${escapeHtml(input.checkName)} expires on ${when}`,
     bodyHtml: `<p>Hi ${escapeHtml(input.firstName || 'there')},</p><p>Your ${escapeHtml(input.checkName)} on SolDirectory expires on <strong>${when}</strong>. Upload your renewed check before then to keep your profile visible.</p>`,
     ctaLabel: 'Upload renewed check',

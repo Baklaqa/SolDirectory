@@ -2,7 +2,7 @@ import nodemailer, { type Transporter } from 'nodemailer';
 import {
   leadConfirmationTemplate, type LeadConfirmationDetails, providerMatchedTemplate, providerResponseTemplate,
   providerLeadNotificationTemplate, providerLeadTeaserTemplate, providerLeadFullTemplate,
-  adminNotificationTemplate, renderEmailLayout,
+  adminNotificationTemplate, renderEmailLayout, escapeHtml, htmlToText,
   passwordResetTemplate, passwordChangedTemplate, verificationResultTemplate, welcomeTemplate,
   capacityConfirmationTemplate, providerChecksPassedTemplate, providerChecksAttentionTemplate,
   subscriptionStartedTemplate, paymentReceivedTemplate, paymentFailedTemplate, subscriptionCancelledTemplate,
@@ -63,6 +63,8 @@ async function sendMail(to: string, subject: string, html: string, opts?: { unsu
   try {
     await t.sendMail({
       from, to, subject, html,
+      // A plain-text version of the same message goes with it (see htmlToText).
+      text: htmlToText(html),
       // Lets mail apps show their own "Unsubscribe" button, which also protects the sender's reputation.
       ...(opts?.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${opts.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
     });
@@ -115,7 +117,7 @@ export const EmailService = {
     const html = renderEmailLayout({
       preheader: `${requesterName} requested to connect with you`,
       heading: 'New request received',
-      bodyHtml: `<p><strong>${requesterName}</strong> has requested a callback from your organisation through SolDirectory. Log in to respond.</p>`,
+      bodyHtml: `<p><strong>${escapeHtml(requesterName)}</strong> has requested a callback from your organisation through SolDirectory. Log in to respond.</p>`,
       ctaLabel: dashboardUrl ? 'View request' : undefined,
       ctaUrl: dashboardUrl,
     });
