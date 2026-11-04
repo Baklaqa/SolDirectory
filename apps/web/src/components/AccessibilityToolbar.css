@@ -1,4 +1,16 @@
+/*
+ * Accessibility menu (components/AccessibilityToolbar.tsx). The visitor's choices are classes on <html> (see lib/accessibilityPrefs.ts).
+ *
+ * Text size: every font-size in the site's CSS is multiplied by --a11y-text-scale at build time (the "sd-scale-text" plugin in vite.config.ts),
+ * so it grows the whole page's text, not just the few sizes written in rem. The menu itself stays at its normal size.
+ */
+html {
+  --site-font-scale: 1.06;
+  font-size: calc(100% * var(--site-font-scale));
+}
+
 .accessibility-toolbar {
+  --a11y-text-scale: 1;
   position: fixed;
   right: 18px;
   bottom: 20px;
@@ -9,239 +21,121 @@
   gap: 10px;
 }
 
-.accessibility-toolbar__toggle-wrap {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .accessibility-toolbar__toggle {
+  display: grid;
+  place-items: center;
   width: 56px;
   height: 56px;
-  border: 0;
+  border: 2px solid #fff;
   border-radius: 18px;
   background: linear-gradient(135deg, #1a5bbf, #0d2b57);
   color: #fff;
-  font-size: 26px;
-  box-shadow: 0 10px 24px rgba(11, 36, 74, 0.22);
+  box-shadow: 0 10px 24px rgba(11, 36, 74, 0.28);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.accessibility-toolbar.is-closed .accessibility-toolbar__toggle {
-  animation: accessibility-pulse 3.2s ease-in-out 2;
-}
-
-.accessibility-toolbar__toggle:hover,
-.accessibility-toolbar__toggle:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(11, 36, 74, 0.28);
-}
+.accessibility-toolbar__toggle:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(11, 36, 74, 0.32); }
+.accessibility-toolbar__toggle:focus-visible,
+.accessibility-toolbar button:focus-visible { outline: 3px solid #8CB8FF; outline-offset: 2px; }
+.accessibility-toolbar__toggle:focus-visible { outline-color: #fff; box-shadow: 0 0 0 5px #0B3F8F; }
 
 .accessibility-toolbar__panel {
-  width: min(285px, calc(100vw - 26px));
-  max-height: calc(100vh - 96px);
+  width: min(340px, calc(100vw - 24px));
+  max-height: calc(100vh - 100px);
+  max-height: calc(100dvh - 100px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(16, 35, 63, 0.08);
+  overscroll-behavior: contain;
+  background: #fff;
+  color: #10233F;
+  border: 1px solid #B9CFEF;
   border-radius: 18px;
-  box-shadow: 0 18px 44px rgba(15, 30, 58, 0.18);
-  padding: 16px 14px 12px;
-  backdrop-filter: blur(8px);
-}
-
-@media (min-width: 641px) and (max-height: 820px) {
-  .accessibility-toolbar {
-    right: 14px;
-    bottom: 12px;
-    gap: 7px;
-  }
-
-  .accessibility-toolbar__panel {
-    width: min(260px, calc(100vw - 28px));
-    padding: 12px 11px 10px;
-    border-radius: 14px;
-  }
-
-  .accessibility-toolbar__panel h2 {
-    margin-bottom: 6px;
-    font-size: 18px;
-  }
-
-  .accessibility-toolbar__item {
-    gap: 10px;
-    padding: 7px 6px;
-    font-size: 14px;
-  }
-
-  .accessibility-toolbar__item span:first-child {
-    font-size: 17px;
-  }
-
-  .accessibility-toolbar__item--read {
-    margin-top: 5px;
-    padding-top: 10px;
-  }
-
-  .accessibility-toolbar__reset {
-    margin-top: 8px;
-    padding: 9px 12px;
-    font-size: 14px;
-  }
-}
-
-.accessibility-toolbar__panel h2 {
-  margin: 0 0 10px;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--color-text, #10233F);
-}
-
-.accessibility-toolbar__item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 0;
-  background: transparent;
-  padding: 10px 8px;
-  margin: 0;
-  border-radius: 10px;
-  color: var(--color-text, #10233F);
+  box-shadow: 0 18px 44px rgba(15, 30, 58, 0.22);
+  padding: 16px;
   font-size: 15px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.18s ease, transform 0.18s ease;
+  line-height: 1.4;
 }
 
-.accessibility-toolbar__item:hover,
-.accessibility-toolbar__item:focus-visible {
-  background: rgba(23, 105, 224, 0.06);
+.accessibility-toolbar__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.accessibility-toolbar__head h2 { margin: 0; font-size: 19px; font-weight: 700; color: #10233F; }
+.accessibility-toolbar__head h2:focus { outline: none; }
+.accessibility-toolbar__close {
+  min-height: 44px; padding: 0 14px; border: 1.5px solid #B9CFEF; border-radius: 10px; background: #fff; color: #0F4FA8; font-size: 15px; font-weight: 600;
 }
 
-.accessibility-toolbar__item.is-active {
-  background: rgba(23, 105, 224, 0.08);
-  color: var(--color-primary, #1769E0);
-  font-weight: 600;
-}
+.accessibility-toolbar__group { margin: 14px 0 0; }
+.accessibility-toolbar__label { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #3E5270; }
 
-.accessibility-toolbar__item.is-active span:first-child {
-  color: var(--color-primary, #1769E0);
+.accessibility-toolbar__size { display: flex; align-items: center; gap: 10px; }
+.accessibility-toolbar__size span { flex: 1; text-align: center; font-size: 18px; font-weight: 700; }
+.accessibility-toolbar__size button {
+  min-width: 64px; min-height: 48px; border: 1.5px solid #1769E0; border-radius: 10px; background: #fff; color: #0F4FA8; font-size: 18px; font-weight: 700;
 }
+.accessibility-toolbar__size button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.accessibility-toolbar__item span:first-child {
-  width: 20px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--color-primary, #1769E0);
-  font-size: 18px;
-  font-weight: 700;
+.accessibility-toolbar__choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.accessibility-toolbar__choices button {
+  min-height: 48px; padding: 6px 8px; border: 1.5px solid #B9CFEF; border-radius: 10px; background: #fff; color: #10233F; font-size: 14.5px; font-weight: 600;
 }
+.accessibility-toolbar__choices button.is-on { border-color: #1769E0; background: #E8F1FF; color: #0B3F8F; box-shadow: inset 0 0 0 1.5px #1769E0; }
 
-.accessibility-toolbar__item--read {
-  border-top: 1px solid rgba(16, 35, 63, 0.08);
-  margin-top: 8px;
-  padding-top: 14px;
+.accessibility-toolbar__switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; margin: 0 0 8px; padding: 8px 12px;
+  border: 1.5px solid #B9CFEF; border-radius: 10px; background: #fff; color: #10233F; text-align: left;
 }
+.accessibility-toolbar__switch strong { display: block; font-size: 15px; font-weight: 600; }
+.accessibility-toolbar__switch small { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 500; color: #3E5270; }
+.accessibility-toolbar__state { flex: none; min-width: 42px; padding: 4px 10px; border-radius: 999px; background: #EEF2F8; color: #3E5270; font-size: 13px; font-weight: 700; text-align: center; }
+.accessibility-toolbar__switch.is-on { border-color: #1769E0; background: #E8F1FF; box-shadow: inset 0 0 0 1.5px #1769E0; }
+.accessibility-toolbar__switch.is-on .accessibility-toolbar__state { background: #1769E0; color: #fff; }
 
 .accessibility-toolbar__reset {
-  width: 100%;
-  margin-top: 12px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--color-primary, #1769E0);
-  color: #fff;
-  padding: 12px 14px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: filter 0.18s ease, transform 0.18s ease;
+  width: 100%; min-height: 48px; margin-top: 6px; border: 0; border-radius: 12px; background: #1769E0; color: #fff; font-size: 16px; font-weight: 700;
 }
-
-.accessibility-toolbar__reset:hover,
-.accessibility-toolbar__reset:focus-visible {
-  filter: brightness(0.96);
-  transform: translateY(-1px);
-}
-
-@keyframes accessibility-pulse {
-  0%, 72%, 100% {
-    box-shadow: 0 10px 24px rgba(11, 36, 74, 0.22);
-  }
-  80% {
-    box-shadow: 0 0 0 7px rgba(23, 105, 224, 0.14), 0 14px 30px rgba(11, 36, 74, 0.3);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .accessibility-toolbar.is-closed .accessibility-toolbar__toggle {
-    animation: none;
-  }
-}
-
-html {
-  --accessibility-scale: 1;
-  --site-font-scale: 1.06;
-  font-size: calc(100% * var(--site-font-scale) * var(--accessibility-scale));
-}
-
-body.a11y-grayscale,
-body.a11y-grayscale * {
-  filter: grayscale(1) !important;
-}
-
-body.a11y-high-contrast,
-body.a11y-high-contrast * {
-  background-color: #000 !important;
-  color: #fff !important;
-  border-color: #fff !important;
-}
-
-body.a11y-negative-contrast,
-body.a11y-negative-contrast * {
-  background-color: #0b0b0b !important;
-  color: #fff !important;
-  box-shadow: none !important;
-}
-
-body.a11y-light-background,
-body.a11y-light-background * {
-  background-color: #f5f7fb !important;
-  color: #111827 !important;
-}
-
-body.a11y-underline-links a,
-body.a11y-underline-links a:visited,
-body.a11y-underline-links a:hover,
-body.a11y-underline-links a:focus {
-  text-decoration: underline !important;
-  text-underline-offset: 2px;
-}
-
-body.a11y-reduced-motion *,
-body.a11y-reduced-motion *::before,
-body.a11y-reduced-motion *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
-
-body,
-body * {
-  line-height: 1.6;
-}
+.accessibility-toolbar__reset:disabled { opacity: 0.5; cursor: not-allowed; }
+.accessibility-toolbar__note { margin: 10px 0 0; font-size: 12.5px; color: #3E5270; text-align: center; }
 
 @media (max-width: 640px) {
-  .accessibility-toolbar {
-    right: 10px;
-    bottom: 12px;
-  }
+  .accessibility-toolbar { right: 10px; bottom: 12px; }
+  .accessibility-toolbar__toggle { width: 52px; height: 52px; border-radius: 16px; }
+}
+@media print { .accessibility-toolbar { display: none; } }
 
-  .accessibility-toolbar__toggle {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-  }
+/* ---- The choices ---- */
+
+html.a11y-grayscale { filter: grayscale(1); }
+
+/* Colours. Each overrides the page's own colours, so only one applies at a time (the menu offers one choice). */
+html.a11y-high-contrast body, html.a11y-high-contrast body * { background-color: #000 !important; color: #fff !important; border-color: #fff !important; box-shadow: none !important; text-shadow: none !important; }
+html.a11y-high-contrast body a, html.a11y-high-contrast body a * { color: #FFEB3B !important; }
+html.a11y-high-contrast :focus-visible { outline: 3px solid #FFEB3B !important; outline-offset: 2px; }
+html.a11y-high-contrast .accessibility-toolbar button.is-on, html.a11y-high-contrast .accessibility-toolbar button.is-on * { background-color: #fff !important; color: #000 !important; }
+
+html.a11y-dark body, html.a11y-dark body * { background-color: #0F1722 !important; color: #F2F5FA !important; border-color: #5C6E88 !important; box-shadow: none !important; }
+html.a11y-dark body a, html.a11y-dark body a * { color: #8CB8FF !important; }
+html.a11y-dark .accessibility-toolbar button.is-on, html.a11y-dark .accessibility-toolbar button.is-on * { background-color: #1D4F9E !important; color: #fff !important; }
+
+html.a11y-light body, html.a11y-light body * { background-color: #F5F7FB !important; color: #111827 !important; }
+html.a11y-light body a, html.a11y-light body a * { color: #0B3F8F !important; }
+html.a11y-light .accessibility-toolbar button.is-on, html.a11y-light .accessibility-toolbar button.is-on * { background-color: #DCE9FF !important; }
+
+/* Pictures keep their own look: the page-colour override above must not paint a box behind them. */
+html.a11y-high-contrast body img, html.a11y-dark body img, html.a11y-light body img { background-color: transparent !important; }
+/* The black version of the logo would vanish on a dark page, so it is shown inverted (white) there. */
+html.a11y-high-contrast img[src*="logo-black"], html.a11y-dark img[src*="logo-black"] { filter: invert(1); }
+
+html.a11y-underline body a, html.a11y-underline body a:visited, html.a11y-underline body a:hover, html.a11y-underline body a:focus { text-decoration: underline !important; text-underline-offset: 3px; }
+
+html.a11y-font body, html.a11y-font body * { font-family: Verdana, Tahoma, 'Segoe UI', Arial, sans-serif !important; }
+
+/* WCAG 1.4.12 text spacing: lines 1.5, letters 0.12em, words 0.16em, paragraphs 2em apart. The menu keeps its own spacing. */
+html.a11y-spacing body *:not(.accessibility-toolbar, .accessibility-toolbar *) { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
+html.a11y-spacing body p:not(.accessibility-toolbar *) { margin-bottom: 2em !important; }
+
+/* Movement stops (a 0.01 ms animation still ends in its final state, so nothing is left half-hidden). The slideshow's timer reads this too. */
+html.a11y-still *, html.a11y-still *::before, html.a11y-still *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import manifest from '../../data/bannerManifest.json';
 import { STATE_INFO } from '../../data/locationInfo';
 import { STATES } from '../../lib/registerMeta';
+import { useStillMotion } from '../../lib/accessibilityPrefs';
 import './LocationCarousel.css';
 
 interface Slide {
@@ -55,19 +56,12 @@ export default function LocationCarousel({ counts }: { counts: Record<string, nu
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [inView, setInView] = useState(false);
-  const [reduced, setReduced] = useState(false);
+  // Stops the slideshow when the device asks for reduced motion or the visitor chose "Stop animations" in the accessibility menu.
+  const reduced = useStillMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; id: number } | null>(null);
 
   const go = useCallback((delta: number) => setActive((i) => (i + delta + total) % total), [total]);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
 
   // Plays only while on screen, with the tab visible and nobody hovering or focused inside.
   useEffect(() => {

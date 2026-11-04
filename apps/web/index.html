@@ -23,6 +23,19 @@
     </style>
     <noscript><style>#initial-preloader{display:none}</style></noscript>
     <script>
+      // The visitor's accessibility choices (text size, colours and so on) from the menu are applied here, before the page paints, so a page
+      // does not flash at the normal size first. They are kept in this browser only. See src/lib/accessibilityPrefs.ts.
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem("soldirectory.a11y") || "null");
+          if (!saved) return;
+          var root = document.documentElement;
+          if (saved.scale >= 1 && saved.scale <= 2) root.style.setProperty("--a11y-text-scale", String(saved.scale));
+          (saved.classes || []).forEach(function (c) { if (/^a11y-[a-z-]+$/.test(c)) root.classList.add(c); });
+        } catch (e) { /* storage blocked: the page is shown with the normal settings */ }
+      })();
+    </script>
+    <script>
       // Ahrefs Web Analytics (page views). It sends the address of each page to Ahrefs, so it is not loaded on pages that are private or whose
       // address can carry a private link: sign-in, password reset, request tracking, the dashboards and the admin area.
       (function () {

@@ -1,157 +1,115 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { applyPrefs, DEFAULT_PREFS, loadPrefs, TEXT_SCALES, type A11yPrefs, type Colours } from '../lib/accessibilityPrefs';
 import './AccessibilityToolbar.css';
 
-type Settings = {
-  fontScale: number;
-  grayscale: boolean;
-  highContrast: boolean;
-  negativeContrast: boolean;
-  lightBackground: boolean;
-  underlineLinks: boolean;
-  reducedMotion: boolean;
-};
+const COLOUR_CHOICES: { value: Colours; label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'high', label: 'High contrast' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light background' },
+];
 
-const defaultSettings: Settings = {
-  fontScale: 1,
-  grayscale: false,
-  highContrast: false,
-  negativeContrast: false,
-  lightBackground: false,
-  underlineLinks: false,
-  reducedMotion: false,
-};
+const SWITCHES: { key: 'grayscale' | 'underlineLinks' | 'readableFont' | 'textSpacing' | 'stillMotion'; label: string; hint: string }[] = [
+  { key: 'underlineLinks', label: 'Underline links', hint: 'Every link is underlined' },
+  { key: 'readableFont', label: 'Readable font', hint: 'A plain, wide font' },
+  { key: 'textSpacing', label: 'Wider text spacing', hint: 'More space between lines, words and letters' },
+  { key: 'stillMotion', label: 'Stop animations', hint: 'Stops moving and fading effects, including the picture slideshow' },
+  { key: 'grayscale', label: 'Black and white', hint: 'Removes colour from the page' },
+];
 
-function clampFontScale(value: number) {
-  return Math.min(1.55, Math.max(0.85, Number(value.toFixed(2))));
-}
-
+/**
+ * The accessibility menu (bottom right of every page). Choices apply at once, are remembered in this browser, and are applied before the
+ * page paints on the next visit (see lib/accessibilityPrefs.ts and the script in index.html). Nothing is sent anywhere.
+ */
 export default function AccessibilityToolbar() {
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [prefs, setPrefs] = useState<A11yPrefs>(loadPrefs);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const wasOpen = useRef(false);
 
-  const actionLabels = [
-    {
-      key: 'fontScale',
-      label: 'Increase Text',
-      sign: '+',
-      action: () => update('fontScale', clampFontScale(settings.fontScale + 0.1)),
-      active: false,
-    },
-    {
-      key: 'fontScale',
-      label: 'Decrease Text',
-      sign: '−',
-      action: () => update('fontScale', clampFontScale(settings.fontScale - 0.1)),
-      active: false,
-    },
-    {
-      key: 'grayscale',
-      label: 'Grayscale',
-      sign: '◫',
-      action: () => update('grayscale', !settings.grayscale),
-      active: settings.grayscale,
-    },
-    {
-      key: 'highContrast',
-      label: 'High Contrast',
-      sign: '◉',
-      action: () => update('highContrast', !settings.highContrast),
-      active: settings.highContrast,
-    },
-    {
-      key: 'negativeContrast',
-      label: 'Negative Contrast',
-      sign: '◌',
-      action: () => update('negativeContrast', !settings.negativeContrast),
-      active: settings.negativeContrast,
-    },
-    {
-      key: 'lightBackground',
-      label: 'Light Background',
-      sign: '☼',
-      action: () => update('lightBackground', !settings.lightBackground),
-      active: settings.lightBackground,
-    },
-    {
-      key: 'underlineLinks',
-      label: 'Links Underline',
-      sign: 'U',
-      action: () => update('underlineLinks', !settings.underlineLinks),
-      active: settings.underlineLinks,
-    },
-    {
-      key: 'reducedMotion',
-      label: 'Read',
-      sign: 'A',
-      action: () => update('reducedMotion', !settings.reducedMotion),
-      active: settings.reducedMotion,
-    },
-  ];
+  useEffect(() => { applyPrefs(prefs); }, [prefs]);
+
+  // Opening moves focus to the menu's heading so a screen reader announces it; closing returns focus to the button.
+  useEffect(() => {
+    if (open) titleRef.current?.focus();
+    else if (wasOpen.current) toggleRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--accessibility-scale', String(settings.fontScale));
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
-    document.body.classList.toggle('a11y-grayscale', settings.grayscale);
-    document.body.classList.toggle('a11y-high-contrast', settings.highContrast);
-    document.body.classList.toggle('a11y-negative-contrast', settings.negativeContrast);
-    document.body.classList.toggle('a11y-light-background', settings.lightBackground);
-    document.body.classList.toggle('a11y-underline-links', settings.underlineLinks);
-    document.body.classList.toggle('a11y-reduced-motion', settings.reducedMotion);
-
-    return () => {
-      root.style.removeProperty('--accessibility-scale');
-      document.body.classList.remove(
-        'a11y-grayscale',
-        'a11y-high-contrast',
-        'a11y-negative-contrast',
-        'a11y-light-background',
-        'a11y-underline-links',
-        'a11y-reduced-motion'
-      );
-    };
-  }, [settings]);
-
-  const update = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const reset = () => setSettings(defaultSettings);
+  const set = <K extends keyof A11yPrefs>(key: K, value: A11yPrefs[K]) => setPrefs((p) => ({ ...p, [key]: value }));
+  const percent = Math.round(TEXT_SCALES[prefs.textStep] * 100);
+  const isDefault = JSON.stringify(prefs) === JSON.stringify(DEFAULT_PREFS);
 
   return (
     <div className={`accessibility-toolbar ${open ? 'is-open' : 'is-closed'}`}>
-      <div className="accessibility-toolbar__toggle-wrap">
-        <button
-          type="button"
-          className="accessibility-toolbar__toggle"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
-          aria-label={open ? 'Close accessibility toolbar' : 'Open accessibility toolbar'}
-        >
-          <span aria-hidden="true">♿</span>
-        </button>
-      </div>
+      <button
+        ref={toggleRef}
+        type="button"
+        className="accessibility-toolbar__toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="accessibility-panel"
+      >
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="7.2" r="1.3" fill="currentColor" stroke="none" />
+          <path d="M6.8 10.2c3.4 1 6 1 10.4 0M12 10.6v3.2M12 13.8l-2.4 4.4M12 13.8l2.4 4.4" />
+        </svg>
+        <span className="visually-hidden">Accessibility options</span>
+      </button>
 
       {open && (
-        <div className="accessibility-toolbar__panel" aria-label="Accessibility settings">
-          <h2>Accessibility Toolbar</h2>
+        <div id="accessibility-panel" className="accessibility-toolbar__panel" role="dialog" aria-modal="false" aria-labelledby="accessibility-title">
+          <div className="accessibility-toolbar__head">
+            <h2 id="accessibility-title" ref={titleRef} tabIndex={-1}>Accessibility options</h2>
+            <button type="button" className="accessibility-toolbar__close" onClick={() => setOpen(false)}>Close</button>
+          </div>
 
-          {actionLabels.map(({ label, sign, action, active }) => (
-            <button
-              key={label}
-              type="button"
-              className={`accessibility-toolbar__item${label === 'Read' ? ' accessibility-toolbar__item--read' : ''}${active ? ' is-active' : ''}`}
-              onClick={action}
-              aria-pressed={active || undefined}
-            >
-              <span aria-hidden="true">{sign}</span>
-              <span>{label}</span>
-            </button>
-          ))}
+          <div className="accessibility-toolbar__group" role="group" aria-labelledby="a11y-size-label">
+            <p id="a11y-size-label" className="accessibility-toolbar__label">Text size</p>
+            <div className="accessibility-toolbar__size">
+              <button type="button" onClick={() => set('textStep', prefs.textStep - 1)} disabled={prefs.textStep === 0} aria-label="Smaller text">A&minus;</button>
+              <span aria-live="polite">{percent}%</span>
+              <button type="button" onClick={() => set('textStep', prefs.textStep + 1)} disabled={prefs.textStep === TEXT_SCALES.length - 1} aria-label="Larger text">A+</button>
+            </div>
+          </div>
 
-          <button type="button" className="accessibility-toolbar__reset" onClick={reset}>
-            Reset
+          <div className="accessibility-toolbar__group" role="group" aria-labelledby="a11y-colour-label">
+            <p id="a11y-colour-label" className="accessibility-toolbar__label">Colours</p>
+            <div className="accessibility-toolbar__choices">
+              {COLOUR_CHOICES.map((c) => (
+                <button key={c.value} type="button" className={prefs.colours === c.value ? 'is-on' : ''} aria-pressed={prefs.colours === c.value} onClick={() => set('colours', c.value)}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="accessibility-toolbar__group" role="group" aria-labelledby="a11y-more-label">
+            <p id="a11y-more-label" className="accessibility-toolbar__label">Reading and movement</p>
+            {SWITCHES.map((s) => (
+              <button key={s.key} type="button" className={`accessibility-toolbar__switch${prefs[s.key] ? ' is-on' : ''}`} aria-pressed={prefs[s.key]} aria-describedby={`a11y-hint-${s.key}`} onClick={() => set(s.key, !prefs[s.key])}>
+                <span>
+                  <strong>{s.label}</strong>
+                  <small id={`a11y-hint-${s.key}`}>{s.hint}</small>
+                </span>
+                <span className="accessibility-toolbar__state" aria-hidden="true">{prefs[s.key] ? 'On' : 'Off'}</span>
+              </button>
+            ))}
+          </div>
+
+          <button type="button" className="accessibility-toolbar__reset" onClick={() => setPrefs(DEFAULT_PREFS)} disabled={isDefault}>
+            Reset all
           </button>
+          <p className="accessibility-toolbar__note">Your choices are saved in this browser only.</p>
         </div>
       )}
     </div>
