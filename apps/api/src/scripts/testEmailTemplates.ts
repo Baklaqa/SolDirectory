@@ -1,7 +1,8 @@
 /**
  * Checks the shared email layout without sending anything:
  *   npx tsx src/scripts/testEmailTemplates.ts
- * The footer (ABN, street address, phone) must stay plain text so mail apps do not turn it into phone or map links; text that came from a
+ * The footer's ABN must stay plain black text (mail apps used to turn it into a phone or map link) while the street address, phone number and
+ * email address are deliberate links with a visible colour; text that came from a
  * person or the database must never add HTML to an email; links are escaped; and the plain-text version reads properly.
  */
 let failures = 0;
@@ -17,11 +18,13 @@ async function main() {
   const footer = welcome.slice(footerStart, welcome.indexOf('</span><br />', footerStart) + 20);
 
   check(footerStart > 0, 'the footer line about who runs SolDirectory is marked so mail apps leave it alone');
-  check(!/<a [^>]*>[^<]*(022|522|John|Glenroy|3046)/.test(footer), 'the ABN, street address and postcode are not inside any link');
+  check(!/<a [^>]*>[^<]*(022|522|662)/.test(footer), 'the ABN is not inside any link');
   check(/ABN <span>20<\/span> <span>662<\/span> <span>022<\/span> <span>522<\/span>/.test(footer), 'the ABN is written out in full as plain words');
-  check(/<span>97<\/span> <span>John<\/span> <span>St,<\/span> <span>Glenroy<\/span> <span>VIC<\/span> <span>3046<\/span>/.test(footer), 'the street address is plain words too');
-  check(/Phone <span>0460<\/span> <span>003<\/span> <span>494<\/span>/.test(footer), 'the phone number is plain text, not a link');
-  check(/href="mailto:directory@solbusinessconsultant\.com\.au"/.test(footer), 'the email address is one deliberate link');
+  check(/<a href="https:\/\/www\.google\.com\/maps\/search\/\?api=1&amp;query=97%20John%20St%2C%20Glenroy%20VIC%203046"[^>]*>97 John St, Glenroy VIC 3046<\/a>/.test(footer), 'the street address is one deliberate map link');
+  check(/<a href="tel:\+61460003494"[^>]*>0460 003 494<\/a>/.test(footer), 'the phone number is one deliberate call link (+61 form)');
+  check(/<a href="mailto:directory@solbusinessconsultant\.com\.au"[^>]*>directory@solbusinessconsultant\.com\.au<\/a>/.test(footer), 'the email address is one deliberate link');
+  check((footer.match(/<a /g) ?? []).length === 3 && (footer.match(/color:#1769E0 !important/g) ?? []).length === 3, 'the three footer links keep their blue colour even where a mail app restyles footer links');
+  check(/<a href="[^"]*" style="color:#0B2D5C; text-decoration:none;"><strong style="color:#0B2D5C;">SolDirectory<\/strong><\/a> helps/.test(welcome), 'the SolDirectory name in the footer links to the website');
   check(/name="format-detection" content="telephone=no, date=no, address=no/.test(welcome), 'the head turns off automatic phone and address links');
 
   check(!welcome.includes('<img src=x'), 'a hostile name in the welcome heading is escaped', welcome.slice(welcome.indexOf('<h1'), welcome.indexOf('</h1>')));

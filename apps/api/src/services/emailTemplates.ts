@@ -30,10 +30,27 @@ export function noAutoLink(value: string): string {
   return escapeHtml(value).split(' ').map((word) => `<span>${word}</span>`).join(' ');
 }
 
-/** The footer line about who runs SolDirectory. Plain text, apart from the email address, which is a deliberate link. */
+/** Colour is marked !important so the footer rule in the head (which stops mail apps restyling phone-like text) can never turn a real link black. */
+const FOOTER_LINK = `color:${PRIMARY} !important; text-decoration:none !important;`;
+
+/** A phone number in the form phones dial: 0460 003 494 becomes +61460003494. */
+function telHref(phone: string): string {
+  const digits = phone.replace(/[^\d+]/g, '');
+  if (digits.startsWith('+')) return digits;
+  return digits.startsWith('0') ? `+61${digits.slice(1)}` : digits;
+}
+
+/**
+ * The footer line about who runs SolDirectory. The phone number, street address and email address are deliberate links (call, open in maps,
+ * write), so they behave the same in every mail app. The business name and the ABN stay plain black text on purpose: the ABN is not a phone
+ * number or a place, and mail apps used to make it one.
+ */
 function businessLineHtml(): string {
-  return `SolDirectory is operated by ${noAutoLink(BUSINESS.operator)} (ABN ${noAutoLink(BUSINESS.abn)}), ${noAutoLink(BUSINESS.address)}. ` +
-    `Phone ${noAutoLink(BUSINESS.phone)}. Email <a href="mailto:${escapeHtml(BUSINESS.email)}" style="color:${PRIMARY}; text-decoration:none;">${escapeHtml(BUSINESS.email)}</a>.`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(BUSINESS.address)}`;
+  return `SolDirectory is operated by ${noAutoLink(BUSINESS.operator)} (ABN ${noAutoLink(BUSINESS.abn)}), ` +
+    `<a href="${escapeHtml(mapsUrl)}" style="${FOOTER_LINK}">${escapeHtml(BUSINESS.address)}</a>. ` +
+    `Phone <a href="tel:${escapeHtml(telHref(BUSINESS.phone))}" style="${FOOTER_LINK}">${escapeHtml(BUSINESS.phone)}</a>. ` +
+    `Email <a href="mailto:${escapeHtml(BUSINESS.email)}" style="${FOOTER_LINK}">${escapeHtml(BUSINESS.email)}</a>.`;
 }
 
 /**
@@ -49,7 +66,8 @@ export function htmlToText(html: string): string {
     .replace(/<a\s[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_m, href: string, label: string) => {
       const text = label.replace(/<[^>]+>/g, '').trim();
       if (!text) return ''; // the logo, which is a picture inside a link
-      return href.startsWith('mailto:') ? text : `${text} (${href})`;
+      // Email, phone and map links are already readable as text; other links are written out as "label (address)".
+      return /^(mailto:|tel:|https:\/\/www\.google\.com\/maps\/)/.test(href) ? text : `${text} (${href})`;
     })
     .replace(/<img[^>]*>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -88,7 +106,7 @@ export function renderEmailLayout(opts: {
   <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
   <title>${heading}</title>
   <style>
-    /* Apple Mail and the Gmail apps still link phone-like numbers and addresses; inside the footer line that is switched off. */
+    /* Apple Mail and the Gmail apps still link phone-like numbers and addresses they find themselves; in the footer line that is switched off. The footer's own links carry !important colours inline, so they stay blue. */
     a[x-apple-data-detectors], u + #body .nolink a { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
   </style>
 </head>
@@ -117,7 +135,7 @@ export function renderEmailLayout(opts: {
         </tr>` : '<tr><td style="height:18px; line-height:18px; font-size:0;">&nbsp;</td></tr>'}
         <tr>
           <td style="padding:22px 32px 26px; background:#F8FAFD; border-top:1px solid #E8EEF7; font-size:12.5px; line-height:1.6; color:${TEXT_MUTED};">
-            <strong style="color:${NAVY};">SolDirectory</strong> helps people find NDIS and aged care providers across Australia.<br />
+            <a href="${site}" style="color:${NAVY}; text-decoration:none;"><strong style="color:${NAVY};">SolDirectory</strong></a> helps people find NDIS and aged care providers across Australia.<br />
             <span class="nolink">${businessLineHtml()}</span><br />
             <a href="${site}" style="color:${PRIMARY}; text-decoration:none;">Visit the website</a> &nbsp;·&nbsp; <a href="${site}/privacy" style="color:${PRIMARY}; text-decoration:none;">Privacy</a> &nbsp;·&nbsp; This is an automated message, so please don't reply to it.${footerHtml ? `<br /><br />${footerHtml}` : ''}
           </td>
