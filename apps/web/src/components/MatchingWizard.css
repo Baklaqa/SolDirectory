@@ -82,6 +82,8 @@
 
 /* ---- Inputs ---- */
 .mw-field-label { display: block; margin: 0 0 6px; font-size: 13.5px; font-weight: 600; color: var(--color-text); }
+/* A field that follows another field (the preferences step) gets space above its label. */
+.mw-input + .mw-field-label, .mw-textarea + .mw-field-label, .mw-input-icon-wrap + .mw-field-label { margin-top: 20px; }
 .mw-input, .mw-textarea {
   width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; /* 16px stops iOS zooming into the field */
   color: var(--color-text); padding: 14px 16px; border: 1.5px solid var(--color-border-strong, #DDE4EF); border-radius: 10px; background: #fff;
