@@ -94,8 +94,8 @@ html.a11y-reading-mode { overflow: hidden !important; }
 /* =========================================================
    Menu
    ========================================================= */
-/* Docked to the left edge, halfway down. */
-.sd-a11y { --a-ink: #0f172a; --a-amber: #f59e0b; --a-amber-deep: #d97706; --a-line: #e2e8f0; position: fixed; left: 0; top: 50%; z-index: 1100; font-family: var(--font-family, system-ui, sans-serif); --a11y-text-scale: 1; font-size: 15px; line-height: 1.4; color: var(--a-ink); text-align: left; letter-spacing: normal; word-spacing: normal; -webkit-font-smoothing: antialiased; }
+/* A floating button at the bottom right of every page (as the toolbar was before); the menu opens above it. */
+.sd-a11y { --a-ink: #0f172a; --a-amber: #f59e0b; --a-amber-deep: #d97706; --a-line: #e2e8f0; position: fixed; right: 18px; bottom: 20px; z-index: 1100; font-family: var(--font-family, system-ui, sans-serif); --a11y-text-scale: 1; font-size: 15px; line-height: 1.4; color: var(--a-ink); text-align: left; letter-spacing: normal; word-spacing: normal; -webkit-font-smoothing: antialiased; }
 .sd-a11y *, .sd-a11y *::before, .sd-a11y *::after { box-sizing: border-box; }
 .sd-a11y svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 .sd-a11y button, .sd-a11y select { font: inherit; margin: 0; }
@@ -103,24 +103,18 @@ html.a11y-reading-mode { overflow: hidden !important; }
 .sd-a11y p, .sd-a11y h2 { margin: 0; }
 html.a11y-ui-hidden .sd-a11y__launch { display: none; }
 
-/* Launcher: a navy tab on the left edge, same family as the cart tab; the label slides out on hover. */
-.sd-a11y__launch { position: relative; display: flex; align-items: center; padding: 8px 10px 8px 8px; border: 1px solid rgba(255, 255, 255, .08); border-left: 0; border-radius: 0 18px 18px 0; background: linear-gradient(160deg, #1e293b 0%, #0f172a 70%); color: #fff; cursor: pointer; box-shadow: 0 22px 44px -16px rgba(15, 23, 42, .6), inset 0 1px 0 rgba(255, 255, 255, .08); transition: box-shadow .3s ease, padding .35s cubic-bezier(.2, .8, .2, 1); }
-.sd-a11y__tile { position: relative; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(145deg, #fff, #e2e8f0); color: var(--a-ink); box-shadow: inset 0 1px 0 #fff, 0 6px 14px -8px rgba(0, 0, 0, .6); transition: background .25s ease, color .25s ease, transform .25s ease; }
-.sd-a11y__tile svg { width: 24px; height: 24px; stroke-width: 2.1; }
-.sd-a11y__tab-label { max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap; font-size: 14px; font-weight: 600; letter-spacing: .01em; transition: max-width .35s cubic-bezier(.2, .8, .2, 1), opacity .25s ease, margin .35s ease; }
-.sd-a11y__launch:hover, .sd-a11y__launch:focus-visible, .sd-a11y.is-open .sd-a11y__launch { box-shadow: 0 26px 48px -16px rgba(15, 23, 42, .7), inset 0 1px 0 rgba(255, 255, 255, .1); }
-.sd-a11y__launch:hover .sd-a11y__tile, .sd-a11y__launch:focus-visible .sd-a11y__tile, .sd-a11y.is-open .sd-a11y__tile { background: linear-gradient(145deg, #fbbf24, var(--a-amber-deep)); transform: rotate(-6deg); }
-@media (hover: hover) {
-	.sd-a11y__launch:hover .sd-a11y__tab-label, .sd-a11y__launch:focus-visible .sd-a11y__tab-label { max-width: 130px; opacity: 1; margin-left: 12px; }
-}
-.sd-a11y.is-open .sd-a11y__launch .sd-a11y__tab-label { max-width: 0; opacity: 0; margin-left: 0; }
+/* Launcher: a floating button; the menu opens above it. The dot shows when any adjustment is on. */
+.sd-a11y__launch { position: relative; display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 2px solid #fff; border-radius: 18px; background: linear-gradient(135deg, #1a5bbf, #0d2b57); color: #fff; cursor: pointer; box-shadow: 0 10px 24px rgba(11, 36, 74, .3); transition: transform .2s ease, box-shadow .2s ease; }
+.sd-a11y__tile { position: relative; display: grid; place-items: center; }
+.sd-a11y__tile svg { width: 28px; height: 28px; stroke-width: 2.1; }
+.sd-a11y__launch:hover, .sd-a11y.is-open .sd-a11y__launch { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(11, 36, 74, .36); }
 .sd-a11y__launch:focus-visible { outline: 3px solid var(--a-amber); outline-offset: 3px; }
 .sd-a11y__dot { position: absolute; top: -5px; right: -5px; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(145deg, #fbbf24, var(--a-amber-deep)); border: 2px solid #0f172a; transform: scale(0); transition: transform .25s ease; }
 .sd-a11y.has-active .sd-a11y__dot { transform: scale(1); }
 
 /* Panel: opens beside the tab, centred in the window. */
-.sd-a11y__panel { position: fixed; left: 76px; top: 50%; width: 410px; height: calc(100vh - 32px); height: calc(100dvh - 32px); max-height: 860px; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; background: #fff; border: 1px solid rgba(15, 23, 42, .08); box-shadow: 0 40px 80px -28px rgba(15, 23, 42, .55), 0 4px 14px rgba(15, 23, 42, .08); opacity: 0; transform: translate(-12px, -50%) scale(.98); transform-origin: left center; transition: opacity .22s ease, transform .22s ease; }
-.sd-a11y.is-shown .sd-a11y__panel { opacity: 1; transform: translate(0, -50%); }
+.sd-a11y__panel { position: fixed; right: 18px; bottom: 88px; width: min(410px, calc(100vw - 36px)); height: min(760px, calc(100vh - 112px)); height: min(760px, calc(100dvh - 112px)); display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; background: #fff; border: 1px solid rgba(15, 23, 42, .08); box-shadow: 0 40px 80px -28px rgba(15, 23, 42, .55), 0 4px 14px rgba(15, 23, 42, .08); opacity: 0; transform: translateY(12px) scale(.98); transform-origin: bottom right; transition: opacity .22s ease, transform .22s ease; }
+.sd-a11y.is-shown .sd-a11y__panel { opacity: 1; transform: none; }
 
 .sd-a11y__head { position: relative; flex-shrink: 0; padding: 16px 16px 14px 18px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; overflow: hidden; }
 .sd-a11y__head::after { content: ""; position: absolute; right: -40px; top: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(245, 158, 11, .28), transparent 70%); pointer-events: none; }
@@ -235,15 +229,14 @@ html.a11y-ui-hidden .sd-a11y__launch { display: none; }
 /* =========================================================
    Responsive
    ========================================================= */
-/* Tablets and phones: the tab sits low on the left edge, clear of the content. */
+/* Tablets and phones: a slightly smaller button, and the menu fills the width above it. */
 @media (max-width: 767px) {
-	.sd-a11y { top: auto; bottom: 96px; }
-	.sd-a11y__launch { padding: 6px 8px 6px 6px; border-radius: 0 16px 16px 0; }
-	.sd-a11y__tile { width: 38px; height: 38px; border-radius: 11px; }
-	.sd-a11y__tile svg { width: 21px; height: 21px; }
+	.sd-a11y { right: 12px; bottom: 14px; }
+	.sd-a11y__launch { width: 52px; height: 52px; border-radius: 16px; }
+	.sd-a11y__tile svg { width: 26px; height: 26px; }
 }
 @media (max-width: 639px) {
-	.sd-a11y__panel { left: 10px; right: 10px; width: auto; height: calc(100vh - 20px); height: calc(100dvh - 20px); }
+	.sd-a11y__panel { left: 10px; right: 10px; bottom: 76px; width: auto; height: calc(100vh - 96px); height: calc(100dvh - 96px); }
 }
 @media (max-width: 359px) {
 	.sd-a11y__grid { grid-template-columns: 1fr 1fr; }

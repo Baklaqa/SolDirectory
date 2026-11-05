@@ -442,7 +442,6 @@ export default function AccessibilityMenu() {
     <div ref={rootRef} className={`sd-a11y${open ? ' is-open' : ''}${shown ? ' is-shown' : ''}${hasActive ? ' has-active' : ''}`}>
       <button ref={toggleRef} type="button" className="sd-a11y__launch" aria-expanded={open} aria-controls="sd-a11y-panel" aria-label="Accessibility menu (Alt + A)" onClick={() => (open ? closeMenu(false) : openMenu())}>
         <span className="sd-a11y__tile"><Ico name="access" /><span className="sd-a11y__dot" aria-hidden="true" /></span>
-        <span className="sd-a11y__tab-label" aria-hidden="true">Accessibility</span>
       </button>
 
       {mounted && (
