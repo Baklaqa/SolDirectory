@@ -78,7 +78,7 @@ export async function signup(req: Request, res: Response) {
     // actual signup response. ADMIN_NOTIFICATION_EMAIL is a plain env
     // var since no existing "who gets admin alerts" config was found
     // in this codebase.
-    EmailService.notifyAdmin('New provider registered', `${escapeForEmail(name)} (${escapeForEmail(email)}) registered a new provider account.`).catch(() => {});
+    EmailService.notifyAdmin(`New provider registered: ${name}`, `${escapeForEmail(name)} (${escapeForEmail(email)}) registered a new provider account.`).catch(() => {});
   }
   // Same gap existed for workers: without a Worker shell created
   // here, a newly-signed-up worker has no profile record at all —

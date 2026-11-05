@@ -22,6 +22,33 @@ export function escapeHtml(value: unknown): string {
 }
 
 /**
+ * Every subject line goes through this before sending: control characters and line breaks are removed (text typed by a person must never
+ * be able to add mail headers), runs of spaces are collapsed, and long subjects are cut at a word so an inbox shows the part that matters.
+ */
+export function cleanSubject(value: unknown, max = 110): string {
+  const text = String(value ?? '').replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const atWord = cut.lastIndexOf(' ');
+  return `${(atWord > max * 0.6 ? cut.slice(0, atWord) : cut).replace(/[\s,;:.\-]+$/, '')}…`;
+}
+
+/** The service a person asked for, or nothing when the form only recorded "Not sure yet". */
+function realNeed(need?: string): string {
+  const n = (need ?? '').trim();
+  return n && !/^(not sure( yet)?|not specified)$/i.test(n) ? n : '';
+}
+
+/** "Plan management in Glenroy VIC", "support in Glenroy", or just "support": for subject lines about a request. */
+export function requestSummary(need?: string, place?: string): string {
+  const n = realNeed(need);
+  const p = (place ?? '').trim();
+  if (n && p) return `${n} in ${p}`;
+  if (n) return n;
+  return p ? `support in ${p}` : 'support';
+}
+
+/**
  * Mail apps turn anything that looks like a phone number or an address into a link: the last digits of the ABN ("022 522") become a phone
  * link and the street address becomes a map link. Putting each word in its own span leaves nothing for them to match, and the text reads
  * exactly the same. (The head also switches the automatic links off for Apple Mail and the Gmail apps; see renderEmailLayout.)
@@ -212,7 +239,7 @@ export function leadConfirmationTemplate(input: {
     ctaLabel: 'Browse providers near you',
     ctaUrl: input.browseUrl ?? input.trackingUrl,
   });
-  return { subject: `We've received your SolDirectory request (${input.requestNumber})`, html };
+  return { subject: cleanSubject(`We've received your SolDirectory request (${input.requestNumber})`), html };
 }
 
 export function providerMatchedTemplate(input: { need: string; trackingUrl?: string }): { subject: string; html: string } {
@@ -281,7 +308,7 @@ export function capacityConfirmationTemplate(input: { providerName: string; conf
     ctaLabel: 'Confirm capacity',
     ctaUrl: input.confirmUrl,
   });
-  return { subject: 'Confirm your capacity — SolDirectory', html };
+  return { subject: 'Confirm your capacity on SolDirectory', html };
 }
 
 export function providerLeadNotificationTemplate(input: { need: string; suburb: string; dashboardUrl?: string }): { subject: string; html: string } {
@@ -292,7 +319,7 @@ export function providerLeadNotificationTemplate(input: { need: string; suburb: 
     ctaLabel: input.dashboardUrl ? 'View opportunity' : undefined,
     ctaUrl: input.dashboardUrl,
   });
-  return { subject: 'New care opportunity available', html };
+  return { subject: cleanSubject(`New request: ${requestSummary(input.need, input.suburb)}`), html };
 }
 
 export function providerLeadTeaserTemplate(input: { need: string; suburb: string; dashboardUrl?: string; claimUrl?: string; unlocksLeft?: number }): { subject: string; html: string } {
@@ -306,7 +333,7 @@ export function providerLeadTeaserTemplate(input: { need: string; suburb: string
     ctaLabel: input.dashboardUrl ? 'View request' : undefined,
     ctaUrl: input.dashboardUrl,
   });
-  return { subject: `New request: ${input.need} in ${input.suburb}`, html };
+  return { subject: cleanSubject(`New request: ${requestSummary(input.need, input.suburb)}`), html };
 }
 
 export function providerLeadFullTemplate(input: {
@@ -338,18 +365,18 @@ export function providerLeadFullTemplate(input: {
     ctaLabel: input.dashboardUrl ? 'Open lead in dashboard' : undefined,
     ctaUrl: input.dashboardUrl,
   });
-  return { subject: `New matched ${input.need} lead in ${input.suburb}`, html };
+  return { subject: cleanSubject(`New matched lead: ${requestSummary(input.need, input.suburb)}`), html };
 }
 
 export function adminNotificationTemplate(input: { title: string; message: string; dashboardUrl?: string }): { subject: string; html: string } {
   const html = renderEmailLayout({
     preheader: input.title,
-    heading: input.title,
+    heading: escapeHtml(input.title),
     bodyHtml: input.message.startsWith('<table') ? input.message : `<p>${input.message}</p>`,
     ctaLabel: input.dashboardUrl ? 'Open admin dashboard' : undefined,
     ctaUrl: input.dashboardUrl,
   });
-  return { subject: `[SolDirectory Admin] ${input.title}`, html };
+  return { subject: cleanSubject(`[SolDirectory Admin] ${input.title}`, 120), html };
 }
 
 export function passwordResetTemplate(input: { resetUrl: string }): { subject: string; html: string } {
@@ -447,7 +474,7 @@ export function subscriptionStartedTemplate(input: { name: string; planName: str
     ctaLabel: input.leadsUrl ? 'View your leads' : undefined,
     ctaUrl: input.leadsUrl,
   });
-  return { subject: `Your SolDirectory ${input.planName} plan is active`, html };
+  return { subject: cleanSubject(`Your SolDirectory ${input.planName} plan is active`), html };
 }
 
 export function paymentReceivedTemplate(input: { name: string; planName: string; amount: string; nextBilling?: string; billingUrl?: string }): { subject: string; html: string } {
@@ -462,7 +489,7 @@ export function paymentReceivedTemplate(input: { name: string; planName: string;
     ctaLabel: input.billingUrl ? 'View billing' : undefined,
     ctaUrl: input.billingUrl,
   });
-  return { subject: 'Payment received — SolDirectory', html };
+  return { subject: cleanSubject(`Payment received for your SolDirectory ${input.planName} plan`), html };
 }
 
 export function paymentFailedTemplate(input: { name: string; planName: string; billingUrl?: string }): { subject: string; html: string } {
@@ -504,7 +531,7 @@ export function checkExpiringTemplate(input: { firstName?: string; checkName: st
     ctaLabel: 'Upload renewed check',
     ctaUrl: input.link,
   });
-  return { subject: `Your ${input.checkName} expires on ${when}`, html };
+  return { subject: cleanSubject(`Your ${input.checkName} expires on ${when}`), html };
 }
 
 /**

@@ -2,7 +2,7 @@ import nodemailer, { type Transporter } from 'nodemailer';
 import {
   leadConfirmationTemplate, type LeadConfirmationDetails, providerMatchedTemplate, providerResponseTemplate,
   providerLeadNotificationTemplate, providerLeadTeaserTemplate, providerLeadFullTemplate,
-  adminNotificationTemplate, renderEmailLayout, escapeHtml, htmlToText,
+  adminNotificationTemplate, renderEmailLayout, escapeHtml, htmlToText, cleanSubject,
   passwordResetTemplate, passwordChangedTemplate, verificationResultTemplate, welcomeTemplate,
   capacityConfirmationTemplate, providerChecksPassedTemplate, providerChecksAttentionTemplate,
   subscriptionStartedTemplate, paymentReceivedTemplate, paymentFailedTemplate, subscriptionCancelledTemplate,
@@ -50,7 +50,8 @@ function getTransporter(): Transporter | null {
  * Returns true/false so callers CAN check and retry/log further up
  * the stack if they want to, without being forced to.
  */
-async function sendMail(to: string, subject: string, html: string, opts?: { unsubscribeUrl?: string }): Promise<boolean> {
+async function sendMail(to: string, rawSubject: string, html: string, opts?: { unsubscribeUrl?: string }): Promise<boolean> {
+  const subject = cleanSubject(rawSubject, 120); // one clean line, whatever text a person typed into it
   const t = getTransporter();
   const from = process.env.EMAIL_FROM || 'SolDirectory <no-reply@soldirectory.example>';
 
@@ -121,7 +122,7 @@ export const EmailService = {
       ctaLabel: dashboardUrl ? 'View request' : undefined,
       ctaUrl: dashboardUrl,
     });
-    return sendMail(to, 'New request received on SolDirectory', html);
+    return sendMail(to, requesterName.trim() ? `New request to connect from ${requesterName}` : 'New request to connect on SolDirectory', html);
   },
 
   async sendProviderLeadNotification(to: string, need: string, suburb: string, dashboardUrl?: string) {

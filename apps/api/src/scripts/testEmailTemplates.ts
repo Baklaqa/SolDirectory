@@ -52,6 +52,18 @@ async function main() {
   check(/ABN 20 662 022 522\), 97 John St, Glenroy VIC 3046\. Phone 0460 003 494\. Email directory@solbusinessconsultant\.com\.au\./.test(text), 'the footer reads normally in plain text');
   check(!/^http/.test(text), 'the plain text does not start with a stray logo link');
   check(!/display:none|Hello preview/.test(text) && !/We've received your request\. Your reference is ABC123\.\s*We've received/.test(text), 'the hidden inbox preview text is not repeated in the plain text');
+  // ---- subject lines ----
+  check(t.cleanSubject('Line one' + String.fromCharCode(13, 10) + 'Bcc: x@y.test') ==='Line one Bcc: x@y.test', 'a subject can never contain a line break (no added mail headers)');
+  check(t.cleanSubject('a'.repeat(300)).length <= 110 && t.cleanSubject('word '.repeat(60)).endsWith('…'), 'a very long subject is cut, at a word, with an ellipsis');
+  check(t.requestSummary('Plan management', 'Glenroy VIC') === 'Plan management in Glenroy VIC' && t.requestSummary('Not sure yet', 'Glenroy') === 'support in Glenroy' && t.requestSummary('', '') === 'support', 'a request is described by what and where, never "Not sure yet"');
+  const adminSubject = t.adminNotificationTemplate({ title: 'New enquiry ABC123: Plan management in Glenroy VIC', message: 'x' }).subject as string;
+  check(adminSubject === '[SolDirectory Admin] New enquiry ABC123: Plan management in Glenroy VIC', 'the admin subject says which enquiry it is', adminSubject);
+  const adminHtml = t.adminNotificationTemplate({ title: evil, message: 'x' }).html as string;
+  check(!adminHtml.includes('<img src=x'), 'text in an admin title is escaped in the email heading');
+  check(t.providerLeadTeaserTemplate({ need: 'Not sure yet', suburb: 'Glenroy' }).subject === 'New request: support in Glenroy', 'provider teaser subject skips "Not sure yet"');
+  check(t.providerLeadFullTemplate({ need: 'Plan management', suburb: 'Glenroy', requesterName: 'P', requesterEmail: 'p@x.test', careFor: 'Myself', timeframe: 'Soon', fundingType: 'NDIS' }).subject === 'New matched lead: Plan management in Glenroy', 'provider full-lead subject');
+  check(t.providerLeadNotificationTemplate({ need: 'Therapy', suburb: 'Footscray' }).subject === 'New request: Therapy in Footscray', 'provider notification subject says what and where');
+  check(!/—/.test(t.capacityConfirmationTemplate({ providerName: 'P', confirmUrl: 'https://x.test' }).subject) && t.paymentReceivedTemplate({ name: 'P', planName: 'Growth', amount: '$1' }).subject === 'Payment received for your SolDirectory Growth plan', 'subjects use one style (no "— SolDirectory" tails)');
   console.log('\n--- plain text of the thank-you email (first 900 chars) ---\n' + text.slice(0, 900));
   console.log(failures ? `\n${failures} FAILED` : '\nAll checks passed.');
   process.exit(failures ? 1 : 0);

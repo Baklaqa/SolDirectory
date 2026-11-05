@@ -232,7 +232,7 @@ async function welcomeSubscriber(provider: ProviderDoc, planKey: PaidPlanKey) {
   await tellProvider(provider, (to) => EmailService.sendSubscriptionStarted(to, { name: providerName(provider), planName: plan?.name ?? planKey, quotaText, leadsUrl: `${siteOrigin()}/leads` }));
   const summary = `${providerName(provider)} subscribed to the ${plan?.name ?? planKey} plan`;
   await logActivity('plan_changed', summary);
-  await tellAdmin('New subscription', `${summary}.`);
+  await tellAdmin(`New subscription: ${providerName(provider)}, ${plan?.name ?? planKey} plan`, `${summary}.`);
 }
 
 /** True when this write moves the provider onto a paid plan they were not already actively on. */
@@ -299,7 +299,7 @@ async function onSubscriptionEnded(sub: any) {
   await tellProvider(provider, (to) => EmailService.sendSubscriptionCancelled(to, { name: providerName(provider), planName: outcome.planName, plansUrl: `${siteOrigin()}/plans` }));
   const summary = `${providerName(provider)}'s ${outcome.planName} plan ended`;
   await logActivity('plan_changed', summary);
-  await tellAdmin('Subscription ended', `${summary}.`);
+  await tellAdmin(`Subscription ended: ${providerName(provider)}, ${outcome.planName} plan`, `${summary}.`);
 }
 
 async function onInvoicePaid(invoice: any) {
@@ -323,7 +323,7 @@ async function onPaymentFailed(invoice: any) {
   await tellProvider(provider, (to) => EmailService.sendPaymentFailed(to, { name: providerName(provider), planName: planDoc?.name ?? provider.plan, billingUrl: `${siteOrigin()}/plans` }));
   const summary = `Payment failed for ${providerName(provider)} (${planDoc?.name ?? provider.plan} plan)`;
   await logActivity('payment_failed', summary);
-  await tellAdmin('Payment failed', `${summary}. Stripe will retry automatically.`);
+  await tellAdmin(`Payment failed: ${providerName(provider)}, ${planDoc?.name ?? provider.plan} plan`, `${summary}. Stripe will retry automatically.`);
 }
 
 async function dispatch(event: Stripe.Event) {

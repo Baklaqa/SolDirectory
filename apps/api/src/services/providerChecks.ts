@@ -163,7 +163,7 @@ export async function applyProviderChecks(provider: ProviderDoc): Promise<{ stat
       await sendChecksEmail(provider, status, checks);
       await Provider.updateOne({ _id: provider._id }, { $set: { 'verification.emailedKey': key } });
       if (status === 'in_review') {
-        EmailService.notifyAdmin('A provider needs a quick look', `${provider.tradingName || provider.legalEntityName || 'A provider'} finished onboarding with something for the team to confirm.`, `${siteOrigin()}/admin/providers/${provider._id}`).catch(() => {});
+        EmailService.notifyAdmin(`Provider needs a quick look: ${provider.tradingName || provider.legalEntityName || 'unnamed provider'}`, `${provider.tradingName || provider.legalEntityName || 'A provider'} finished onboarding with something for the team to confirm.`, `${siteOrigin()}/admin/providers/${provider._id}`).catch(() => {});
       }
     }
     return { status, checks };

@@ -10,6 +10,7 @@ import LeadMatch from '../models/LeadMatch.js';
 import { notifyRegisterListings, notifyPreferredListing } from '../services/leadFollowUp.service.js';
 import RegisterListing from '../models/RegisterListing.js';
 import { siteOrigin } from '../services/emailTokens.js';
+import { requestSummary } from '../services/emailTemplates.js';
 import jwt from 'jsonwebtoken';
 import { trackUrl } from '../services/requestTracking.js';
 
@@ -35,7 +36,10 @@ async function notifyAdminOfEnquiry(lead: any, requestNumber: string, matchedCou
   const message = '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">'
     + rows.filter(([, v]) => v).map(([label, value]) => `<tr><td style="padding:7px 14px 7px 0;color:#5A6B84;font-size:13px;vertical-align:top;white-space:nowrap">${label}</td><td style="padding:7px 0;font-size:14.5px;font-weight:600;color:#0B2D5C">${escapeHtml(value)}</td></tr>`).join('')
     + '</table>';
-  await EmailService.notifyAdmin('New enquiry received', message, `${siteOrigin()}/dashboard`).catch(() => false);
+  // The title is the subject line: reference, what and where, and a warning when nobody could be matched, so each enquiry is told apart in the inbox.
+  const summary = requestSummary(lead.need, [lead.suburb, lead.state].filter(Boolean).join(' '));
+  const title = `New enquiry ${requestNumber}: ${summary}${matchedCount === 0 ? ' (no provider matched yet)' : ''}`;
+  await EmailService.notifyAdmin(title, message, `${siteOrigin()}/admin/enquiries`).catch(() => false);
 }
 
 // Maps the wizard's NDIS-specific plan-management wording onto
