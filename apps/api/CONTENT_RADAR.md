@@ -57,7 +57,7 @@ original. Ask counsel before changing that, and about linking to ndis.gov.au (th
 permission).
 
 ndis.gov.au sits behind bot protection. The crawler obeys robots.txt, identifies itself
-(`SolDirectoryBot/1.0 (+site)`), waits `OFFICIAL_SOURCES_GAP_MS` between requests and opens at most
+(`Mozilla/5.0 (compatible; SolDirectoryBot/1.0; +site)`, the usual way crawlers introduce themselves; robots.txt is matched on `SolDirectoryBot`), waits `OFFICIAL_SOURCES_GAP_MS` between requests and opens at most
 `OFFICIAL_SOURCES_MAX_DETAILS` article pages per run. It does not rotate user agents or otherwise work round a refusal.
 
 - If the **news lists** are refused (HTTP 403/429/503) it pauses everything for `OFFICIAL_SOURCES_BACKOFF_MINUTES` (60).

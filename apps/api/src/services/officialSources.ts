@@ -12,7 +12,11 @@ import CrawlState from '../models/CrawlState.js';
  * the writing is ours and the source is cited and linked, never copied.
  */
 
-const USER_AGENT = 'SolDirectoryBot/1.0 (+https://directory.solbusinessconsultant.com.au; official-source monitor)';
+// The product token robots.txt files address us by, and the full user agent we send. The "Mozilla/5.0 (compatible; ...)" form is the
+// conventional way for a crawler to introduce itself (Googlebot, Bingbot) and some firewalls drop a bare token without it. The name and the
+// contact page are still in it, so it is not a browser disguise.
+const BOT_TOKEN = 'SolDirectoryBot';
+const USER_AGENT = `Mozilla/5.0 (compatible; ${BOT_TOKEN}/1.0; +https://directory.solbusinessconsultant.com.au; official-source monitor)`;
 const NDIS_ORIGIN = 'https://www.ndis.gov.au';
 const MAC_ORIGIN = 'https://www.myagedcare.gov.au';
 const REQUEST_GAP_MS = Math.max(500, Number(process.env.OFFICIAL_SOURCES_GAP_MS) || 1500);
@@ -39,7 +43,7 @@ function parseRobots(text: string): { allow: boolean; path: string }[] {
       // A new group starts after rules; consecutive User-agent lines share one group.
       if (!sawAgent) applies = false;
       sawAgent = true;
-      if (value === '*' || USER_AGENT.toLowerCase().startsWith(value.toLowerCase())) applies = true;
+      if (value === '*' || (value && BOT_TOKEN.toLowerCase().startsWith(value.toLowerCase()))) applies = true;
     } else if (key === 'allow' || key === 'disallow') {
       sawAgent = false;
       if (applies && value) rules.push({ allow: key === 'allow', path: value });
