@@ -102,6 +102,17 @@ OFFICIAL_SOURCES_NO_RESPONSE_MINUTES=30
 
 `npm run job:ndis-news-monitor -w apps/api -- --dry-run` reads the sources and changes nothing.
 
+## Weekly health report
+
+Every Monday the `official-content-check` job (`scripts/checkOfficialContent.ts`) emails the admin a summary that includes this monitor's
+health for the last 7 days: how many times it ran (about 28 expected), how many runs failed, how many were turned away by an official site,
+the last clean run, any source that has gone quiet, and any pause that is still in force. It sits beside the weekly check of every official
+page our articles cite (broken links, pages changed since an article was checked, articles whose checked date is over 30 days old).
+
+```
+0 6 * * 1 cd /var/www/soldirectory && npm run job:official-content-check -w apps/api >> /var/log/official-content-check.log 2>&1
+```
+
 ## Adding another official source
 
 Add an entry to `SOURCES` in `officialSources.ts` (and to `SOURCE_INFO`, which tells editors who publishes it and what its terms allow) with its list URL and a `parse` function returning

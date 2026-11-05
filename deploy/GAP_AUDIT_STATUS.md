@@ -45,8 +45,25 @@ The generated file also sets `Permissions-Policy`. If the live file already sets
 ## Cron (root crontab)
 
 ```
-30 7 * * * cd /var/www/soldirectory/apps/api && npm run job:register-freshness >> /var/log/register-freshness.log 2>&1
+# Every Monday: is the register data older than a week? (emails the admin if so)
+30 7 * * 1 cd /var/www/soldirectory/apps/api && npm run job:register-freshness >> /var/log/register-freshness.log 2>&1
+# Every Monday: official links, article check dates, and the official-source monitor's health (one summary email)
+0 6 * * 1 cd /var/www/soldirectory/apps/api && npm run job:official-content-check >> /var/log/official-content-check.log 2>&1
 ```
+
+The register-freshness line used to run every day at 07:30 (`30 7 * * *`). Replace it with the weekly line above (`crontab -e`).
+`REGISTER_MAX_AGE_DAYS` now defaults to 8 (a week and a day); it was 35.
+
+## Weekly official-content check
+
+`npm run job:official-content-check -w apps/api` opens every official (`.gov.au`) page the guides and articles cite and emails the admin one
+summary: links that no longer open, official pages that changed after an article was last checked, articles whose checked date is more than
+30 days old (`CONTENT_MAX_CHECK_AGE_DAYS`), and the official-source monitor's health for the last 7 days (did it run, was it turned away).
+`-- --dry-run` reads pages and prints the report without saving or sending anything. It reads politely (robots.txt, a pause between
+requests) and leaves a site alone once that site turns it away; pages it cannot reach are listed as "could not be checked", never as fine.
+It never edits an article: a person re-reads the official page and moves the article's `checkedAt` date (packages/topic-content/blog.js,
+blogGuides.js, blogWorkers.js, blogProviders.js). ndis.gov.au refuses automated requests from some server addresses; if the report says so,
+see "If article pages stay refused" in apps/api/CONTENT_RADAR.md.
 
 ## Monthly register routine
 

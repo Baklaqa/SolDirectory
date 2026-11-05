@@ -50,6 +50,8 @@
     "job:outcome-check": "tsx src/scripts/sendOutcomeChecks.ts",
     "job:check-expiry": "tsx src/scripts/notifyExpiringChecks.ts",
     "job:register-freshness": "tsx src/scripts/checkRegisterFreshness.ts",
+    "job:official-content-check": "tsx src/scripts/checkOfficialContent.ts",
+    "test:official-content": "tsx src/scripts/testOfficialContent.ts",
     "register:remove": "tsx src/scripts/removeRegisterListing.ts",
     "register:actions": "tsx src/scripts/applyRegisterActions.ts",
     "audit:indexing": "tsx src/scripts/auditIndexing.ts",

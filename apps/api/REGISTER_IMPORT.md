@@ -43,6 +43,13 @@ Verifying marks the listing "claimed"; the business still signs up as a
 normal provider. An email goes to `ADMIN_NOTIFY_EMAIL` (or
 `ADMIN_NOTIFICATION_EMAIL`) if set.
 
+## How often
+
+The register data should be refreshed **every week**. The `register-freshness` job runs every Monday and emails the admin when either register
+was last imported more than `REGISTER_MAX_AGE_DAYS` (default 8) days ago. The import itself is still run by hand from a downloaded export:
+nothing fetches the registers automatically, and the NDIS Commission does not publish a download. The public register pages promise only
+"at least every month", so that sentence stays true if a week is missed.
+
 ## Telling n8n when an import finishes
 
 After a real import (not `--dry-run`) the script calls the n8n webhook so the stale-content check runs straight away

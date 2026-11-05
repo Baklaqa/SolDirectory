@@ -4,11 +4,12 @@ import RegisterListing from '../models/RegisterListing.js';
 import { EmailService } from '../services/email.service.js';
 
 /**
- * The register pages promise a monthly re-import (REGISTER_CORRECTION in packages/topic-content). This job runs every day and emails
- * the admin when the newest import of a register is older than REGISTER_MAX_AGE_DAYS (default 35), so a missed import is noticed
- * before the "data as at" date on the pages looks stale.
+ * The register data should be refreshed every week; the pages themselves promise at least a monthly re-import (REGISTER_CORRECTION in
+ * packages/topic-content), so that sentence stays true even if a week is missed. This job runs every Monday and emails the admin when the
+ * newest import of a register is older than REGISTER_MAX_AGE_DAYS (default 8: a week and a day), so a missed import is noticed straight
+ * away. The import itself is still run by hand from a downloaded export (see REGISTER_IMPORT.md); this job only notices when it is late.
  */
-const MAX_AGE_DAYS = Number(process.env.REGISTER_MAX_AGE_DAYS) || 35;
+const MAX_AGE_DAYS = Number(process.env.REGISTER_MAX_AGE_DAYS) || 8;
 
 async function main(): Promise<string> {
   const stale: string[] = [];
@@ -29,8 +30,8 @@ async function main(): Promise<string> {
   if (stale.length) {
     await EmailService.notifyAdmin(
       'Register data is out of date',
-      `<p>The register pages say the data is re-imported every month, but:</p><ul>${stale.map((s) => `<li>${s}</li>`).join('')}</ul>` +
-        '<p>Download the latest export, run importRegisterListings.ts with --prune, then run applyRegisterActions.ts with the latest NDIS Commission compliance actions list.</p>',
+      `<p>The register data should be refreshed every week (the pages promise at least every month), and it is now older than ${MAX_AGE_DAYS} days:</p><ul>${stale.map((s) => `<li>${s}</li>`).join('')}</ul>` +
+        '<p>Download the latest export, run importRegisterListings.ts with --prune, then run applyRegisterActions.ts with the latest NDIS Commission compliance actions list. When the import finishes, n8n is told so the stale-content check runs.</p>',
     );
   }
   return `${lines.join('; ')}${stale.length ? ' (admin emailed)' : ''}`;

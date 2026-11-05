@@ -98,6 +98,24 @@ export const JOB_CATALOG: JobDefinition[] = [
     command: 'npm run job:ndis-news-monitor -w apps/api',
     everyHours: 6,
   },
+  {
+    name: 'official-content-check',
+    label: 'Weekly official-content check',
+    description: 'Opens every official page our guides and articles cite, and emails the admin one summary: links that broke, pages that changed since an article was checked, articles last checked over 30 days ago, and whether the official-source monitor is running and getting through.',
+    schedule: 'Every Monday, 6:00am',
+    cron: '0 6 * * 1',
+    command: 'npm run job:official-content-check -w apps/api',
+    everyHours: 168,
+  },
+  {
+    name: 'register-freshness',
+    label: 'Register data freshness',
+    description: 'Checks when the NDIS Commission and My Aged Care registers were last imported and emails the admin if either is older than a week.',
+    schedule: 'Every Monday, 7:30am',
+    cron: '30 7 * * 1',
+    command: 'npm run job:register-freshness -w apps/api',
+    everyHours: 168,
+  },
 ];
 
 export type JobHealth = 'ok' | 'running' | 'failed' | 'overdue' | 'never_run';
