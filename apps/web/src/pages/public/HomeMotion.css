@@ -31,20 +31,17 @@
 .coverage-group.is-lit { translate: 0 -4px; background: #fff; box-shadow: 0 20px 40px -18px rgba(11, 45, 92, 0.24); }
 
 /* ---- photographs: depth lives here -------------------------------------------- */
-/* The frame stays put. The picture inside leans a few pixels against the mouse and slowly draws closer. */
+/* The frame stays put. The picture inside eases slightly closer; it does not follow the mouse. */
 .about-photo img, .providers-photo img {
-  transform: translate3d(calc(var(--px, 0) * -11px), calc(var(--py, 0) * -8px), 0) scale(1);
-  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: scale(1);
+  transition: transform 600ms ease;
 }
 .about-photo-wrap.is-lit .about-photo img,
-.providers-photo-wrap.is-lit .providers-photo img { transform: translate3d(calc(var(--px, 0) * -11px), calc(var(--py, 0) * -8px), 0) scale(1.08); }
-/* The badge and the steps card are a nearer layer: they drift the other way, a little further. */
-.about-stat-badge, .providers-steps-card { transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); transform: translate3d(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 9px), 0); }
+.providers-photo-wrap.is-lit .providers-photo img { transform: scale(1.04); }
 .about-photo-wrap.is-lit .about-photo, .providers-photo-wrap.is-lit .providers-photo { box-shadow: 0 36px 72px -20px rgba(11, 45, 92, 0.32); }
 .about-photo, .providers-photo { transition: box-shadow 500ms ease; }
 
-/* Hero: the whole photograph shifts against the mouse (the dark overlay travels with it) */
-.hero-photo-bg { scale: 1.06; translate: calc(var(--px, 0) * -16px) calc(var(--py, 0) * -10px); transition: translate 900ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+/* Hero: the photograph stays still while the mouse moves. */
 
 /* Where the browser can link animation to scrolling, the big photographs also drift as they pass through view */
 @media (prefers-reduced-motion: no-preference) {
