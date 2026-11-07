@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './middleware/asyncErrors.js'; // before any router exists: errors in async handlers must never end the process
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
@@ -107,8 +108,14 @@ app.get('/sitemap-:name.xml', (req, res, next) => { getSitemapPart(req, res).cat
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
-  res.status(err.status ?? 500).json({ error: err.message ?? 'Something went wrong' });
+  if (res.headersSent) return;
+  // A deliberate 4xx (bad JSON, body too large, ...) keeps its message; anything else is a bug on our side and must not leak internals.
+  const status = Number(err?.status ?? err?.statusCode) >= 400 && Number(err?.status ?? err?.statusCode) < 500 ? Number(err.status ?? err.statusCode) : 500;
+  res.status(status).json({ error: status === 500 ? 'Something went wrong on our side. Please try again.' : (err.message ?? 'Bad request') });
 });
+
+// A stray rejected promise (for example in background work that nobody awaits) is logged, not allowed to end the API process.
+process.on('unhandledRejection', (reason) => console.error('[unhandledRejection]', reason));
 
 const PORT = process.env.PORT || 4000;
 

@@ -33,12 +33,22 @@ function signToken(user: UserDoc): string {
 // public signups are workers and providers; participants use the free "Get matched" request.
 const PUBLIC_SIGNUP_ROLES = ['worker', 'provider'];
 
-export async function signup(req: Request, res: Response) {
-  const { name, email, mobile, password, role, referralCode } = req.body;
+/** Everything a form sends here is text. Anything else (an object or list in the JSON) is a bad request, never something to look up. */
+const isText = (v: unknown): v is string => typeof v === 'string';
+const MAX_PASSWORD = 200;
 
-  if (!name || !/.+@.+\..+/.test(email || '') || !mobile || !password || password.length < 8) {
+export async function signup(req: Request, res: Response) {
+  let { name, email, mobile, password, role, referralCode } = req.body ?? {};
+
+  if (![name, email, mobile, password, role].every(isText) || (referralCode !== undefined && !isText(referralCode))) {
     return res.status(400).json({ error: 'Missing or invalid required fields' });
   }
+  if (!name.trim() || name.length > 120 || email.length > 200 || mobile.length > 40 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || !mobile.trim() || password.length < 8 || password.length > MAX_PASSWORD) {
+    return res.status(400).json({ error: 'Missing or invalid required fields' });
+  }
+  email = email.trim();
+  name = name.trim();
+  mobile = mobile.trim();
   if (!PUBLIC_SIGNUP_ROLES.includes(role)) {
     return res.status(400).json({ error: 'That account type is not available for public registration.' });
   }
@@ -103,12 +113,15 @@ export async function signup(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email: (email || '').toLowerCase() });
+  const { email, password } = req.body ?? {};
+  if (!isText(email) || !isText(password) || !email || !password || email.length > 200 || password.length > MAX_PASSWORD) {
+    return res.status(400).json({ error: 'Enter your email and password.' });
+  }
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
 
   if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-  const ok = await bcrypt.compare(password || '', user.passwordHash);
+  const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
 
   // Second factor, for anyone who has switched it on (required for administrators once enrolled).
@@ -216,9 +229,9 @@ export async function disableTwoFactor(req: AuthedRequest, res: Response) {
  */
 export async function forgotPassword(req: Request, res: Response) {
   const { email } = req.body ?? {};
-  if (!email) return res.status(400).json({ error: 'Email is required.' });
+  if (!isText(email) || !email.trim() || email.length > 200) return res.status(400).json({ error: 'Email is required.' });
 
-  const user = await User.findOne({ email: String(email).toLowerCase() });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
   const GENERIC_RESPONSE = { message: 'If an account exists for that email, a reset link has been sent.' };
 
   if (!user) {
@@ -240,11 +253,11 @@ export async function forgotPassword(req: Request, res: Response) {
 
 export async function resetPassword(req: Request, res: Response) {
   const { email, token, newPassword } = req.body ?? {};
-  if (!email || !token || !newPassword || newPassword.length < 8) {
+  if (!isText(email) || !isText(token) || !isText(newPassword) || !email || !token || newPassword.length < 8 || newPassword.length > MAX_PASSWORD) {
     return res.status(400).json({ error: 'Email, token, and a password of at least 8 characters are required.' });
   }
 
-  const user = await User.findOne({ email: String(email).toLowerCase() });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
   const tokenHash = crypto.createHash('sha256').update(String(token)).digest('hex');
 
   if (

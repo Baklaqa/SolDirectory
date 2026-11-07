@@ -47,7 +47,7 @@ export default function LegalPage({ slug }: { slug: string }) {
       const canonicalUrl = `${window.location.origin}/${doc.slug}`;
       applySeoTags({
         title: `${doc.title} | SolDirectory`,
-        description: `${doc.title} for SolDirectory, run by Sol Business Consultant Pty Ltd.`,
+        description: `${doc.title} for SolDirectory, the NDIS and aged care provider directory run by Sol Business Consultant Pty Ltd.`,
         canonicalUrl,
       });
       setJsonLd('legal-page', {

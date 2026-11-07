@@ -320,7 +320,7 @@ for (const f of FUNDING_CONTENT) {
     pages.push({
       path: `/${slug}`,
       title: `${doc.title} | SolDirectory`,
-      description: `${doc.title} for SolDirectory, run by Sol Business Consultant Pty Ltd.`,
+      description: `${doc.title} for SolDirectory, the NDIS and aged care provider directory run by Sol Business Consultant Pty Ltd.`,
       crumbs: [{ name: 'Home', path: '/' }, { name: doc.title, path: `/${slug}` }],
       jsonLd: [{ '@type': 'WebPage', name: doc.title, url: `${site}/${slug}`, inLanguage: 'en-AU' }],
       body: (c) => `${c}<h1>${esc(doc.title)}</h1>` +
@@ -337,7 +337,7 @@ for (const f of FUNDING_CONTENT) {
   // Same words as AboutPage.tsx and ContactPage.tsx.
   pages.push({
     path: '/about',
-    title: 'About SolDirectory',
+    title: 'About SolDirectory: who we are and how we work',
     description: 'Who operates SolDirectory, how it makes money, our related businesses and how we keep listings fair.',
     crumbs: [{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }],
     jsonLd: [{ '@type': 'AboutPage', name: 'About SolDirectory', url: `${site}/about`, about: { '@type': 'Organization', name: 'SolDirectory', url: site } }],
@@ -357,7 +357,7 @@ for (const f of FUNDING_CONTENT) {
   });
   pages.push({
     path: '/contact',
-    title: 'Contact SolDirectory',
+    title: 'Contact SolDirectory: phone, email and help',
     description: 'Phone, email and post details for SolDirectory, and a form to ask for help, update a listing or raise a concern.',
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }],
     jsonLd: [{ '@type': 'ContactPage', name: 'Contact SolDirectory', url: `${site}/contact` }],

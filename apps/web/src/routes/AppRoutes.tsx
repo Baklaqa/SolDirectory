@@ -162,11 +162,31 @@ function RequireAdminOrProProvider({ children }: { children: ReactElement }) {
   return children;
 }
 
+/**
+ * Sign-in and account pages do not set their own search tags (they are not for search engines), but every page still needs a title that
+ * says where you are: it is what a screen reader announces on arrival and what the browser tab and history show. Longest prefix first.
+ */
+const PRIVATE_PAGE_TITLES: [string, string][] = [
+  ['/provider/listing', 'Your provider listing'], ['/worker/profile', 'Your worker profile'], ['/confirm-capacity', 'Confirm your capacity'],
+  ['/forgot-password', 'Reset your password'], ['/reset-password', 'Choose a new password'], ['/saved-providers', 'Saved providers'],
+  ['/find-providers', 'Find providers'], ['/verification', 'Verification queue'], ['/onboarding', 'Set up your provider profile'],
+  ['/dashboard', 'Dashboard'], ['/security', 'Account security'], ['/workers', 'Worker directory'], ['/signup', 'Create your account'],
+  ['/login', 'Log in'], ['/leads', 'Requests'], ['/plans', 'Plans and billing'], ['/admin', 'Admin'],
+];
+function privatePageTitle(pathname: string): string | null {
+  const hit = PRIVATE_PAGE_TITLES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  return hit ? `${hit[1]} | SolDirectory` : null;
+}
+
 export default function AppRoutes() {
   // Layout effects run before every child's useEffect, so this reset lands
   // before the new page writes its own tags.
   const { pathname } = useLocation();
-  useLayoutEffect(() => { resetSeoTags(); }, [pathname]);
+  useLayoutEffect(() => {
+    resetSeoTags();
+    const title = privatePageTitle(pathname);
+    if (title) document.title = title; // a page that sets its own tags afterwards simply replaces this
+  }, [pathname]);
 
   return (
     <Suspense fallback={<div style={{ minHeight: '70vh' }} aria-busy="true" />}>

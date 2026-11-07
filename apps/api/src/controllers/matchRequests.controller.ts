@@ -12,6 +12,8 @@ import RegisterListing from '../models/RegisterListing.js';
 import { siteOrigin } from '../services/emailTokens.js';
 import { requestSummary } from '../services/emailTemplates.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import { BUSINESS } from '../config/business.js';
 import { trackUrl } from '../services/requestTracking.js';
 
 const escapeHtml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -101,6 +103,31 @@ export function parseConsent(raw: unknown, careFor: string | undefined, ip?: str
   };
 }
 
+/**
+ * What the wizard may send, as text, with a sensible longest length. Anything that is not text (an object or a list in the JSON, such as
+ * {"$ne": null}) is dropped, so it can never reach a database query or be stored, and no field can be megabytes long.
+ */
+const FORM_TEXT_LIMITS: Record<string, number> = {
+  location: 120, suburb: 80, state: 20, postcode: 10, careFor: 60, timeframe: 60, funding: 40, planManagement: 40, service: 120,
+  serviceContext: 80, email: 200, phone: 40, name: 120, additionalDetails: 2000, hoursPerWeek: 40, language: 80, workerGender: 20,
+  cultural: 160, website: 200,
+};
+function cleanForm(raw: unknown): Record<string, unknown> {
+  const body = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [key, max] of Object.entries(FORM_TEXT_LIMITS)) {
+    const value = body[key];
+    if (typeof value === 'string') out[key] = value.slice(0, max);
+  }
+  for (const key of ['lat', 'lng', 'consent', 'preferredProvider']) if (key in body) out[key] = body[key]; // each is checked on its own where it is used
+  return out;
+}
+
+/** The id of the draft the wizard has been saving to, only if it is a real id: a lookup can never be made with anything else. */
+function draftIdOf(raw: unknown): string | undefined {
+  return typeof raw === 'string' && mongoose.isValidObjectId(raw) ? raw : undefined;
+}
+
 function mapFormToLeadFields(body: Record<string, unknown>) {
   const { location, suburb, state, postcode, careFor, timeframe, funding, planManagement, service, serviceContext, email, phone, name, additionalDetails, hoursPerWeek, language, workerGender, cultural } = body as Record<string, string | undefined>;
   return {
@@ -181,7 +208,8 @@ const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
  * new one per step.
  */
 export async function saveMatchRequestDraft(req: Request, res: Response) {
-  const { draftId, ...form } = req.body ?? {};
+  const draftId = draftIdOf(req.body?.draftId);
+  const form = cleanForm(req.body);
   const preferred = await resolvePreferredListing((form as Record<string, unknown>).preferredProvider);
   const fields = { ...mapFormToLeadFields(form), preferredListing: preferred ? { type: preferred.type, slug: preferred.slug, name: preferred.name } : null };
 
@@ -232,13 +260,14 @@ async function registerBrowseUrl(lead: { suburb?: string; state?: string; fundin
 }
 
 export async function submitMatchRequest(req: Request, res: Response) {
-  const { draftId, ...form } = req.body ?? {};
+  const draftId = draftIdOf(req.body?.draftId);
+  const form = cleanForm(req.body);
   // A hidden field real people never fill in.
   if (typeof (form as Record<string, unknown>).website === 'string' && (form as Record<string, string>).website.trim()) {
     return res.status(201).json({ id: '', requestNumber: '', matchedProviderCount: 0, trackingUrl: '' });
   }
   if (tooManySubmissions(req.ip || 'unknown')) {
-    return res.status(429).json({ error: 'Too many requests from this connection. Please call us on 0460 003 494 and we will take your request over the phone.' });
+    return res.status(429).json({ error: `Too many requests from this connection. Please call us on ${BUSINESS.phone} and we will take your request over the phone.` });
   }
   const { location, careFor, timeframe, funding, email, name } = form as Record<string, string | undefined>;
 

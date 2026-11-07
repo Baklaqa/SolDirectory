@@ -34,7 +34,7 @@ export default function ContactPage() {
 
   useEffect(() => {
     applySeoTags({
-      title: 'Contact SolDirectory',
+      title: 'Contact SolDirectory: phone, email and help',
       description: 'Phone, email and post details for SolDirectory, and a form to ask for help, update a listing or raise a concern.',
       canonicalUrl: `${window.location.origin}/contact`,
     });

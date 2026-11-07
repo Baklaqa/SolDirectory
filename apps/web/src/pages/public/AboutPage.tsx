@@ -12,7 +12,7 @@ export default function AboutPage() {
 
   useEffect(() => {
     applySeoTags({
-      title: 'About SolDirectory',
+      title: 'About SolDirectory: who we are and how we work',
       description: 'Who operates SolDirectory, how it makes money, our related businesses and how we keep listings fair.',
       canonicalUrl: `${window.location.origin}/about`,
     });
