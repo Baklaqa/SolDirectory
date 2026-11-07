@@ -232,8 +232,14 @@ html.a11y-ui-hidden .sd-a11y__launch { display: none; }
 /* Tablets and phones: a slightly smaller button, and the menu fills the width above it. */
 @media (max-width: 767px) {
 	.sd-a11y { right: 12px; bottom: 14px; }
+
 	.sd-a11y__launch { width: 52px; height: 52px; border-radius: 16px; }
 	.sd-a11y__tile svg { width: 26px; height: 26px; }
+}
+/* The privacy notice is a card across the bottom of a narrow screen: the button rises above it instead of sitting on its buttons. */
+@media (max-width: 560px) {
+	html.cc-open .sd-a11y { bottom: calc(var(--cc-h, 220px) + 22px); }
+	html.cc-open .sd-a11y.is-open { bottom: 14px; }
 }
 @media (max-width: 639px) {
 	.sd-a11y__panel { left: 10px; right: 10px; bottom: 76px; width: auto; height: calc(100vh - 96px); height: calc(100dvh - 96px); }

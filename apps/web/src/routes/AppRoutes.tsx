@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { lazy, Suspense, useLayoutEffect, type ReactElement } from 'react';
+import { Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
+import { lazy, Suspense, useLayoutEffect, type ReactElement, type ReactNode } from 'react';
 import { resetSeoTags } from '../lib/seo';
 import { useAuth } from '../context/AuthContext';
 import { CPT_ROUTES } from '../lib/cptRouteConfig';
@@ -120,17 +120,22 @@ function RequireAuth({ children }: { children: ReactElement }) {
 // since browsing the worker directory was never a worker's own
 // purpose in this product. Only /dashboard stays open to any
 // authenticated role for now.
+/** The screen for someone signed in whose account type cannot use a section: a real page (main landmark, one h1) and an in-app link back. */
+function NotAvailable({ children }: { children: ReactNode }) {
+  return (
+    <main id="main-content" style={{ padding: '80px 20px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 26, marginBottom: 12 }}>Not available for your account type</h1>
+      <p>{children} <Link to="/dashboard">Back to dashboard</Link></p>
+    </main>
+  );
+}
+
 function RequireRole({ roles, children }: { roles: Role[]; children: ReactElement }) {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Loading…</div>;
   if (!user) return <LoginRedirect />;
   if (!roles.includes(user.role)) {
-    return (
-      <div style={{ padding: 60, textAlign: 'center' }}>
-        <h2>Not available for your account type</h2>
-        <p>This section isn't part of your role. <a href="/dashboard">Back to dashboard</a></p>
-      </div>
-    );
+    return <NotAvailable>This section isn't part of your role.</NotAvailable>;
   }
   return children;
 }
@@ -147,17 +152,7 @@ function RequireAdminOrProProvider({ children }: { children: ReactElement }) {
   if (!user) return <LoginRedirect />;
   const allowed = user.role === 'admin' || (user.role === 'provider' && user.plan === 'pro');
   if (!allowed) {
-    return (
-      <div style={{ padding: 60, textAlign: 'center' }}>
-        <h2>Not available for your account type</h2>
-        <p>
-          {user.role === 'provider'
-            ? "The worker directory is available on the Connect Plus plan. "
-            : "This section isn't part of your role. "}
-          <a href="/dashboard">Back to dashboard</a>
-        </p>
-      </div>
-    );
+    return <NotAvailable>{user.role === 'provider' ? 'The worker directory is available on the Connect Plus plan.' : "This section isn't part of your role."}</NotAvailable>;
   }
   return children;
 }
@@ -171,7 +166,12 @@ const PRIVATE_PAGE_TITLES: [string, string][] = [
   ['/forgot-password', 'Reset your password'], ['/reset-password', 'Choose a new password'], ['/saved-providers', 'Saved providers'],
   ['/find-providers', 'Find providers'], ['/verification', 'Verification queue'], ['/onboarding', 'Set up your provider profile'],
   ['/dashboard', 'Dashboard'], ['/security', 'Account security'], ['/workers', 'Worker directory'], ['/signup', 'Create your account'],
-  ['/login', 'Log in'], ['/leads', 'Requests'], ['/plans', 'Plans and billing'], ['/admin', 'Admin'],
+  ['/login', 'Log in'], ['/leads', 'Requests'], ['/plans', 'Plans and billing'],
+  ['/admin/worker-reviews', 'Admin: worker reviews'], ['/admin/diagnostics', 'Admin: diagnostics'], ['/admin/operations', 'Admin: operations'],
+  ['/admin/conditions', 'Admin: conditions'], ['/admin/enquiries', 'Admin: enquiries'], ['/admin/providers', 'Admin: providers'],
+  ['/admin/register', 'Admin: register'], ['/admin/services', 'Admin: services'], ['/admin/content', 'Admin: content'],
+  ['/admin/workers', 'Admin: workers'], ['/admin/reports', 'Admin: reports'], ['/admin/claims', 'Admin: claims'],
+  ['/admin/users', 'Admin: users'], ['/admin/plans', 'Admin: plans'], ['/admin', 'Admin'],
 ];
 function privatePageTitle(pathname: string): string | null {
   const hit = PRIVATE_PAGE_TITLES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`));

@@ -169,7 +169,7 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', position: 'relative' }}>
           <div className="ad-search-wrap">
             <input
-              className="ad-search-input"
+              className="ad-search-input" aria-label="Search users, providers and workers"
               placeholder="Search users, providers, workers…"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}

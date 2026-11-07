@@ -32,6 +32,20 @@ export default function CookieConsent() {
 
   useEffect(() => { if (forcedOpen) cardRef.current?.focus(); }, [forcedOpen]);
 
+  // While the notice is on screen, tell the page how tall it is so the floating accessibility button can sit above it on a narrow screen
+  // instead of on top of its buttons (see AccessibilityMenu.css).
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!visible || !card) return;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--cc-h', `${card.offsetHeight}px`);
+    root.classList.add('cc-open');
+    update();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null;
+    observer?.observe(card);
+    return () => { observer?.disconnect(); root.classList.remove('cc-open'); root.style.removeProperty('--cc-h'); };
+  }, [visible, customise]);
+
   if (!visible) return null;
 
   function choose(save: boolean) {

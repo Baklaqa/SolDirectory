@@ -144,7 +144,7 @@ export default function Verification() {
                 </button>
               ))}
             </div>
-            <textarea className="verify-note" placeholder="What they need to change" value={note} onChange={(e) => setNote(e.target.value)} />
+            <textarea className="verify-note" aria-label="What the provider needs to change" placeholder="What they need to change" value={note} onChange={(e) => setNote(e.target.value)} />
 
             {error && (
               <p className="verify-decision-error" role="alert">

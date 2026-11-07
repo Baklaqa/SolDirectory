@@ -48,6 +48,15 @@ import capacityRoutes from './routes/capacity.routes.js';
 import statsRoutes from './routes/stats.routes.js';
 import searchAlertsRoutes from './routes/searchAlerts.routes.js';
 
+// Signing sign-in tokens needs a real secret. Without one every login fails with a vague 500 and, worse, a short or guessable secret lets
+// anyone forge a token. In production the API refuses to start; elsewhere it says so loudly.
+const jwtSecret = process.env.JWT_SECRET ?? '';
+if (jwtSecret.length < 16) {
+  const message = 'JWT_SECRET is missing or shorter than 16 characters. Set a long random value in apps/api/.env (for example: openssl rand -hex 32).';
+  if (process.env.NODE_ENV === 'production') { console.error(`[startup] ${message}`); process.exit(1); }
+  console.error(`[startup] WARNING: ${message} Signing in will not work until it is set.`);
+}
+
 const app = express();
 // Behind nginx: take the visitor's address from X-Forwarded-For so consent, unlock and view records log the real one.
 app.set('trust proxy', 1);
