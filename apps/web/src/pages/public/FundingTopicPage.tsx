@@ -68,14 +68,14 @@ export default function FundingTopicPage() {
       title: `${meta.name} | Funding | SolDirectory`,
       // The same description the crawler HTML carries (packages/topic-content/fundingSeoDescriptions.js).
       description: FUNDING_SEO_DESCRIPTIONS[meta.slug] ?? `${meta.summary[0].slice(0, 155).replace(/\s+\S*$/, '')}…`,
-      canonicalUrl: `${window.location.origin}/funding/${meta.slug}/`,
+      canonicalUrl: `${window.location.origin}/funding/${meta.slug}`,
     });
     setJsonLd('funding-breadcrumbs', {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/` },
         { '@type': 'ListItem', position: 2, name: 'Funding', item: `${window.location.origin}/funding` },
-        { '@type': 'ListItem', position: 3, name: meta.name, item: `${window.location.origin}/funding/${meta.slug}/` },
+        { '@type': 'ListItem', position: 3, name: meta.name, item: `${window.location.origin}/funding/${meta.slug}` },
       ],
     });
     const faqs = fundingFaqs(meta);
@@ -83,7 +83,7 @@ export default function FundingTopicPage() {
       '@type': 'WebPage',
       name: meta.name,
       description: meta.summary[0],
-      url: `${window.location.origin}/funding/${meta.slug}/`,
+      url: `${window.location.origin}/funding/${meta.slug}`,
       isPartOf: { '@type': 'WebSite', name: 'SolDirectory', url: window.location.origin },
     });
     setJsonLd('funding-faq', {
@@ -253,7 +253,7 @@ export default function FundingTopicPage() {
           <h2>Other topics in {meta.categoryGroup}</h2>
           <ul className="reg-linkgrid">
             {siblings.map((f) => (
-              <li key={f.slug}><Link to={`/funding/${f.slug}/`}><span>{f.name}</span></Link></li>
+              <li key={f.slug}><Link to={`/funding/${f.slug}`}><span>{f.name}</span></Link></li>
             ))}
           </ul>
         </section>
@@ -313,7 +313,7 @@ export function FundingHubPage() {
             <h2 className="reg-h2">{group.title}</h2>
             <ul className="reg-linkgrid">
               {group.items.map((f: FundingContent) => (
-                <li key={f.slug}><Link to={`/funding/${f.slug}/`}><span>{f.name}</span></Link></li>
+                <li key={f.slug}><Link to={`/funding/${f.slug}`}><span>{f.name}</span></Link></li>
               ))}
             </ul>
           </section>

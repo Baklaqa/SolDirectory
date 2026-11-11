@@ -268,7 +268,7 @@ pages.push({
   crumbs: [{ name: 'Home', path: '/' }, { name: 'Funding', path: '/funding' }],
   body: (c) => `${c}<h1>NDIS, aged care and other funding explained</h1>` +
     '<p>Use these general guides to understand common terms and prepare questions for the relevant official body or provider. They are general information, not financial advice, and program rules change.</p>' +
-    FUNDING_CATEGORY_GROUPS.map((g) => `<h2>${esc(g.title)}</h2>${ul(g.items.map((f) => a(`/funding/${f.slug}/`, f.name)))}`).join(''),
+    FUNDING_CATEGORY_GROUPS.map((g) => `<h2>${esc(g.title)}</h2>${ul(g.items.map((f) => a(`/funding/${f.slug}`, f.name)))}`).join(''),
 });
 
 for (const f of FUNDING_CONTENT) {
@@ -276,7 +276,6 @@ for (const f of FUNDING_CONTENT) {
   const editorial = fundingShellEditorial(f);
   pages.push({
     path: `/funding/${f.slug}`,
-    canonical: `/funding/${f.slug}/`, // the form the menu and FundingTopicPage's own canonical use
     title: `${f.name} | Funding | SolDirectory`,
     description: trim(FUNDING_SEO_DESCRIPTIONS[f.slug] ?? f.summary[0], 155),
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Funding', path: '/funding' }, { name: f.name, path: `/funding/${f.slug}` }],
@@ -290,7 +289,7 @@ for (const f of FUNDING_CONTENT) {
       `<h2>Common mistakes to avoid</h2>${ul((editorial.pitfalls ?? []).map(esc))}` +
       `<h2>Frequently asked questions</h2>${editorial.faq.map((item) => `<h3>${esc(item.question)}</h3><p>${esc(item.answer)}</p>`).join('')}` +
       `<h2>Official sources</h2>${ul((editorial.sources ?? []).map((source) => `<a href="${esc(source.href)}" rel="noopener noreferrer">${esc(source.label)}</a>`))}` +
-      (siblings.length ? `<h2>Other topics in ${esc(f.categoryGroup)}</h2>${ul(siblings.map((s) => a(`/funding/${s.slug}/`, s.name)))}` : '') +
+      (siblings.length ? `<h2>Other topics in ${esc(f.categoryGroup)}</h2>${ul(siblings.map((s) => a(`/funding/${s.slug}`, s.name)))}` : '') +
       `<p>${a('/find-a-provider', 'Find a provider')} &middot; ${a('/funding', 'All funding topics')}</p>`,
   });
 }

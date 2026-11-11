@@ -134,7 +134,19 @@ async function buildPageUrls(): Promise<UrlEntry[]> {
     }
   }
 
-  const urls = [...new Set(paths)].map((path) => ({ path }));
+  // Last-modified dates only where the site really holds one: an article's own "checked" or published date (never today's date,
+  // which would tell search engines everything changes every day and teach them to ignore the field).
+  const lastmodOf = new Map<string, Date>();
+  for (const post of EDITORIAL_BLOG_POSTS) {
+    const raw = (post as { checkedAt?: string; publishedAt?: string }).checkedAt ?? (post as { publishedAt?: string }).publishedAt;
+    const when = raw ? new Date(raw) : null;
+    if (when && !Number.isNaN(when.getTime())) {
+      lastmodOf.set(`/blog/${post.slug}`, when);
+      const index = lastmodOf.get('/blog');
+      if (!index || index < when) lastmodOf.set('/blog', when);
+    }
+  }
+  const urls: UrlEntry[] = [...new Set(paths)].map((path) => ({ path, lastmod: lastmodOf.get(path) }));
   pagesCache = { urls, at: Date.now() };
   return urls;
 }

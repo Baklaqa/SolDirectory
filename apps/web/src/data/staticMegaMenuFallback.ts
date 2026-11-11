@@ -42,17 +42,17 @@ function serviceLink(title: string): { label: string; url: string } {
 // slugify() here must match ITS slugs exactly, which is why both use
 // the same lib/slugify.ts function, not wpStyleSlugify above).
 function conditionLink(title: string): { label: string; url: string } {
-  return { label: title, url: `/condition/${slugify(title)}/` };
+  return { label: title, url: `/condition/${slugify(title)}` };
 }
 
 // The Funding tab has real, permalink-style pages too: /funding/:slug/
 // (see data/fundingContent.ts, which FundingTopicPage.tsx reads).
 function fundingLink(title: string): { label: string; url: string } {
-  return { label: title, url: `/funding/${slugify(title)}/` };
+  return { label: title, url: `/funding/${slugify(title)}` };
 }
 
 function languageLink(title: string): { label: string; url: string } {
-  return { label: title, url: `/language/${slugify(title)}/` };
+  return { label: title, url: `/language/${slugify(title)}` };
 }
 
 const SERVICE_CATEGORIES: { title: string; items: string[] }[] = [

@@ -168,7 +168,7 @@ export default function RegisterListPage({ kind, stateSlug, suburbSlug }: Props)
   useEffect(() => {
     if (!state || loading) return;
     // Keep in step with the server-rendered title (registerShell.controller.ts).
-    const title = approved ? `${approved.seoTitle} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
+    const title = approved ? `${approved.seoTitle.length <= 46 ? approved.seoTitle : `${approved.seoTitle.slice(0, 45).replace(/\s+\S*$/, '')}…`} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`;
     applySeoTags({
       title,
       description: approved ? metaDescription(approved.metaDescription, 160) : metaDescription(

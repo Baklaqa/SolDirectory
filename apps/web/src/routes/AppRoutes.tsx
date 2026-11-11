@@ -80,7 +80,7 @@ const RegisterSuburbRoute = lazy(() => import('../pages/public/register/Register
 /** Old /directory/for/:condition path -> new permalink-style /condition/:slug/. */
 function RedirectToCondition() {
   const { condition = '' } = useParams<{ condition: string }>();
-  return <Navigate to={`/condition/${condition}/`} replace />;
+  return <Navigate to={`/condition/${condition}`} replace />;
 }
 
 /** /directory -> /find-a-provider, preserving ?service=/?suburb= — a plain <Navigate to="/find-a-provider" /> drops the query string, which would silently break every old ?service= deep link (Services.tsx, ProviderPublicPage.tsx chips, ...). */

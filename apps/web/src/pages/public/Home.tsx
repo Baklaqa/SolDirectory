@@ -37,10 +37,8 @@ export default function Home() {
   // accepting enquiries" above, and each shown under its own label below
   // so it can never read as a claim that these orgs are accepting
   // enquiries or verified — see RegisterCard for the same rule on cards.
-  const [registerTotal, setRegisterTotal] = useState<number | null>(null);
   const [ndisRegisterTotal, setNdisRegisterTotal] = useState<number | null>(null);
   const [ndisByState, setNdisByState] = useState<Record<string, number>>({});
-  const [agedCareRegisterTotal, setAgedCareRegisterTotal] = useState<number | null>(null);
   // Per-category counts across both registers, combined — lets
   // SupportFinder show a real number on each support card even while
   // there are no real Providers yet (see registerCounts prop below).
@@ -50,10 +48,8 @@ export default function Home() {
     Promise.all([getRegisterHub('ndis').catch(() => null), getRegisterHub('aged_care').catch(() => null)])
       .then(([ndis, agedCare]) => {
         if (!alive) return;
-        setRegisterTotal((ndis?.total ?? 0) + (agedCare?.total ?? 0));
         setNdisRegisterTotal(ndis?.total ?? 0);
         setNdisByState(ndis?.states ?? {});
-        setAgedCareRegisterTotal(agedCare?.total ?? 0);
         const counts: Record<string, number> = {};
         for (const hub of [ndis, agedCare]) {
           for (const c of hub?.categories ?? []) counts[c.category] = (counts[c.category] ?? 0) + c.count;
@@ -74,26 +70,6 @@ export default function Home() {
       .then((pairs) => { if (alive) setServiceAreaLinks(Object.fromEntries(pairs)); });
     return () => { alive = false; };
   }, []);
-
-  // Each figure appears only when the database can back it (see
-  // stats.controller.ts); nothing here is estimated or padded.
-  const reply = stats?.medianFirstReplyMinutes ?? null;
-  const figures: { label: string; value: number; suffix?: string; format?: boolean; accent?: boolean }[] = [];
-  if (stats && stats.suburbsCovered > 0) figures.push({ label: 'Suburbs with a listed provider', value: stats.suburbsCovered });
-  if (reply !== null) {
-    figures.push(
-      reply < 120
-        ? { label: 'Median time to first provider response', value: reply, suffix: ' min', format: false, accent: true }
-        : { label: 'Median time to first provider response', value: Math.round(reply / 60), suffix: ' hr', format: false, accent: true }
-    );
-  }
-  if (stats && stats.enquiriesLast30Days > 0) figures.push({ label: 'Support requests in the last 30 days', value: stats.enquiriesLast30Days });
-  // Register counts, appended after the real-provider figures above so this
-  // section never sits nearly empty while the platform is still building up
-  // its own providers — each keeps a label that names it as a register
-  // count, never as "accepting enquiries" (see the effect above).
-  if (ndisRegisterTotal && ndisRegisterTotal > 0) figures.push({ label: 'Organisations on the NDIS register', value: ndisRegisterTotal });
-  if (agedCareRegisterTotal && agedCareRegisterTotal > 0) figures.push({ label: 'Organisations on the My Aged Care register', value: agedCareRegisterTotal });
 
   // Organization structured data — every field is either fixed (the
   // site's own name/URL) or read straight from siteConfig (apps/web/.env),
@@ -234,38 +210,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {figures.length > 0 && (
-        <section className="stats-section home-stats" aria-label="Directory figures">
-          <p className="stats-headline">
-            A live snapshot of SolDirectory, including{' '}
-            <span className="stats-headline-accent">the public NDIS and My Aged Care registers</span>{' '}
-            we draw on.
-          </p>
-          <dl className="home-stats-row" data-reveal>
-            {figures.map((f) => (
-              <div key={f.label} className="home-stat">
-                <dt className="home-stat-label">{f.label}</dt>
-                <dd className={`home-stat-value${f.accent ? ' home-stat-accent' : ''}`}>
-                  <Counter value={f.value} suffix={f.suffix} format={f.format ?? true} />
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className="home-stats-note">Providers confirm their availability every week. Figures are calculated from live directory records.</p>
-        </section>
-      )}
-
-      {registerTotal !== null && registerTotal > 0 && (
-        <section className="stats-section home-register-note" aria-label="Public register inventory">
-          <p>
-            SolDirectory's directory also draws on <Counter value={registerTotal} /> organisations listed on the public{' '}
-            <Link to="/ndis-providers">NDIS</Link> and <Link to="/aged-care-providers">My Aged Care</Link> registers. These are real
-            businesses, shown here for reference — browse them on the register pages, or a business can{' '}
-            <Link to="/providers">set up its own SolDirectory listing</Link>.
-          </p>
-        </section>
-      )}
 
       <SupportFinder stats={stats} registerCounts={registerCategoryCounts} />
 

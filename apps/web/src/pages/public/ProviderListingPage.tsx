@@ -114,7 +114,7 @@ export default function ProviderListingPage({ mode }: { mode: Mode }) {
   // Condition pages live under their own top-level "category" prefix
   // (/condition/:slug/, permalink-style, per explicit request) rather
   // than nested under /directory — area pages are unchanged.
-  const base = mode === 'area' ? `/directory/in/${slug}` : `/condition/${slug}/`;
+  const base = mode === 'area' ? `/directory/in/${slug}` : `/condition/${slug}`;
   // The condition's own name is known before the provider counts load, so the banner doesn't flash "Provider directory".
   const knownName = row?.name ?? (mode === 'condition' ? conditionMeta?.name : undefined);
   const heading = knownName
@@ -382,7 +382,7 @@ function ConditionContentSections({ meta }: { meta: NonNullable<ReturnType<typeo
           <h2>Other conditions in {meta.categoryGroup}</h2>
           <ul className="reg-linkgrid">
             {siblings.map((c) => (
-              <li key={c.slug}><Link to={`/condition/${c.slug}/`}><span>{c.name}</span></Link></li>
+              <li key={c.slug}><Link to={`/condition/${c.slug}`}><span>{c.name}</span></Link></li>
             ))}
           </ul>
         </section>
@@ -485,7 +485,7 @@ export function ConditionsHubPage() {
                 const count = countFor(c.slug);
                 return (
                   <li key={c.slug}>
-                    <Link to={`/condition/${c.slug}/`}><span>{c.name}</span>{count > 0 && <span>{fmt(count)}</span>}</Link>
+                    <Link to={`/condition/${c.slug}`}><span>{c.name}</span>{count > 0 && <span>{fmt(count)}</span>}</Link>
                   </li>
                 );
               })}

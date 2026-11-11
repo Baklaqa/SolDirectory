@@ -303,7 +303,7 @@ async function listPage(site: string, kindPath: KindPath, stateSlug: string, sub
   return {
     status: 200,
     // "Australian Capital Territory" would push the title past what search results show, so the title says the ACT.
-    title: approved ? `${approved.content.seoTitle} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
+    title: approved ? `${trimTo(approved.content.seoTitle, 46)} | SolDirectory` : `${kind.label} providers in ${areaName === 'Australian Capital Territory' ? 'the ACT' : areaName}${page > 1 ? ` (page ${page})` : ''} | SolDirectory`,
     description: approved ? metaDescription(approved.content.metaDescription, 160) : metaDescription(`${fmt(total)} ${kind.plain} ${total === 1 ? 'provider is' : 'providers are'} listed on the ${kind.register} for ${areaName}. See the supports listed and service areas, then get matched for free.`, 158),
     canonical: page > 1 && !filtered ? `${base}?page=${page}` : base,
     noindex,
@@ -763,7 +763,7 @@ async function providerFilterPage(site: string, mode: 'area' | 'condition', slug
       `<h2>Questions to ask before choosing support</h2><ol>${editorial.checks.map((item) => `<li>${esc(item)}</li>`).join('')}</ol>` +
       `<h2>Frequently asked questions</h2>${editorial.faq.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join('')}` +
       `<h2>Official sources and further support</h2><ul>${(editorial.sources ?? []).map((source) => li(source.href, source.label)).join('')}</ul>` +
-      `<h2>Other conditions in ${esc(topic.categoryGroup)}</h2><ul>${siblings.map((item) => li(`/condition/${item.slug}/`, item.name)).join('')}</ul>`
+      `<h2>Other conditions in ${esc(topic.categoryGroup)}</h2><ul>${siblings.map((item) => li(`/condition/${item.slug}`, item.name)).join('')}</ul>`
     : '';
 
   return {
@@ -849,11 +849,11 @@ function fundingTopicPage(site: string, slug: string): Page {
     status: 200,
     title: `${topic.name} | Funding | SolDirectory`,
     description: metaDescription(FUNDING_SEO_DESCRIPTIONS[topic.slug] ?? `Understand ${topic.name}, what to confirm with the responsible funding body, records to prepare and questions to ask providers before support begins.`, 158),
-    canonical: `${base}/`,
+    canonical: base,
     noindex: false,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Funding', path: '/funding' }, { name: topic.name, path: base }]),
-      ...topicJsonLd(site, `${base}/`, topic.name, editorial),
+      ...topicJsonLd(site, base, topic.name, editorial),
     ],
     body: `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/funding">Funding</a> / ${esc(topic.name)}</nav>` +
       `<h1>${esc(topic.name)}</h1>` + body +
@@ -984,13 +984,13 @@ async function languageTopicPage(site: string, slug: string, page: number): Prom
     status: 200,
     title: seoTitle(specifics ? specifics.heading : `${topic.name} language support providers`),
     description: metaDescription(specifics ? specifics.about[0] : `Find providers that list ${topic.name} and learn what to confirm about fluency, interpreters, cultural safety, privacy, funding and communication before support begins.`, 158),
-    canonical: page > 1 ? `${base}?page=${page}` : `${base}/`,
+    canonical: page > 1 ? `${base}?page=${page}` : base,
     // A language page with no member provider and no register listing that mentions it has only the shared guidance,
     // so it is reachable but kept out of search results until it has something specific to say.
     noindex: snapshot !== null && total === 0 && registerTotal === 0 && !specifics && resources.length === 0,
     jsonLd: [
       breadcrumbLd(site, [{ name: 'Home', path: '/' }, { name: 'Language', path: '/language' }, { name: topic.name, path: base }]),
-      ...topicJsonLd(site, `${base}/`, heading, editorial),
+      ...topicJsonLd(site, base, heading, editorial),
     ],
     body:
       `<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/language">Language</a> / ${esc(topic.name)}</nav>` +
