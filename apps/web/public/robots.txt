@@ -12,4 +12,23 @@ Disallow: /providers/
 Disallow: /signup
 Disallow: /track/
 
+# AI search crawlers (they build the indexes behind ChatGPT search, Claude search and Perplexity answers). They are welcome on the public
+# pages. A crawler that has its own group ignores the "*" group above, so the private-area rules are repeated here on purpose: do not
+# shorten this group to "Allow: /" alone, or these crawlers would be allowed into the private areas.
+User-agent: OAI-SearchBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /leads
+Disallow: /login
+Disallow: /my-requests/
+Disallow: /onboarding
+Disallow: /plans
+Disallow: /providers/
+Disallow: /signup
+Disallow: /track/
+
 Sitemap: https://directory.solbusinessconsultant.com.au/sitemap.xml
