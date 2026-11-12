@@ -56,3 +56,6 @@ apps/web/scripts/content-audit/quality_rows.json
 
 # Provider documents stored on the server disk (see services/s3.service.ts); never commit them
 apps/api/uploads/
+
+# Contact lists exported for email campaigns (business contact details: never commit)
+apps/api/exports/

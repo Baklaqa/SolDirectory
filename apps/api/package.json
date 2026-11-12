@@ -42,6 +42,8 @@
     "test:lead-notices": "tsx src/scripts/testLeadNotices.ts",
     "test:email-templates": "tsx src/scripts/testEmailTemplates.ts",
     "test:api-hardening": "tsx src/scripts/testApiHardening.ts",
+    "export:outreach": "tsx src/scripts/exportOutreachList.ts",
+    "import:outreach-optouts": "tsx src/scripts/importOutreachOptOuts.ts",
     "stripe:gst-rate": "tsx src/scripts/createStripeGstTaxRate.ts",
     "job:ndis-news-monitor": "tsx src/scripts/monitorNdisNews.ts",
     "audit:register": "tsx src/scripts/auditRegisterData.ts",
