@@ -113,7 +113,9 @@ If anything here is unclear, ask before sending. Nothing is urgent enough to ris
 ## Files and commands (for the developer)
 
 - Export the list (on the server, where the live database is): `npm run export:outreach -w apps/api` writes `apps/api/exports/outreach-verified-<date>.csv`.
-  Add `-- --count` to see numbers only; `-- --type ndis|aged_care` or `-- --state VIC` to narrow. `-- --include-unverified` adds addresses not matched to the
+  Add `-- --count` to see numbers only; `-- --type ndis|aged_care` or `-- --state VIC` to narrow; `-- --batch-size 300` adds a "Batch" column
+  (Batch 001, Batch 002, ...) so one batch can be sent a day. The script cleans every field, then reads the file back and prints
+  "Check passed" or says what is wrong. Open the file in Google Sheets or import it straight into Mailchimp; Excel is not needed. `-- --include-unverified` adds addresses not matched to the
   business's own website; use it only after a lawyer or the owner has agreed.
 - Feed unsubscribes back before the next send: `npm run import:outreach-optouts -w apps/api -- <mailchimp-unsubscribed-export.csv>`.
 - Delete the exported CSV from the server once the campaign is loaded.
