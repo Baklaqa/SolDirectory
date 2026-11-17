@@ -1201,7 +1201,7 @@ export const LEGAL_PACK = [
             "t": "ul",
             "items": [
               "**Email:**  directory@solbusinessconsultant.com.au",
-              "**Phone:**  0460 003 494, Monday to Friday, 8am to 5.30pm",
+              "**Phone:**  0460 003 494, Monday to Friday, 8:30am to 5:30pm",
               "**Post:**  Complaints, SolDirectory, 97 John St, Glenroy VIC 3046",
               "**Online:**  the “Report” link on any listing or in your request tracker"
             ]

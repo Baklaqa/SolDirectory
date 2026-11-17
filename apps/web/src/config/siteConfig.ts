@@ -15,7 +15,7 @@ export const siteConfig = {
   contactPhone: clean(env.VITE_CONTACT_PHONE, '0460 003 494'),
   contactAddress: clean(env.VITE_CONTACT_ADDRESS, '97 John St, Glenroy VIC 3046'),
   legalEntity: clean(env.VITE_LEGAL_ENTITY, 'Sol Business Consultant Pty Ltd (ABN 20 662 022 522)'),
-  supportHours: clean(env.VITE_SUPPORT_HOURS, 'Monday to Friday, 8am to 5.30pm Melbourne time'),
+  supportHours: clean(env.VITE_SUPPORT_HOURS, 'Monday to Friday, 8:30am to 5:30pm Melbourne time'),
 };
 
 /** tel: links want digits only. */

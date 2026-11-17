@@ -14,7 +14,7 @@ export const BUSINESS = {
   address: env('BUSINESS_ADDRESS', '97 John St, Glenroy VIC 3046'),
   phone: env('BUSINESS_PHONE', '0460 003 494'),
   email: env('BUSINESS_EMAIL', 'directory@solbusinessconsultant.com.au'),
-  hours: env('BUSINESS_HOURS', 'Monday to Friday, 8am to 5.30pm (Melbourne time)'),
+  hours: env('BUSINESS_HOURS', 'Monday to Friday, 8:30am to 5:30pm (Melbourne time)'),
 };
 
 /** One line for the footer of every email. */
